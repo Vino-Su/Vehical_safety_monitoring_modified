@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>违法事故统计 - 智能网联汽车安全监测平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../../components/pagination-component.js"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 </head>
@@ -58,25 +59,7 @@
             <tbody id="accidentTableBody"></tbody>
           </table>
         </div>
-        <div class="flex items-center justify-between px-1 py-3">
-          <span class="text-sm text-[#00000073]">共 <b id="totalCount">247</b> 条</span>
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 text-sm text-[#00000073]">
-              <span>每页显示</span>
-              <select id="pageSizeSelect" class="ant-input" style="width:70px;height:28px;padding:0 4px;font-size:12px">
-                <option value="10" selected>10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-              </select>
-              <span>条</span>
-            </div>
-            <div class="ant-pagination">
-              <span class="page-item" id="prevBtn">&lt;</span>
-              <span class="page-item active" id="currPageDisplay">1</span>
-              <span class="page-item" id="nextBtn">&gt;</span>
-            </div>
-          </div>
-        </div>
+        <div id="paginationBar"></div>
       </div>
     </main>
   </div>
@@ -142,8 +125,7 @@ const PAGE_ID = 'violation-stats';
   }
 
   const allAccidents = generateAccidents(247);
-  let currentPage = 1;
-  let pageSize = 10;
+  var pager;
   let filteredAccidents = [...allAccidents];
 
   window.applyFilters = function() {
@@ -157,8 +139,8 @@ const PAGE_ID = 'violation-stats';
       return true;
     });
     updateStats();
-    currentPage = 1;
-    renderTable(1);
+    if(pager)pager.reset();
+    renderTable();
     updateCharts();
   };
 
@@ -204,11 +186,12 @@ const PAGE_ID = 'violation-stats';
     return 'ant-tag ant-tag-success';
   }
 
-  function renderTable(page) {
-    const tbody = document.getElementById('accidentTableBody');
-    const start = (page - 1) * pageSize;
-    const end = Math.min(start + pageSize, filteredAccidents.length);
-    const pageData = filteredAccidents.slice(start, end);
+  function renderTable() {
+    var cp=pager?pager.getCurrentPage():1;var ps=pager?pager.getPageSize():10;
+    var tbody = document.getElementById('accidentTableBody');
+    var start = (cp - 1) * ps;
+    var end = Math.min(start + ps, filteredAccidents.length);
+    var pageData = filteredAccidents.slice(start, end);
     tbody.innerHTML = pageData.map(a => {
       return '<tr onclick="openDetail(\'' + a.id + '\')" style="cursor:pointer">' +
         '<td><b>' + a.id + '</b></td>' +
@@ -223,28 +206,8 @@ const PAGE_ID = 'violation-stats';
         '<td><button class="ant-btn-link" onclick="event.stopPropagation();openDetail(\'' + a.id + '\')">详情</button></td>' +
         '</tr>';
     }).join('');
-    document.getElementById('totalCount').textContent = filteredAccidents.length;
-    updatePagination(page);
+    if(pager)pager.setTotal(filteredAccidents.length);
   }
-
-  function updatePagination(page) {
-    const totalPages = Math.ceil(filteredAccidents.length / pageSize) || 1;
-    document.getElementById('currPageDisplay').textContent = page;
-    document.getElementById('currPageDisplay').className = 'page-item active';
-  }
-
-  document.getElementById('prevBtn').addEventListener('click', function() {
-    if (currentPage > 1) { currentPage--; renderTable(currentPage); }
-  });
-  document.getElementById('nextBtn').addEventListener('click', function() {
-    const totalPages = Math.ceil(filteredAccidents.length / pageSize);
-    if (currentPage < totalPages) { currentPage++; renderTable(currentPage); }
-  });
-  document.getElementById('pageSizeSelect').addEventListener('change', function() {
-    pageSize = parseInt(this.value);
-    currentPage = 1;
-    renderTable(currentPage);
-  });
 
   window.openDetail = function(id) {
     const a = filteredAccidents.find(function(item) { return item.id === id; }) || filteredAccidents[0];
@@ -345,7 +308,15 @@ const PAGE_ID = 'violation-stats';
     resizeTimer = setTimeout(resizeAllCharts, 200);
   });
 
-  renderTable(1);
+  pager=new Pagination({
+    container:'paginationBar',
+    pageSize:10,
+    pageSizeOptions:[10,20,50,100],
+    onPageChange:function(page,size){
+      renderTable();
+    }
+  });
+  renderTable();
   updateStats();
   updateCharts();
 })();

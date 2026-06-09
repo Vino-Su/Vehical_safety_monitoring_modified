@@ -83,10 +83,7 @@
             <tbody id="tableBody"></tbody>
           </table>
         </div>
-        <div class="flex items-center justify-between px-4 py-3 flex-wrap gap-2">
-          <span class="text-sm" style="color:#00000073;" id="totalInfo">共 0 条</span>
-          <div class="ant-pagination" id="pagination"></div>
-        </div>
+        <div id="paginationBar"></div>
       </div>
 
     </main>
@@ -112,7 +109,7 @@ const locations = ['长虹路建华路口','檀溪路铁佛寺路口','航空路
 
 let mockAlarms = [];
 let currentPeriod = '7d';
-let page = 1; const pageSize = 10;
+var pager;
 let chartPie, chartLevel, chartTrend, chartRank;
 let alertMap = null;
 let mapInitialized = false;
@@ -184,7 +181,7 @@ function setPeriod(type) {
 }
 
 function doQuery() {
-  page=1;
+  if(pager)pager.reset();
   refreshAll();
   showToast('数据已更新','#1677ff');
 }
@@ -298,10 +295,11 @@ function initAlertMap() {
 }
 
 function renderTable(filtered) {
-  var totalPages=Math.ceil(filtered.length/pageSize);
-  if(page>totalPages)page=Math.max(1,totalPages);
-  var start=(page-1)*pageSize;
-  var end=Math.min(start+pageSize,filtered.length);
+  var cp=pager?pager.getCurrentPage():1;var ps=pager?pager.getPageSize():10;
+  var totalPages=Math.ceil(filtered.length/ps);
+  if(cp>totalPages)cp=Math.max(1,totalPages);
+  var start=(cp-1)*ps;
+  var end=Math.min(start+ps,filtered.length);
   var pageData=filtered.slice(start,end);
   var tbody=document.getElementById('tableBody');
   tbody.innerHTML=pageData.map(function(a){
@@ -309,27 +307,7 @@ function renderTable(filtered) {
     var sgt=a.status==='待处理'?'<span class="ant-tag ant-tag-processing">待处理</span>':a.status==='处理中'?'<span class="ant-tag ant-tag-warning">处理中</span>':'<span class="ant-tag ant-tag-success">已完成</span>';
     return '<tr><td style="font-size:11px;color:#00000073;">'+a.id+'</td><td>'+a.time+'</td><td>'+a.plate+'</td><td style="font-size:11px;">'+a.vin+'</td><td>'+a.enterprise+'</td><td>'+a.type+'</td><td>'+lt+'</td><td>'+a.location+'</td><td>'+sgt+'</td><td><button class="ant-btn-link" onclick="openDetail(\''+a.id+'\',\''+a.plate+'\',\''+a.vin+'\',\''+a.type+'\',\''+a.level+'\',\''+a.status+'\',\''+a.time+'\',\''+a.enterprise+'\',\''+a.location+'\')">详情</button></td></tr>';
   }).join('');
-  document.getElementById('totalInfo').innerText='共 '+filtered.length+' 条';
-  renderPagination(totalPages);
-}
-
-function renderPagination(totalPages) {
-  var p=document.getElementById('pagination');
-  if(totalPages<=1){p.innerHTML='';return;}
-  var html='<span class="page-item" onclick="goPage('+(page-1)+')"><i class="fas fa-chevron-left"></i></span>';
-  var s=Math.max(1,page-2),e=Math.min(totalPages,s+4);
-  if(s>1){html+='<span class="page-item" onclick="goPage(1)">1</span><span class="page-item" style="border:none;cursor:default;">...</span>';}
-  for(var i=s;i<=e;i++){html+='<span class="page-item'+(i===page?' active':'')+'" onclick="goPage('+i+')">'+i+'</span>';}
-  if(e<totalPages){html+='<span class="page-item" style="border:none;cursor:default;">...</span><span class="page-item" onclick="goPage('+totalPages+')">'+totalPages+'</span>';}
-  html+='<span class="page-item" onclick="goPage('+(page+1)+')"><i class="fas fa-chevron-right"></i></span>';
-  p.innerHTML=html;
-}
-
-function goPage(p) {
-  var totalPages=Math.ceil(getFilteredAlarms().length/pageSize);
-  if(p<1||p>totalPages)return;
-  page=p;
-  renderTable(getFilteredAlarms());
+  if(pager)pager.setTotal(filtered.length);
 }
 
 function openDetail(id,plate,vin,type,level,status,time,enterprise,location) {
@@ -367,6 +345,14 @@ function showToast(msg,bgColor) {
 
 document.addEventListener('DOMContentLoaded',function(){
   mockAlarms=genAlarms();
+  pager=new Pagination({
+    container:'paginationBar',
+    pageSize:10,
+    pageSizeOptions:[10,20,50,100],
+    onPageChange:function(page,size){
+      renderTable(getFilteredAlarms());
+    }
+  });
   setPeriod('7d');
   initAlertMap();
 });
@@ -377,5 +363,6 @@ window.addEventListener('resize',function(){
 });
 </script>
 <script src="../../common.js"></script>
+<script src="../../components/pagination-component.js"></script>
 </body>
 </html>

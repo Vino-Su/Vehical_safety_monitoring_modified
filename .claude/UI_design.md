@@ -9,9 +9,18 @@
    - 中性色：文字色 `#000000d9`/`#00000073`/`#00000040`，背景色 `#f0f2f5`，分割线 `#f0f0f0`
    - 组件样式：按钮、表格、表单、弹窗、标签、分页、面包屑、导航等，1:1对齐 Ant Design 原生组件视觉与交互
 2. **字体与排版**
-   - 字体栈：`"Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
-   - 标题层级：页面标题 20px，模块标题 16px，正文 14px，辅助文字 12px
-   - 行高：正文 1.5，标题 1.3，表单标签 1.5
+   - 中文字体：PingFang SC，兜底字体：Microsoft YaHei（微软雅黑）
+   - 英文字体：SF UI Text，兜底字体：Arial
+   - 数字字体：DIN
+   - 字号、字重、行高统一层级规范：
+      |文本层级|字号|字重|行高|适用场景|
+      |---|---|---|---|---|
+      |**H1 大标题**|32px|Semibold|40px|页面一级大标题|
+      |**H2 二级标题**|24px|Semibold|34px|模块标题、弹窗标题|
+      |**H3 三级标题**|20px|Semibold|30px|卡片标题、分组标题|
+      |**Body\-Large 重点正文**|16px|Medium|24px|重点内容、按钮文字、表单标签|
+      |**Body\-Normal 标准正文**|14px|Regular|22px|常规正文、列表、标签|
+      |**Body\-Prompt 辅助提示**|12px|Regular|18px|备注、报错、小字提示|
 
 ***
 

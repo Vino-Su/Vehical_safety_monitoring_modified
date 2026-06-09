@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>测试数据总览 - 智能网联汽车安全监测平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../../components/pagination-component.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
@@ -81,8 +82,7 @@
             <span class="text-xs text-[#00000073]">最新上报数据（8秒轮换）</span>
           </div>
           <div id="vehicleDynamicList"></div>
-          <div id="vehiclePagination" class="ant-pagination" style="margin-top:12px;"></div>
-          <div style="margin-top:8px;font-size:12px;color:#00000073;text-align:right;">共 <span id="totalDynamicCount">0</span> 条记录</div>
+          <div id="paginationBar"></div>
         </div>
       </div>
     </main>
@@ -177,8 +177,7 @@ let dynamicVehicles = [
   { plate: "鄂F临0234", enterprise: "L公司", mode: "人工驾驶", speed: 20, time: "2025-05-09 14:24:05" }
 ];
 
-let currentPage = 1;
-const pageSize = 5;
+var pager;
 
 function getModeBadge(mode) {
   if (mode === '自动驾驶') return '<span class="ant-tag ant-tag-success">自动驾驶</span>';
@@ -251,36 +250,18 @@ function renderEnterpriseTable() {
 }
 
 function renderVehicleDynamicList() {
-  var start = (currentPage - 1) * pageSize;
-  var end = Math.min(start + pageSize, dynamicVehicles.length);
-  var pageData = dynamicVehicles.slice(start, end);
-  var container = document.getElementById('vehicleDynamicList');
-  container.innerHTML = pageData.map(function(v) {
+  var cp=pager?pager.getCurrentPage():1;var ps=pager?pager.getPageSize():5;
+  var start=(cp-1)*ps;
+  var end=Math.min(start+ps,dynamicVehicles.length);
+  var pageData=dynamicVehicles.slice(start,end);
+  var container=document.getElementById('vehicleDynamicList');
+  container.innerHTML=pageData.map(function(v){
     return '<div class="list-item" style="padding:10px 0;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">' +
       '<div><span style="font-weight:600;color:#1677ff;">' + v.plate + '</span> <span style="color:#595959;margin-left:8px;font-size:12px;">' + v.enterprise + '</span></div>' +
       '<div>' + getModeBadge(v.mode) + ' <span style="color:#00000073;font-size:12px;">' + v.speed + ' km/h</span> <span style="margin-left:8px;color:#00000040;font-size:12px;">' + v.time + '</span></div>' +
       '</div>';
   }).join('');
-  renderPagination();
-  document.getElementById('totalDynamicCount').innerText = dynamicVehicles.length;
-}
-
-function renderPagination() {
-  var totalPages = Math.ceil(dynamicVehicles.length / pageSize);
-  var pagination = document.getElementById('vehiclePagination');
-  var html = '<span class="page-item" onclick="goPage(' + (currentPage - 1) + ')"><i class="fas fa-chevron-left"></i></span>';
-  for (var i = 1; i <= totalPages; i++) {
-    html += '<span class="page-item' + (i === currentPage ? ' active' : '') + '" onclick="goPage(' + i + ')">' + i + '</span>';
-  }
-  html += '<span class="page-item" onclick="goPage(' + (currentPage + 1) + ')"><i class="fas fa-chevron-right"></i></span>';
-  pagination.innerHTML = html;
-}
-
-function goPage(page) {
-  var totalPages = Math.ceil(dynamicVehicles.length / pageSize);
-  if (page < 1 || page > totalPages) return;
-  currentPage = page;
-  renderVehicleDynamicList();
+  if(pager)pager.setTotal(dynamicVehicles.length);
 }
 
 function refreshRealtimeData() {
@@ -362,6 +343,14 @@ function refreshUpperData() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  pager=new Pagination({
+    container:'paginationBar',
+    pageSize:5,
+    pageSizeOptions:[5,10,20,50],
+    onPageChange:function(page,size){
+      renderVehicleDynamicList();
+    }
+  });
   setPeriod('7d');
   renderDailyStats();
   renderEnterpriseTable();

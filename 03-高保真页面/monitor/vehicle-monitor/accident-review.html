@@ -93,7 +93,7 @@ function openReviewDetail(accId, step){
   var isFirst=step==='first';
   var isJoint=step==='joint';
   var currentNode = isTraffic?'交通事故报告审核':isFirst?'事故分析报告-第三方初审':'事故分析报告-联席审核';
-  var role = isJoint?'联席小组':'第三方服务机构';
+  var role = isJoint?'市工作专班':'第三方专业管理机构';
   var content = '<div>' +
     '<div class="ant-descriptions">' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">事故编号</div><div class="ant-descriptions-value">'+accId+'</div><div class="ant-descriptions-label">当前审批节点</div><div class="ant-descriptions-value">'+(isTraffic?'<span class="ant-tag ant-tag-default">交通事故报告审核</span>':isFirst?'<span class="ant-tag ant-tag-warning">事故分析报告-第三方初审</span>':'<span class="ant-tag ant-tag-success">事故分析报告-联席审核</span>')+'</div></div>' +
@@ -158,15 +158,15 @@ function makeAccidentFlowLog(accId, step){
   if(accId==='ACC20260427001'&&(isFirst||isJoint)){
     nodes=[
       {title:'事故上报',handler:'王工（D公司）',time:'2026-04-27 14:00',opinion:'提交事故基本信息报告，包含VIN码、临牌号码、事故发生地点/时间、事故经过等完整信息。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg、行车记录.mp4'},
-      {title:'交通事故报告审核',handler:'李四（第三方服务机构A）',time:'2026-04-30 09:00 - 2026-04-30 16:00',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，事故原因和责任认定清晰，现场材料齐全，符合上报要求。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
-      {title:'事故分析报告-第三方初审',handler:isFirst?'张三（第三方服务机构B）':'张三（第三方服务机构B）',time:isFirst?'2026-05-09 09:00 - 审核中':(isJoint?'2026-05-09 09:00 - 2026-05-09 16:00':'-'),opinion:isJoint?'审核结论：通过\n审核意见：事故分析报告数据来源可靠，结论合理有据，符合平台事故分析标准要求。建议通过初审。':'',nextNode:'事故分析报告-联席审核',status:isFirst?'处理中':'已处理',attach:isJoint?'事故分析初稿.pdf':''},
-      {title:'事故分析报告-联席审核',handler:isJoint?'王主任（联席小组）':'-',time:isJoint?'2026-05-09 - 审核中':'-',opinion:'',nextNode:'省厅上报',status:isJoint?'处理中':'待处理'},
+      {title:'交通事故报告审核',handler:'李四（第三方专业管理机构A）',time:'2026-04-30 09:00 - 2026-04-30 16:00',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，事故原因和责任认定清晰，现场材料齐全，符合上报要求。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
+      {title:'事故分析报告-第三方初审',handler:isFirst?'张三（第三方专业管理机构B）':'张三（第三方专业管理机构B）',time:isFirst?'2026-05-09 09:00 - 审核中':(isJoint?'2026-05-09 09:00 - 2026-05-09 16:00':'-'),opinion:isJoint?'审核结论：通过\n审核意见：事故分析报告数据来源可靠，结论合理有据，符合平台事故分析标准要求。建议通过初审。':'',nextNode:'事故分析报告-联席审核',status:isFirst?'处理中':'已处理',attach:isJoint?'事故分析初稿.pdf':''},
+      {title:'事故分析报告-联席审核',handler:isJoint?'王主任（市工作专班）':'-',time:isJoint?'2026-05-09 - 审核中':'-',opinion:'',nextNode:'省厅上报',status:isJoint?'处理中':'待处理'},
       {title:'省厅上报',handler:'-',time:'-',opinion:'',nextNode:'-',status:'待处理'}
     ];
   }else if(accId==='ACC20260427001'&&isTraffic){
     nodes=[
       {title:'事故上报',handler:'王工（D公司）',time:'2026-04-27 14:00',opinion:'提交事故基本信息报告，包含VIN码、临牌号码、事故发生地点/时间、事故经过等完整信息。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg、行车记录.mp4'},
-      {title:'交通事故报告审核',handler:'李四（第三方服务机构A）',time:'2026-04-30 - 审核中',opinion:'',nextNode:'事故分析报告-第三方初审',status:'处理中'},
+      {title:'交通事故报告审核',handler:'李四（第三方专业管理机构A）',time:'2026-04-30 - 审核中',opinion:'',nextNode:'事故分析报告-第三方初审',status:'处理中'},
       {title:'事故分析报告-第三方初审',handler:'-',time:'-',opinion:'',nextNode:'事故分析报告-联席审核',status:'待处理'},
       {title:'事故分析报告-联席审核',handler:'-',time:'-',opinion:'',nextNode:'省厅上报',status:'待处理'},
       {title:'省厅上报',handler:'-',time:'-',opinion:'',nextNode:'-',status:'待处理'}
@@ -174,15 +174,15 @@ function makeAccidentFlowLog(accId, step){
   }else if(accId==='ACC20260420001'){
     nodes=[
       {title:'事故上报',handler:'陈工（B公司）',time:'2026-04-20 09:15',opinion:'提交事故基本信息报告。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg'},
-      {title:'交通事故报告审核',handler:'李四（第三方服务机构A）',time:'2026-04-23 10:00 - 2026-04-23 17:00',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，予以审核通过。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
-      {title:'事故分析报告-第三方初审',handler:'赵五（第三方服务机构C）',time:'2026-04-30 09:00 - 2026-05-02 11:00',opinion:'审核结论：通过\n审核意见：事故分析逻辑清晰，结论合理。',nextNode:'事故分析报告-联席审核',status:'已处理',attach:'事故分析报告_v1.pdf'},
-      {title:'事故分析报告-联席审核',handler:'李主任（联席小组）',time:'2026-05-03 10:00 - 2026-05-05 16:00',opinion:'审核结论：通过\n审核意见：经联席审议，一致认可事故分析结论。',nextNode:'省厅上报',status:'已处理'},
+      {title:'交通事故报告审核',handler:'李四（第三方专业管理机构A）',time:'2026-04-23 10:00 - 2026-04-23 17:00',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，予以审核通过。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
+      {title:'事故分析报告-第三方初审',handler:'赵五（第三方专业管理机构C）',time:'2026-04-30 09:00 - 2026-05-02 11:00',opinion:'审核结论：通过\n审核意见：事故分析逻辑清晰，结论合理。',nextNode:'事故分析报告-联席审核',status:'已处理',attach:'事故分析报告_v1.pdf'},
+      {title:'事故分析报告-联席审核',handler:'李主任（市工作专班）',time:'2026-05-03 10:00 - 2026-05-05 16:00',opinion:'审核结论：通过\n审核意见：经联席审议，一致认可事故分析结论。',nextNode:'省厅上报',status:'已处理'},
       {title:'省厅上报',handler:'赵工（管理平台）',time:'2026-05-06 10:00',opinion:'已完成省级平台数据同步。',nextNode:'-',status:'已处理',attach:'省厅上报回执.pdf'}
     ];
   }else if(accId==='ACC20260415001'){
     nodes=[
       {title:'事故上报',handler:'李工（C公司）',time:'2026-04-15 08:45',opinion:'提交事故基本信息报告。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg'},
-      {title:'交通事故报告审核',handler:'张三（第三方服务机构B）',time:'2026-04-18 09:00 - 2026-04-19 14:00',opinion:'审核结论：退回\n审核意见：事故原因描述不够详细，缺少完整的行车记录数据，请补充后重新提报。',nextNode:'事故分析报告-第三方初审',status:'已退回'},
+      {title:'交通事故报告审核',handler:'张三（第三方专业管理机构B）',time:'2026-04-18 09:00 - 2026-04-19 14:00',opinion:'审核结论：退回\n审核意见：事故原因描述不够详细，缺少完整的行车记录数据，请补充后重新提报。',nextNode:'事故分析报告-第三方初审',status:'已退回'},
       {title:'事故分析报告-第三方初审',handler:'-',time:'-',opinion:'',nextNode:'事故分析报告-联席审核',status:'待处理'},
       {title:'事故分析报告-联席审核',handler:'-',time:'-',opinion:'',nextNode:'省厅上报',status:'待处理'},
       {title:'省厅上报',handler:'-',time:'-',opinion:'',nextNode:'-',status:'待处理'}
@@ -190,9 +190,9 @@ function makeAccidentFlowLog(accId, step){
   }else{
     nodes=[
       {title:'事故上报',handler:'王工（D公司）',time:'2026-04-25 10:30',opinion:'提交事故基本信息报告。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg'},
-      {title:'交通事故报告审核',handler:'李四（第三方服务机构A）',time:'2026-04-28 09:00 - 2026-04-28 16:30',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
-      {title:'事故分析报告-第三方初审',handler:'张三（第三方服务机构B）',time:'2026-05-03 10:00 - 2026-05-05 14:00',opinion:'审核结论：通过\n审核意见：事故分析合理。',nextNode:'事故分析报告-联席审核',status:'已处理'},
-      {title:'事故分析报告-联席审核',handler:'王主任（联席小组）',time:'2026-05-06 09:30 - 2026-05-07 11:00',opinion:'审核结论：通过\n审核意见：经联席审议，一致同意。',nextNode:'省厅上报',status:'已处理'},
+      {title:'交通事故报告审核',handler:'李四（第三方专业管理机构A）',time:'2026-04-28 09:00 - 2026-04-28 16:30',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
+      {title:'事故分析报告-第三方初审',handler:'张三（第三方专业管理机构B）',time:'2026-05-03 10:00 - 2026-05-05 14:00',opinion:'审核结论：通过\n审核意见：事故分析合理。',nextNode:'事故分析报告-联席审核',status:'已处理'},
+      {title:'事故分析报告-联席审核',handler:'王主任（市工作专班）',time:'2026-05-06 09:30 - 2026-05-07 11:00',opinion:'审核结论：通过\n审核意见：经联席审议，一致同意。',nextNode:'省厅上报',status:'已处理'},
       {title:'省厅上报',handler:'赵工（管理平台）',time:'2026-05-07 15:00',opinion:'已完成省级平台数据同步。',nextNode:'-',status:'已处理'}
     ];
   }

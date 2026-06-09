@@ -131,7 +131,7 @@
                 <thead><tr><th>特征组合</th><th>事故数</th><th>占比</th><th>显著</th></tr></thead>
                 <tbody>
                   <tr><td>城区道路 × 自动驾驶 × 追尾 × 高峰</td><td>38</td><td>15.4%</td><td><span class="tag-acc tag-green">是</span></td></tr>
-                  <tr><td>次干路 × 手动驾驶 × 刮擦 × 平峰</td><td>22</td><td>8.9%</td><td><span class="tag-acc tag-green">是</span></td></tr>
+                  <tr><td>次干道 × 手动驾驶 × 刮擦 × 平峰</td><td>22</td><td>8.9%</td><td><span class="tag-acc tag-green">是</span></td></tr>
                   <tr><td>快速路 × 手动驾驶 × 追尾 × 夜间</td><td>15</td><td>6.1%</td><td><span class="tag-acc tag-orange">否</span></td></tr>
                   <tr><td>支路 × 自动驾驶 × 行人冲突 × 平峰</td><td>10</td><td>4.0%</td><td><span class="tag-acc tag-orange">否</span></td></tr>
                 </tbody>
@@ -296,7 +296,8 @@
           { value:520, name:'主干道', itemStyle:{color:'#1677ff'} },
           { value:340, name:'次干道', itemStyle:{color:'#52c41a'} },
           { value:210, name:'支路', itemStyle:{color:'#faad14'} },
-          { value:177, name:'快速路', itemStyle:{color:'#722ed1'} }
+          { value:177, name:'快速路', itemStyle:{color:'#722ed1'} },
+          { value:85, name:'园区道路', itemStyle:{color:'#13c2c2'} }
         ]}
     ]});
   }
@@ -390,7 +391,7 @@
       '事故类型':[ {value:180,name:'追尾',itemStyle:{color:'#ff4d4f'}}, {value:95,name:'碰撞',itemStyle:{color:'#fa8c16'}}, {value:72,name:'刮擦',itemStyle:{color:'#1677ff'}}, {value:50,name:'行人冲突',itemStyle:{color:'#722ed1'}} ],
       '车辆类型':[ {value:210,name:'轿车',itemStyle:{color:'#1677ff'}}, {value:120,name:'SUV',itemStyle:{color:'#52c41a'}}, {value:45,name:'货车',itemStyle:{color:'#faad14'}} ],
       '测试场景':[ {value:150,name:'封闭道路',itemStyle:{color:'#1677ff'}}, {value:200,name:'开放道路',itemStyle:{color:'#ff4d4f'}} ],
-      '道路类型':[ {value:180,name:'主干道',itemStyle:{color:'#1677ff'}}, {value:120,name:'次干道',itemStyle:{color:'#52c41a'}}, {value:70,name:'支路',itemStyle:{color:'#faad14'}} ]
+      '道路类型':[ {value:180,name:'主干道',itemStyle:{color:'#1677ff'}}, {value:120,name:'次干道',itemStyle:{color:'#52c41a'}}, {value:70,name:'支路',itemStyle:{color:'#faad14'}}, {value:85,name:'园区道路',itemStyle:{color:'#13c2c2'}} ]
     };
     chart.setOption({
       tooltip: { trigger:'item' },

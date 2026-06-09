@@ -25,7 +25,7 @@
         <div class="filter-bar">
           <div class="filter-row">
             <div class="filter-item"><label>报告类型</label><select class="ant-input" id="qReportType" style="width:130px"><option value="all">全部</option><option value="阶段性报告">阶段性报告</option><option value="总结性报告">总结性报告</option></select></div>
-            <div class="filter-item"><label>申请类型</label><select class="ant-input" id="qSubType" style="width:130px"><option value="all">全部</option><option value="道路测试准入">道路测试准入</option><option value="示范应用准入">示范应用准入</option><option value="示范运营准入">示范运营准入</option></select></div>
+            <div class="filter-item"><label>申请类型</label><select class="ant-input" id="qSubType" style="width:130px"><option value="all">全部</option><option value="道路测试准入">道路测试准入</option><option value="示范应用准入">示范应用准入</option><option value="商业化试点准入">商业化试点准入</option></select></div>
             <div class="filter-item"><label>报告提交机构</label><input class="ant-input" placeholder="请输入关键词" id="qCompany" style="width:160px"></div>
             <div class="filter-item"><label>关联申请编号</label><input class="ant-input" placeholder="请输入编号" id="qApplicationId" style="width:160px"></div>
             <div class="filter-item"><label>提交时间起</label><input class="ant-input" type="date" id="qStartDate" style="width:140px"></div>
@@ -40,12 +40,12 @@
             <tbody id="reportTbody"></tbody>
           </table>
         </div>
-        <div id="paginationQuery" class="mt-4"></div>
+        <div id="paginationQuery"></div>
       </div>
 
       <div id="tab-submit" style="display:none">
         <div class="flex items-center justify-between mb-4">
-          <p class="text-sm text-[#00000073]">主管部门向工业和信息化部、公安部和交通运输部报告辖区内智能网联汽车道路测试、示范应用、示范运营情况，该报告无需审核直接提交。</p>
+          <p class="text-sm text-[#00000073]">主管部门向工业和信息化部、公安部和交通运输部报告辖区内智能网联汽车道路测试、示范应用、商业化试点情况，该报告无需审核直接提交。</p>
           <button class="ant-btn ant-btn-primary" onclick="openNewReport()">+ 新增报告</button>
         </div>
         <div class="filter-bar">
@@ -63,7 +63,7 @@
             <tbody id="submitTbody"></tbody>
           </table>
         </div>
-        <div id="paginationSubmit" class="mt-4"></div>
+        <div id="paginationSubmit"></div>
       </div>
 
       <div id="tab-archive" style="display:none">
@@ -86,7 +86,7 @@
             <tbody id="archiveTbody"></tbody>
           </table>
         </div>
-        <div id="paginationArchive" class="mt-4"></div>
+        <div id="paginationArchive"></div>
       </div>
     </main>
   </div>
@@ -101,33 +101,33 @@ var pagerQuery,pagerSubmit,pagerArchive;
 var mockReports=[
   {id:'RPT001',type:'阶段性报告',applyType:'道路测试准入',name:'2026年第二季度道路测试事故分析报告',company:'E公司',applicationId:'SQ2026041001',time:'2026-04-28 14:30'},
   {id:'RPT002',type:'阶段性报告',applyType:'示范应用准入',name:'2026年第二季度自动驾驶功能版本升级测试报告',company:'C公司',applicationId:'SQ2026041502',time:'2026-04-15 09:12'},
-  {id:'RPT003',type:'总结性报告',applyType:'示范运营准入',name:'关于我局监管的企业按季度提交定期安全评估报告的审核意见',company:'A公司',applicationId:'SQ2026042003',time:'2026-04-20 16:45'},
+  {id:'RPT003',type:'总结性报告',applyType:'商业化试点准入',name:'关于我局监管的企业按季度提交定期安全评估报告的审核意见',company:'A公司',applicationId:'SQ2026042003',time:'2026-04-20 16:45'},
   {id:'RPT004',type:'阶段性报告',applyType:'道路测试准入',name:'3月份新增测试路段的道路测试数据分析报告',company:'上海E公司技术有限公司',applicationId:'SQ2026033104',time:'2026-03-31 11:00'},
   {id:'RPT005',type:'总结性报告',applyType:'示范应用准入',name:'关于保障自动驾驶车辆运营安全的阶段性排查报告',company:'G公司',applicationId:'SQ2026042505',time:'2026-04-25 08:30'},
   {id:'RPT006',type:'阶段性报告',applyType:'道路测试准入',name:'2026年5月测试车辆运行数据统计与分析报告',company:'J公司',applicationId:'SQ2026050106',time:'2026-05-06 10:15'},
-  {id:'RPT007',type:'总结性报告',applyType:'示范运营准入',name:'2026年第二季度示范运营车辆安全运行评估报告',company:'P公司',applicationId:'SQ2026050207',time:'2026-05-08 14:00'},
+  {id:'RPT007',type:'总结性报告',applyType:'商业化试点准入',name:'2026年第二季度商业化试点车辆安全运行评估报告',company:'P公司',applicationId:'SQ2026050207',time:'2026-05-08 14:00'},
   {id:'RPT008',type:'阶段性报告',applyType:'示范应用准入',name:'P公司L4级自动驾驶系统V3.2版本升级测试报告',company:'P公司',applicationId:'SQ2026050308',time:'2026-05-10 09:30'},
   {id:'RPT009',type:'总结性报告',applyType:'道路测试准入',name:'测试车辆鄂F·T0012事故分析与整改报告',company:'C公司',applicationId:'SQ2026050409',time:'2026-05-12 16:20'},
-  {id:'RPT010',type:'阶段性报告',applyType:'示范运营准入',name:'B公司示范运营2026年4月安全运行评估报告',company:'B公司',applicationId:'SQ2026050510',time:'2026-05-14 11:00'},
+  {id:'RPT010',type:'阶段性报告',applyType:'商业化试点准入',name:'B公司商业化试点2026年4月安全运行评估报告',company:'B公司',applicationId:'SQ2026050510',time:'2026-05-14 11:00'},
   {id:'RPT011',type:'总结性报告',applyType:'道路测试准入',name:'A公司2026年4月道路测试数据汇总报告',company:'A公司',applicationId:'SQ2026042003',time:'2026-05-01 08:00'},
   {id:'RPT012',type:'阶段性报告',applyType:'示范应用准入',name:'测试车辆鄂F·T0018紧急制动事件专项分析报告',company:'P公司',applicationId:'SQ2026050207',time:'2026-05-07 13:45'},
   {id:'RPT013',type:'总结性报告',applyType:'道路测试准入',name:'汉EV自动驾驶系统升级后道路测试验证报告',company:'A公司',applicationId:'SQ2026042003',time:'2026-04-22 09:00'},
-  {id:'RPT014',type:'阶段性报告',applyType:'示范运营准入',name:'G公司全无人示范运营2026年Q1安全评估报告',company:'G公司',applicationId:'SQ2026042505',time:'2026-04-10 15:00'},
+  {id:'RPT014',type:'阶段性报告',applyType:'商业化试点准入',name:'G公司全无人商业化试点2026年Q1安全评估报告',company:'G公司',applicationId:'SQ2026042505',time:'2026-04-10 15:00'},
   {id:'RPT015',type:'总结性报告',applyType:'示范应用准入',name:'2026年4月自动驾驶路测里程及脱离数据统计报告',company:'E公司',applicationId:'SQ2026041001',time:'2026-05-05 10:30'}
 ];
 
 var mockSubmits=[
   {id:'SBR001',type:'道路测试情况报告',period:'2026年第二季度',title:'关于2026年第二季度辖区智能网联汽车道路测试情况的报告',time:'2026-05-15',submitter:'武汉市经济和信息化局',receiver:'工业和信息化部'},
   {id:'SBR002',type:'示范应用情况报告',period:'2026年第一季度',title:'关于2026年第一季度辖区智能网联汽车示范应用运行情况的报告',time:'2026-04-10',submitter:'武汉市交通运输局',receiver:'交通运输部'},
-  {id:'SBR003',type:'示范运营安全报告',period:'2026年第二季度',title:'关于2026年第二季度辖区智能网联汽车示范运营安全管理情况的报告',time:'2026-05-20',submitter:'武汉市公安局交通管理局',receiver:'公安部'},
+  {id:'SBR003',type:'商业化试点安全报告',period:'2026年第二季度',title:'关于2026年第二季度辖区智能网联汽车商业化试点安全管理情况的报告',time:'2026-05-20',submitter:'武汉市公安局交通管理局',receiver:'公安部'},
   {id:'SBR004',type:'年度综合报告',period:'2025年度',title:'2025年度武汉市智能网联汽车道路测试与示范应用工作总结报告',time:'2026-01-31',submitter:'武汉市经济和信息化局',receiver:'工业和信息化部'},
   {id:'SBR005',type:'道路测试情况报告',period:'2026年5月',title:'2026年5月辖区智能网联汽车道路测试月度情况报告',time:'2026-06-05',submitter:'武汉市智能网联汽车测试场',receiver:'工业和信息化部'},
   {id:'SBR006',type:'示范应用情况报告',period:'2026年第二季度',title:'关于2026年第二季度智能网联汽车示范应用车辆运行数据的报告',time:'2026-05-18',submitter:'武汉市交通运输局',receiver:'交通运输部'},
-  {id:'SBR007',type:'示范运营安全报告',period:'2026年第一季度',title:'2026年第一季度智能网联汽车示范运营交通事故与应急处置情况报告',time:'2026-04-15',submitter:'武汉市公安局交通管理局',receiver:'公安部'},
+  {id:'SBR007',type:'商业化试点安全报告',period:'2026年第一季度',title:'2026年第一季度智能网联汽车商业化试点交通事故与应急处置情况报告',time:'2026-04-15',submitter:'武汉市公安局交通管理局',receiver:'公安部'},
   {id:'SBR008',type:'道路测试情况报告',period:'2026年第一季度',title:'关于2026年第一季度辖区新增测试道路与测试主体情况的报告',time:'2026-04-08',submitter:'武汉市经济和信息化局',receiver:'工业和信息化部'},
   {id:'SBR009',type:'专项工作报告',period:'专项检查',title:'关于辖区自动驾驶测试车辆违规行为排查整治情况的专项报告',time:'2026-05-25',submitter:'武汉市公安局交通管理局',receiver:'公安部'},
   {id:'SBR010',type:'年度综合报告',period:'2026年上半年',title:'2026年上半年武汉市智能网联汽车测试与示范应用发展情况报告',time:'2026-05-30',submitter:'武汉市经济和信息化局',receiver:'工业和信息化部'},
-  {id:'SBR011',type:'示范运营安全报告',period:'2026年5月',title:'智能网联汽车示范运营车辆2026年5月安全运行监测报告',time:'2026-06-01',submitter:'武汉市交通运输局',receiver:'交通运输部'},
+  {id:'SBR011',type:'商业化试点安全报告',period:'2026年5月',title:'智能网联汽车商业化试点车辆2026年5月安全运行监测报告',time:'2026-06-01',submitter:'武汉市交通运输局',receiver:'交通运输部'},
   {id:'SBR012',type:'专项工作报告',period:'不定期',title:'关于智能网联汽车测试数据接入国家监管平台情况的报告',time:'2026-05-22',submitter:'武汉市智能网联汽车测试场',receiver:'工业和信息化部'}
 ];
 
@@ -136,36 +136,36 @@ var mockArchives=[
   {id:'ARC002',name:'现场实车审查记录表——ES6',type:'现场实车审查材料',appId:'SQ2026041001',company:'E公司',format:'PDF',size:'1.5MB',time:'2026-04-29'},
   {id:'ARC003',name:'自动驾驶系统安全评估专家评审报告',type:'专家评审材料',appId:'SQ2026041502',company:'C公司',format:'PDF',size:'3.2MB',time:'2026-04-20'},
   {id:'ARC004',name:'实车制动性能测试原始记录',type:'现场实车审查材料',appId:'SQ2026041502',company:'C公司',format:'Excel',size:'680KB',time:'2026-04-21'},
-  {id:'ARC005',name:'示范运营资质专家评审综合意见',type:'专家评审材料',appId:'SQ2026042003',company:'A公司',format:'PDF',size:'2.1MB',time:'2026-04-25'},
+  {id:'ARC005',name:'商业化试点资质专家评审综合意见',type:'专家评审材料',appId:'SQ2026042003',company:'A公司',format:'PDF',size:'2.1MB',time:'2026-04-25'},
   {id:'ARC006',name:'现场实车审查——传感器系统校准验证记录',type:'现场实车审查材料',appId:'SQ2026042003',company:'A公司',format:'PDF',size:'1.8MB',time:'2026-04-26'},
   {id:'ARC007',name:'道路测试准入专家评审意见书',type:'专家评审材料',appId:'SQ2026033104',company:'上海E公司技术有限公司',format:'PDF',size:'2.5MB',time:'2026-04-02'},
   {id:'ARC008',name:'现场实车审查——自动驾驶功能测试记录',type:'现场实车审查材料',appId:'SQ2026033104',company:'上海E公司技术有限公司',format:'Word',size:'3.6MB',time:'2026-04-03'},
-  {id:'ARC009',name:'全无人示范运营安全评估专家评审报告',type:'专家评审材料',appId:'SQ2026042505',company:'G公司',format:'PDF',size:'4.1MB',time:'2026-04-28'},
+  {id:'ARC009',name:'全无人商业化试点安全评估专家评审报告',type:'专家评审材料',appId:'SQ2026042505',company:'G公司',format:'PDF',size:'4.1MB',time:'2026-04-28'},
   {id:'ARC010',name:'实车审查——远程干预与应急接管测试记录',type:'现场实车审查材料',appId:'SQ2026042505',company:'G公司',format:'CSV',size:'2.3MB',time:'2026-04-29'},
   {id:'ARC011',name:'RoboTaxi运营资质专家评审综合意见',type:'专家评审材料',appId:'SQ2026050106',company:'J公司',format:'PDF',size:'3.5MB',time:'2026-05-10'},
   {id:'ARC012',name:'现场实车审查——环境感知能力测试记录',type:'现场实车审查材料',appId:'SQ2026050106',company:'J公司',format:'PDF',size:'2.7MB',time:'2026-05-11'},
-  {id:'ARC013',name:'示范运营资质续期专家评审意见',type:'专家评审材料',appId:'SQ2026050207',company:'P公司',format:'PDF',size:'2.2MB',time:'2026-05-12'},
+  {id:'ARC013',name:'商业化试点资质延期专家评审意见',type:'专家评审材料',appId:'SQ2026050207',company:'P公司',format:'PDF',size:'2.2MB',time:'2026-05-12'},
   {id:'ARC014',name:'实车审查——V2X通信功能现场测试记录',type:'现场实车审查材料',appId:'SQ2026050207',company:'P公司',format:'PDF',size:'1.9MB',time:'2026-05-13'},
   {id:'ARC015',name:'L4级自动驾驶功能升级专家评审意见',type:'专家评审材料',appId:'SQ2026050308',company:'P公司',format:'PDF',size:'2.6MB',time:'2026-05-14'},
   {id:'ARC016',name:'现场实车审查——紧急制动与规避测试记录',type:'现场实车审查材料',appId:'SQ2026050409',company:'C公司',format:'PDF',size:'3.1MB',time:'2026-05-15'},
   {id:'ARC017',name:'专家评审会议纪要及签字确认表',type:'专家评审材料',appId:'SQ2026050510',company:'B公司',format:'Word',size:'1.2MB',time:'2026-05-18'},
   {id:'ARC018',name:'实车审查——车辆定位与导航系统精度测试',type:'现场实车审查材料',appId:'SQ2026050510',company:'B公司',format:'Excel',size:'4.5MB',time:'2026-05-19'},
-  {id:'ARC019',name:'示范运营安全管理制度专家审核意见',type:'专家评审材料',appId:'SQ2026042003',company:'A公司',format:'PDF',size:'1.6MB',time:'2026-04-27'},
+  {id:'ARC019',name:'商业化试点安全管理制度专家审核意见',type:'专家评审材料',appId:'SQ2026042003',company:'A公司',format:'PDF',size:'1.6MB',time:'2026-04-27'},
   {id:'ARC020',name:'现场实车审查——全过程录像资料（摘要）',type:'现场实车审查材料',appId:'SQ20260430001',company:'E公司',format:'MP4',size:'156MB',time:'2026-05-02'}
 ];
 
 var mockApplications=[
   {id:'SQ2026041001',type:'道路测试准入',company:'E公司',vehicle:'测试车辆001',applyTime:'2026-04-10 10:00',status:'已通过',applicant:'张伟'},
   {id:'SQ2026041502',type:'自动驾驶功能测试',company:'C公司',vehicle:'测试车辆003',applyTime:'2026-04-15 08:30',status:'审批中',applicant:'李明'},
-  {id:'SQ2026042003',type:'示范运营准入',company:'A公司',vehicle:'测试车辆006',applyTime:'2026-04-20 14:15',status:'已通过',applicant:'刘波'},
+  {id:'SQ2026042003',type:'商业化试点准入',company:'A公司',vehicle:'测试车辆006',applyTime:'2026-04-20 14:15',status:'已通过',applicant:'刘波'},
   {id:'SQ2026033104',type:'道路测试准入',company:'上海E公司技术有限公司',vehicle:'测试车辆007',applyTime:'2026-03-31 09:00',status:'已通过',applicant:'韩梅'},
   {id:'SQ2026042505',type:'自动驾驶功能测试',company:'G公司',vehicle:'测试车辆008',applyTime:'2026-04-25 11:20',status:'已通过',applicant:'王鹏'},
   {id:'SQ20260430001',type:'道路测试准入',company:'E公司',vehicle:'测试车辆002',applyTime:'2026-04-30 09:45',status:'已通过',applicant:'张伟'},
   {id:'SQ2026050106',type:'道路测试准入',company:'J公司',vehicle:'测试车辆009',applyTime:'2026-05-01 10:00',status:'已通过',applicant:'陈晨'},
-  {id:'SQ2026050207',type:'示范运营准入',company:'P公司',vehicle:'测试车辆010',applyTime:'2026-05-02 09:30',status:'审批中',applicant:'赵岩'},
+  {id:'SQ2026050207',type:'商业化试点准入',company:'P公司',vehicle:'测试车辆010',applyTime:'2026-05-02 09:30',status:'审批中',applicant:'赵岩'},
   {id:'SQ2026050308',type:'自动驾驶功能测试',company:'P公司',vehicle:'测试车辆011',applyTime:'2026-05-03 14:00',status:'已通过',applicant:'赵岩'},
   {id:'SQ2026050409',type:'道路测试准入',company:'C公司',vehicle:'测试车辆003',applyTime:'2026-05-04 11:15',status:'已通过',applicant:'李明'},
-  {id:'SQ2026050510',type:'示范运营准入',company:'B公司',vehicle:'测试车辆012',applyTime:'2026-05-05 16:30',status:'待初审',applicant:'孙丽'}
+  {id:'SQ2026050510',type:'商业化试点准入',company:'B公司',vehicle:'测试车辆012',applyTime:'2026-05-05 16:30',status:'待初审',applicant:'孙丽'}
 ];
 
 function switchTab(el,tabId){
@@ -198,7 +198,7 @@ function initPagerQuery(){
     pagerQuery=new Pagination({
       container:'paginationQuery',
       pageSize:10,
-      pageSizeOptions:[10,20,50],
+      pageSizeOptions:[10,20,50,100],
       onPageChange:function(page,size){renderReports(page,size);}
     });
   }
@@ -233,7 +233,7 @@ function initPagerSubmit(){
     pagerSubmit=new Pagination({
       container:'paginationSubmit',
       pageSize:10,
-      pageSizeOptions:[10,20,50],
+      pageSizeOptions:[10,20,50,100],
       onPageChange:function(page,size){renderSubmits(page,size);}
     });
   }
@@ -264,7 +264,7 @@ function initPagerArchive(){
     pagerArchive=new Pagination({
       container:'paginationArchive',
       pageSize:10,
-      pageSizeOptions:[10,20,50],
+      pageSizeOptions:[10,20,50,100],
       onPageChange:function(page,size){renderArchives(page,size);}
     });
   }
@@ -381,7 +381,7 @@ function openNewReport(){
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>报送对象</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择报送对象<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>'+
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>报告期次</div><div class="ant-form-control"><input class="ant-input" placeholder="如：2026年第二季度"></div></div>'+
     '<div class="ant-form-item"><div class="ant-form-label">备注说明</div><div class="ant-form-control"><textarea class="ant-input" style="height:60px" placeholder="补充说明信息（选填）"></textarea></div></div>'+
-    '<p class="text-sm text-[#00000073]">根据《智能网联汽车道路测试与示范应用管理规范》，主管部门应定期向工业和信息化部、公安部和交通运输部报告辖区内的智能网联汽车道路测试、示范应用、示范运营情况。该报告无需审核，提交后直接报送。</p>';
+    '<p class="text-sm text-[#00000073]">根据《智能网联汽车道路测试与示范应用管理规范》，主管部门应定期向工业和信息化部、公安部和交通运输部报告辖区内的智能网联汽车道路测试、示范应用、商业化试点情况。该报告无需审核，提交后直接报送。</p>';
   openModal('新增报告',body,{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">提交报告</button>'});
 }
 

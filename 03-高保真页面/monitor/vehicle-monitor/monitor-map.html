@@ -62,7 +62,7 @@
           <div id="mapContainer" class="w-full h-full"></div>
           <div class="absolute top-3 left-3 z-20 flex gap-2">
             <button class="ant-btn bg-white shadow-md text-sm" onclick="toggleLayerPanel()" style="height:32px;padding:0 12px">☰ 图层控制</button>
-            <button class="ant-btn bg-white shadow-md text-sm" onclick="toggleBaseMap()" style="height:32px;padding:0 12px" id="btnBaseMap">🗺 切换卫星</button>
+            <button class="ant-btn bg-white shadow-md text-sm" onclick="toggleBaseMap()" style="height:32px;padding:0 12px" id="btnBaseMap">切换卫星</button>
           </div>
           <div id="layerPanel" class="absolute top-12 left-3 bg-white rounded-lg shadow-lg z-30" style="width:260px;display:none;max-height:calc(100% - 60px);overflow-y:auto">
             <div class="flex items-center justify-between p-4 pb-2">
@@ -497,10 +497,10 @@ function toggleBaseMap(){
   isSatellite=!isSatellite;
   if(isSatellite){
     map.add(satelliteLayer);
-    document.getElementById('btnBaseMap').textContent='🗺 切换地图';
+    document.getElementById('btnBaseMap').textContent='切换地图';
   }else{
     map.remove(satelliteLayer);
-    document.getElementById('btnBaseMap').textContent='🛰 切换卫星';
+    document.getElementById('btnBaseMap').textContent='切换卫星';
   }
 }
 

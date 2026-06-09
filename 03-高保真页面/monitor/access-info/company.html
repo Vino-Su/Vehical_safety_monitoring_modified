@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>企业信息登记 - 智能网联汽车安全监测平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../../components/pagination-component.js"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <style>
     .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
@@ -143,9 +144,7 @@
           </table>
         </div>
         <div class="flex items-center justify-between px-4 py-3">
-          <span class="text-sm text-[#00000073]" id="totalCount">共 0 条</span>
-          <div class="ant-pagination" id="pagination">
-          </div>
+          <div id="paginationBar"></div>
         </div>
       </div>
     </main>
@@ -299,7 +298,7 @@ let companyData = [
     creditCode: '91420600MA4F2X5K8T',
     subjectType: '系统运营商',
     registeredCapital: '5000',
-    businessScope: '智能网联汽车测试示范运营服务、自动驾驶技术研发与应用推广',
+    businessScope: '智能网联汽车测试商业化试点服务、自动驾驶技术研发与应用推广',
     capabilityDesc: '拥有完善的自动驾驶测试场地，具备L3-L4级自动驾驶车辆测试能力',
     contactAddress: '湖北省襄阳市高新区汽车工业园',
     contactPhone: '0710-3366888',
@@ -359,18 +358,19 @@ let companyData = [
   }
 ];
 
-let currentPage = 1;
-let pageSize = 10;
+var pager;
 let editingId = null;
 let selectedType = '';
 let uploadedLicenseFile = null;
 
 function renderTable() {
   const tbody = document.getElementById('tableBody');
-  const start = (currentPage - 1) * pageSize;
-  const end = start + pageSize;
+  var cp = pager?pager.getCurrentPage():1;
+  var ps = pager?pager.getPageSize():10;
+  const start = (cp - 1) * ps;
+  const end = start + ps;
   const pageData = companyData.slice(start, end);
-  
+
   tbody.innerHTML = pageData.map((item, index) => `
     <tr>
       <td><input type="checkbox" class="ant-checkbox row-checkbox" data-id="${item.id}"></td>
@@ -387,35 +387,8 @@ function renderTable() {
       </td>
     </tr>
   `).join('');
-  
-  document.getElementById('totalCount').textContent = `共 ${companyData.length} 条`;
-  renderPagination();
-}
 
-function renderPagination() {
-  const totalPages = Math.ceil(companyData.length / pageSize);
-  let html = '';
-  
-  html += `<span class="page-item ${currentPage === 1 ? 'disabled' : ''}" onclick="goPage(${currentPage - 1})">
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-  </span>`;
-  
-  for (let i = 1; i <= totalPages; i++) {
-    html += `<span class="page-item ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</span>`;
-  }
-  
-  html += `<span class="page-item ${currentPage === totalPages ? 'disabled' : ''}" onclick="goPage(${currentPage + 1})">
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
-  </span>`;
-  
-  document.getElementById('pagination').innerHTML = html;
-}
-
-function goPage(page) {
-  const totalPages = Math.ceil(companyData.length / pageSize);
-  if (page < 1 || page > totalPages) return;
-  currentPage = page;
-  renderTable();
+  if(pager) pager.setTotal(companyData.length);
 }
 
 function toggleSelectAll() {
@@ -733,6 +706,7 @@ document.addEventListener('click', function(e) {
 });
 
 // 初始化
+pager = new Pagination({container:'paginationBar',pageSize:10,pageSizeOptions:[10,20,50,100],onPageChange:function(){renderTable();},onPageSizeChange:function(){renderTable();}});
 renderTable();
 </script>
 <script src="../../common.js"></script>

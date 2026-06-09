@@ -76,7 +76,7 @@ function defaultWeightConfig(){
 var rulesData=[
   {id:'RUL-001',name:'2026年Q2测试车辆评估规则',vehicleType:'测试车辆',periodType:'季度',effectiveStart:'2026-04-01',effectiveEnd:'2026-06-30',version:'V2.1',status:'生效中',weightConfig:defaultWeightConfig(),wn:0.7,wf:0.3,versions:[{version:'V2.0',time:'2026-01-01',wn:0.7,wf:0.3,weightConfig:defaultWeightConfig()},{version:'V1.0',time:'2025-10-01',wn:0.6,wf:0.4,weightConfig:defaultWeightConfig()}]},
   {id:'RUL-002',name:'2026年Q1测试车辆评估规则',vehicleType:'测试车辆',periodType:'季度',effectiveStart:'2026-01-01',effectiveEnd:'2026-03-31',version:'V2.0',status:'已过期',weightConfig:defaultWeightConfig(),wn:0.7,wf:0.3,versions:[{version:'V1.0',time:'2025-10-01',wn:0.6,wf:0.4,weightConfig:defaultWeightConfig()}]},
-  {id:'RUL-003',name:'2026年度示范运营车辆评估规则',vehicleType:'示范运营车辆',periodType:'年度',effectiveStart:'2026-01-01',effectiveEnd:'2026-12-31',version:'V1.0',status:'生效中',weightConfig:defaultWeightConfig(),wn:0.7,wf:0.3,versions:[]}
+  {id:'RUL-003',name:'2026年度商业化试点车辆评估规则',vehicleType:'商业化试点车辆',periodType:'年度',effectiveStart:'2026-01-01',effectiveEnd:'2026-12-31',version:'V1.0',status:'生效中',weightConfig:defaultWeightConfig(),wn:0.7,wf:0.3,versions:[]}
 ];
 
 var levelCriteria=[
@@ -186,7 +186,7 @@ function renderRules(){
 function openNewRuleModal(){
   var enabledIndicators=indicators.filter(function(i){return i.enabled});
   var html='<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>规则名称</div><div class="ant-form-control"><input class="ant-input" placeholder="如：2026年Q3评估规则" style="width:260px"></div></div>';
-  html+='<div class="grid grid-cols-2 gap-4"><div class="ant-form-item"><div class="ant-form-label">适用对象</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer"><option>测试车辆</option><option>示范应用车辆</option><option>示范运营车辆</option></select></div></div>';
+  html+='<div class="grid grid-cols-2 gap-4"><div class="ant-form-item"><div class="ant-form-label">适用对象</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer"><option>测试车辆</option><option>示范应用车辆</option><option>商业化试点车辆</option></select></div></div>';
   html+='<div class="ant-form-item"><div class="ant-form-label">周期类型</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer"><option>月度</option><option selected>季度</option><option>年度</option></select></div></div></div>';
   html+='<div class="grid grid-cols-2 gap-4"><div class="ant-form-item"><div class="ant-form-label">生效开始</div><div class="ant-form-control"><input class="ant-input" type="date" value="2026-07-01"></div></div>';
   html+='<div class="ant-form-item"><div class="ant-form-label">生效结束</div><div class="ant-form-control"><input class="ant-input" type="date" value="2026-09-30"></div></div></div>';
@@ -203,7 +203,7 @@ function openEditRuleModal(ruleId){
   var rule=rulesData.find(function(r){return r.id===ruleId});if(!rule)return;
   var enabledIndicators=indicators.filter(function(i){return i.enabled});
   var html='<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>规则名称</div><div class="ant-form-control"><input class="ant-input" value="'+rule.name+'" style="width:260px"></div></div>';
-  html+='<div class="grid grid-cols-2 gap-4"><div class="ant-form-item"><div class="ant-form-label">适用对象</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer">'+['测试车辆','示范应用车辆','示范运营车辆'].map(function(t){return '<option '+(rule.vehicleType===t?'selected':'')+'>'+t+'</option>';}).join('')+'</select></div></div>';
+  html+='<div class="grid grid-cols-2 gap-4"><div class="ant-form-item"><div class="ant-form-label">适用对象</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer">'+['测试车辆','示范应用车辆','商业化试点车辆'].map(function(t){return '<option '+(rule.vehicleType===t?'selected':'')+'>'+t+'</option>';}).join('')+'</select></div></div>';
   html+='<div class="ant-form-item"><div class="ant-form-label">周期类型</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer">'+['月度','季度','年度'].map(function(t){return '<option '+(rule.periodType===t?'selected':'')+'>'+t+'</option>';}).join('')+'</select></div></div></div>';
   html+='<div class="grid grid-cols-2 gap-4"><div class="ant-form-item"><div class="ant-form-label">生效开始</div><div class="ant-form-control"><input class="ant-input" type="date" value="'+rule.effectiveStart+'"></div></div>';
   html+='<div class="ant-form-item"><div class="ant-form-label">生效结束</div><div class="ant-form-control"><input class="ant-input" type="date" value="'+rule.effectiveEnd+'"></div></div></div>';

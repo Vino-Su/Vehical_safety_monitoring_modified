@@ -128,11 +128,11 @@
           <div class="list-panel">
             <div class="mb-3"><input class="ant-input" type="text" id="roadSearchInput" placeholder="搜索道路名称..." oninput="filterRoadList()"></div>
             <ul id="roadList">
-              <li class="active" data-road="长虹路" onclick="selectRoad(this)">长虹路<div class="list-item-desc">主干路 · 4.8km · 6车道</div></li>
-              <li data-road="檀溪路" onclick="selectRoad(this)">檀溪路<div class="list-item-desc">主干路 · 3.2km · 4车道</div></li>
-              <li data-road="航空路" onclick="selectRoad(this)">航空路<div class="list-item-desc">主干路 · 5.1km · 6车道</div></li>
-              <li data-road="人民路" onclick="selectRoad(this)">人民路<div class="list-item-desc">次干路 · 2.8km · 4车道</div></li>
-              <li data-road="建设路" onclick="selectRoad(this)">建设路<div class="list-item-desc">次干路 · 1.9km · 2车道</div></li>
+              <li class="active" data-road="长虹路" onclick="selectRoad(this)">长虹路<div class="list-item-desc">主干道 · 4.8km · 6车道</div></li>
+              <li data-road="檀溪路" onclick="selectRoad(this)">檀溪路<div class="list-item-desc">主干道 · 3.2km · 4车道</div></li>
+              <li data-road="航空路" onclick="selectRoad(this)">航空路<div class="list-item-desc">主干道 · 5.1km · 6车道</div></li>
+              <li data-road="人民路" onclick="selectRoad(this)">人民路<div class="list-item-desc">次干道 · 2.8km · 4车道</div></li>
+              <li data-road="建设路" onclick="selectRoad(this)">建设路<div class="list-item-desc">次干道 · 1.9km · 2车道</div></li>
               <li data-road="金源路" onclick="selectRoad(this)">金源路<div class="list-item-desc">支路 · 1.2km · 2车道</div></li>
             </ul>
           </div>
@@ -146,7 +146,7 @@
             </div>
             <div class="info-card-row" id="roadInfoCards">
               <div class="info-card-mini"><div class="ic-val">长虹路</div><div class="ic-label">道路名称</div></div>
-              <div class="info-card-mini"><div class="ic-val">主干路</div><div class="ic-label">等级</div></div>
+              <div class="info-card-mini"><div class="ic-val">主干道</div><div class="ic-label">等级</div></div>
               <div class="info-card-mini"><div class="ic-val">双向6车道</div><div class="ic-label">车道数</div></div>
               <div class="info-card-mini"><div class="ic-val">4.8 km</div><div class="ic-label">路段长度</div></div>
               <div class="info-card-mini"><div class="ic-val">92%</div><div class="ic-label">RSU覆盖率</div></div>
@@ -278,11 +278,11 @@
 
   // ==================== Data Store ====================
   var roadDataMap = {
-    '长虹路': { name: '长虹路', grade: '主干路', lanes: '双向6车道', length: '4.8 km', rsu: '92%', density: '3.2个/km' },
-    '檀溪路': { name: '檀溪路', grade: '主干路', lanes: '双向4车道', length: '3.2 km', rsu: '88%', density: '2.8个/km' },
-    '航空路': { name: '航空路', grade: '主干路', lanes: '双向6车道', length: '5.1 km', rsu: '90%', density: '3.5个/km' },
-    '人民路': { name: '人民路', grade: '次干路', lanes: '双向4车道', length: '2.8 km', rsu: '85%', density: '2.2个/km' },
-    '建设路': { name: '建设路', grade: '次干路', lanes: '双向2车道', length: '1.9 km', rsu: '80%', density: '1.8个/km' },
+    '长虹路': { name: '长虹路', grade: '主干道', lanes: '双向6车道', length: '4.8 km', rsu: '92%', density: '3.2个/km' },
+    '檀溪路': { name: '檀溪路', grade: '主干道', lanes: '双向4车道', length: '3.2 km', rsu: '88%', density: '2.8个/km' },
+    '航空路': { name: '航空路', grade: '主干道', lanes: '双向6车道', length: '5.1 km', rsu: '90%', density: '3.5个/km' },
+    '人民路': { name: '人民路', grade: '次干道', lanes: '双向4车道', length: '2.8 km', rsu: '85%', density: '2.2个/km' },
+    '建设路': { name: '建设路', grade: '次干道', lanes: '双向2车道', length: '1.9 km', rsu: '80%', density: '1.8个/km' },
     '金源路': { name: '金源路', grade: '支路', lanes: '双向2车道', length: '1.2 km', rsu: '75%', density: '1.5个/km' }
   };
 

@@ -113,7 +113,7 @@
         <div class="filter-row">
           <div class="filter-item"><label>时间范围</label><div style="display:flex;gap:4px;align-items:center;"><input class="ant-input" type="date" value="2026-04-01" style="width:140px"><span class="mx-1 text-[#00000040]">~</span><input class="ant-input" type="date" value="2026-05-08" style="width:140px"></div></div>
           <div class="filter-item"><label>行政区域</label><div class="ant-select">全部区域</div></div>
-          <div class="filter-item"><label>道路等级</label><select id="filterLevel" style="height:32px;padding:0 28px 0 11px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;color:#000000d9;background:#fff;outline:none;min-width:130px;cursor:pointer;"><option value="">全部等级</option><option>主干道</option><option>次干道</option><option>支路</option><option>快速路</option></select></div>
+          <div class="filter-item"><label>道路等级</label><select id="filterLevel" style="height:32px;padding:0 28px 0 11px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;color:#000000d9;background:#fff;outline:none;min-width:130px;cursor:pointer;"><option value="">全部等级</option><option>主干道</option><option>次干道</option><option>支路</option><option>快速路</option><option>园区道路</option></select></div>
           <div class="filter-item"><label>开放等级</label><select id="filterStatus" style="height:32px;padding:0 28px 0 11px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;color:#000000d9;background:#fff;outline:none;min-width:130px;cursor:pointer;"><option value="">全部等级</option><option>开放</option><option>暂停</option><option>关闭</option></select></div>
           <div class="filter-item"><label>搜索关键词</label><input class="ant-input" placeholder="请输入搜索关键词" id="searchKeyword"></div>
           <div style="display:flex;gap:8px;align-items:end;">
@@ -475,8 +475,9 @@ const PAGE_ID = 'stats';
     }
     modalPager = new Pagination({
       container: 'modalPaginationBar',
+      size: 'small',
       pageSize: 10,
-      pageSizeOptions: [5, 10, 20],
+      pageSizeOptions: [5, 10, 20, 50, 100],
       onPageChange: function() {
         renderModalRoadTable();
       }

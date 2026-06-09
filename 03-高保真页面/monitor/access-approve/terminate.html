@@ -6,6 +6,7 @@
   <title>资格终止管理 - 智能网联汽车安全监测平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <script src="../../components/pagination-component.js"></script>
 </head>
 <body>
 <div id="app" class="flex h-screen overflow-hidden">
@@ -30,39 +31,35 @@
             <tbody id="terminateTbody"></tbody>
           </table>
         </div>
-        <div class="flex items-center justify-between px-4 py-3">
-          <span class="text-sm text-[#00000073]" id="totalCount">共 0 条</span>
-          <div class="ant-pagination" id="paginationBar"></div>
-        </div>
+        <div class="flex items-center justify-between px-4 py-3"><div id="paginationBar"></div></div>
       </div>
     </main>
   </div>
 </div>
 <script>
 const PAGE_ID='terminate';
-var pageSize=10;
-var currentPage=1;
+var pager;
 
 var termTypes=[
   {id:'vehicle_mismatch',name:'车辆与声明不符',trigger:'手动触发',desc:'车辆与安全性自我声明及其相关材料不符',color:'#ff4d4f'},
   {id:'plate_expired',name:'号牌到期/撤销',trigger:'自动/手动触发',desc:'临时行驶车号牌到期或者被撤销',color:'#fa8c16'},
-  {id:'safety_risk',name:'重大安全风险',trigger:'手动触发',desc:'市联席工作小组认为示范应用活动具有重大安全风险',color:'#ff4d4f'},
+  {id:'safety_risk',name:'重大安全风险',trigger:'手动触发',desc:'市工作专班认为示范应用活动具有重大安全风险',color:'#ff4d4f'},
   {id:'serious_violation',name:'严重违法',trigger:'自动/手动触发',desc:'违反交通信号灯通行、逆行等严重交通违法行为',color:'#ff4d4f'},
   {id:'accident',name:'交通事故',trigger:'自动/手动触发',desc:'发生交通事故造成人员重伤、死亡或车辆毁损等严重情形',color:'#ff4d4f'},
   {id:'road_closed',name:'道路关闭',trigger:'自动触发',desc:'车辆所在测试路线关联的开放道路被暂停或关闭',color:'#fa8c16'}
 ];
 
 var termData=[
-  {id:'TM202604001',appId:'RT202604002',appType:'道路测试续期',company:'B公司',termType:'vehicle_mismatch',trigger:'手动触发',time:'2026-04-18',status:'已办结',reason:'经现场实车审查发现，测试车辆鄂F·T0003的实际传感器配置与安全性自我声明中描述不符，缺少2颗侧向激光雷达，制动系统型号与申报材料不一致。',operator:'联席工作小组',manager:'赵工',managerPhone:'13987654321',testPeriod:'2026-05-01 至 2026-10-05',roads:[{name:'东风汽车专用测试道路',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·T0003'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
+  {id:'TM202604001',appId:'RT202604002',appType:'道路测试延期',company:'B公司',termType:'vehicle_mismatch',trigger:'手动触发',time:'2026-04-18',status:'已办结',reason:'经现场实车审查发现，测试车辆鄂F·T0003的实际传感器配置与安全性自我声明中描述不符，缺少2颗侧向激光雷达，制动系统型号与申报材料不一致。',operator:'市工作专班',manager:'赵工',managerPhone:'13987654321',testPeriod:'2026-05-01 至 2026-10-05',roads:[{name:'东风汽车专用测试道路',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·T0003'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
   {id:'TM202604002',appId:'RT202604005',appType:'道路测试变更',company:'D公司',termType:'plate_expired',trigger:'自动触发',time:'2026-04-20',status:'已办结',reason:'D公司测试车辆鄂F·T0025临时行驶车号牌已于2026-04-15到期，系统自动检测到期未续，触发资格终止。',operator:'系统自动',manager:'陈工',managerPhone:'13611112222',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'D公司专属测试路线',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012348',brand:'U品牌',model:'阿尔法T',level:'L3',plate:'鄂F·T0025'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证','变更说明']},
-  {id:'TM202604003',appId:'DA202604002',appType:'示范应用续期',company:'B公司',termType:'safety_risk',trigger:'手动触发',time:'2026-04-22',status:'已办结',reason:'市联席工作小组经评估认为，B公司示范应用车辆在近一个月内连续发生3次自动驾驶系统异常退出事件，存在重大安全风险，决定终止其示范应用资格。',operator:'联席工作小组',manager:'李明',managerPhone:'13987654321',testPeriod:'2026-05-01 至 2026-10-05',roads:[{name:'东风汽车专用测试道路',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·T0008'}],materials:['安全性自我声明','自动驾驶功能说明','示范应用方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
+  {id:'TM202604003',appId:'DA202604002',appType:'示范应用延期',company:'B公司',termType:'safety_risk',trigger:'手动触发',time:'2026-04-22',status:'已办结',reason:'市工作专班经评估认为，B公司示范应用车辆在近一个月内连续发生3次自动驾驶系统异常退出事件，存在重大安全风险，决定终止其示范应用资格。',operator:'市工作专班',manager:'李明',managerPhone:'13987654321',testPeriod:'2026-05-01 至 2026-10-05',roads:[{name:'东风汽车专用测试道路',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·T0008'}],materials:['安全性自我声明','自动驾驶功能说明','示范应用方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
   {id:'TM202604004',appId:'RT202604006',appType:'道路测试准入',company:'上海E公司',termType:'serious_violation',trigger:'自动触发',time:'2026-04-25',status:'受理中',reason:'2026年4月24日14:30，上海E公司测试车辆鄂F·T0031在襄阳市高新区环线路段闯红灯通行，被交通监控自动抓拍。依据道路交通安全法律法规，该行为属于严重交通违法，系统自动触发资格终止。',operator:'系统自动',manager:'张伟',managerPhone:'13812345678',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'上海E品牌专属测试路线',type:'专用测试道路',status:'开放'},{name:'城区开放道路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·T0031'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
-  {id:'TM202604005',appId:'DO202604002',appType:'示范运营准入',company:'B公司',termType:'accident',trigger:'自动触发',time:'2026-04-28',status:'受理中',reason:'2026年4月27日09:15，B公司示范运营车辆鄂F·T0015在运营过程中与行人发生碰撞事故，造成1人重伤。依据《智能网联汽车道路测试与示范应用管理规范》，系统自动触发资格终止。',operator:'系统自动',manager:'赵强',managerPhone:'13987654321',testPeriod:'2026-05-01 至 2026-10-05',roads:[{name:'东风汽车专用测试道路',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·T0015'}],materials:['安全性自我声明','自动驾驶功能说明','示范运营方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
+  {id:'TM202604005',appId:'DO202604002',appType:'商业化试点准入',company:'B公司',termType:'accident',trigger:'自动触发',time:'2026-04-28',status:'受理中',reason:'2026年4月27日09:15，B公司商业化试点车辆鄂F·T0015在运营过程中与行人发生碰撞事故，造成1人重伤。依据《智能网联汽车道路测试与示范应用管理规范》，系统自动触发资格终止。',operator:'系统自动',manager:'赵强',managerPhone:'13987654321',testPeriod:'2026-05-01 至 2026-10-05',roads:[{name:'东风汽车专用测试道路',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·T0015'}],materials:['安全性自我声明','自动驾驶功能说明','商业化试点方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
   {id:'TM202604006',appId:'RT202604001',appType:'道路测试准入',company:'A公司',termType:'road_closed',trigger:'自动触发',time:'2026-04-30',status:'已办结',reason:'因襄阳市高新区环线路段进行道路改造施工，该路段自2026年5月1日起暂停开放。A公司测试车辆RT202604001的测试路线包含该路段，系统自动触发资格终止。',operator:'系统自动',manager:'王工',managerPhone:'13812345678',testPeriod:'2026-04-15 至 2026-10-15',roads:[{name:'襄阳市区道路',type:'城市道路',status:'开放'},{name:'高新区环线路',type:'城市道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012345',brand:'T品牌',model:'秦PLUS DM-i',level:'L3',plate:'鄂F·T0001'},{vin:'LSVAU2180N2012346',brand:'T品牌',model:'汉EV',level:'L3',plate:'鄂F·T0002'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
-  {id:'TM202605001',appId:'DA202604003',appType:'示范应用新增',company:'A公司',termType:'vehicle_mismatch',trigger:'手动触发',time:'2026-05-05',status:'受理中',reason:'经第三方检测机构现场核查，A公司新增示范应用车辆的自动驾驶系统软件版本与申报材料中声明的版本不一致，实际运行版本为V2.1而非声明的V3.0。',operator:'联席工作小组',manager:'张伟',managerPhone:'13812345678',testPeriod:'2026-04-15 至 2026-10-15',roads:[{name:'襄阳市区道路',type:'城市道路',status:'开放'},{name:'高新区环线路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012345',brand:'T品牌',model:'秦PLUS DM-i',level:'L3',plate:'鄂F·T0001'},{vin:'LSVAU2180N2012346',brand:'T品牌',model:'汉EV',level:'L3',plate:'鄂F·T0002'}],materials:['安全性自我声明','自动驾驶功能说明','示范应用方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
-  {id:'TM202605002',appId:'DO202604003',appType:'示范运营变更',company:'J公司',termType:'plate_expired',trigger:'手动触发',time:'2026-05-08',status:'已办结',reason:'J公司示范运营车辆鄂F·T0018临时行驶车号牌被交管部门撤销（因连续3次未按时提交运营数据报告），联席工作小组手动发起资格终止。',operator:'联席工作小组',manager:'陈明',managerPhone:'13611112222',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'J公司专属运营路线',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012351',brand:'雷克萨斯',model:'RX450hL',level:'L4',plate:'鄂F·T0018'}],materials:['安全性自我声明','自动驾驶功能说明','示范运营方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证','变更说明']},
-  {id:'TM202605003',appId:'DA202604004',appType:'示范应用变更',company:'C公司',termType:'serious_violation',trigger:'手动触发',time:'2026-05-10',status:'受理中',reason:'C公司示范应用车辆鄂F·T0026于2026年5月9日在运营区域逆行行驶，被路面巡逻交警现场查获。联席工作小组决定手动发起资格终止。',operator:'联席工作小组',manager:'王小明',managerPhone:'13611112222',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'C公司专属测试路线',type:'专用测试道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012348',brand:'U品牌',model:'阿尔法T',level:'L3',plate:'鄂F·T0026'}],materials:['安全性自我声明','自动驾驶功能说明','示范应用方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证','变更说明']},
-  {id:'TM202605004',appId:'RT202604007',appType:'道路测试准入',company:'G公司',termType:'accident',trigger:'手动触发',time:'2026-05-12',status:'已办结',reason:'G公司测试车辆鄂F·T0020于2026年5月11日在城区开放道路测试时发生追尾事故，造成前车车辆毁损。联席工作小组经评估决定终止其道路测试资格。',operator:'联席工作小组',manager:'王鹏',managerPhone:'13866667777',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'G公司专属测试路线',type:'专用测试道路',status:'已关闭'},{name:'城区开放道路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012353',brand:'大通',model:'MIFA 9',level:'L4',plate:'鄂F·T0020'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']}
+  {id:'TM202605001',appId:'DA202604003',appType:'示范应用新增',company:'A公司',termType:'vehicle_mismatch',trigger:'手动触发',time:'2026-05-05',status:'受理中',reason:'经第三方检测机构现场核查，A公司新增示范应用车辆的自动驾驶系统软件版本与申报材料中声明的版本不一致，实际运行版本为V2.1而非声明的V3.0。',operator:'市工作专班',manager:'张伟',managerPhone:'13812345678',testPeriod:'2026-04-15 至 2026-10-15',roads:[{name:'襄阳市区道路',type:'城市道路',status:'开放'},{name:'高新区环线路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012345',brand:'T品牌',model:'秦PLUS DM-i',level:'L3',plate:'鄂F·T0001'},{vin:'LSVAU2180N2012346',brand:'T品牌',model:'汉EV',level:'L3',plate:'鄂F·T0002'}],materials:['安全性自我声明','自动驾驶功能说明','示范应用方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']},
+  {id:'TM202605002',appId:'DO202604003',appType:'商业化试点变更',company:'J公司',termType:'plate_expired',trigger:'手动触发',time:'2026-05-08',status:'已办结',reason:'J公司商业化试点车辆鄂F·T0018临时行驶车号牌被交管部门撤销（因连续3次未按时提交运营数据报告），市工作专班手动发起资格终止。',operator:'市工作专班',manager:'陈明',managerPhone:'13611112222',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'J公司专属运营路线',type:'专用测试道路',status:'已关闭'}],vehicles:[{vin:'LSVAU2180N2012351',brand:'雷克萨斯',model:'RX450hL',level:'L4',plate:'鄂F·T0018'}],materials:['安全性自我声明','自动驾驶功能说明','商业化试点方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证','变更说明']},
+  {id:'TM202605003',appId:'DA202604004',appType:'示范应用变更',company:'C公司',termType:'serious_violation',trigger:'手动触发',time:'2026-05-10',status:'受理中',reason:'C公司示范应用车辆鄂F·T0026于2026年5月9日在运营区域逆行行驶，被路面巡逻交警现场查获。市工作专班决定手动发起资格终止。',operator:'市工作专班',manager:'王小明',managerPhone:'13611112222',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'C公司专属测试路线',type:'专用测试道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012348',brand:'U品牌',model:'阿尔法T',level:'L3',plate:'鄂F·T0026'}],materials:['安全性自我声明','自动驾驶功能说明','示范应用方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证','变更说明']},
+  {id:'TM202605004',appId:'RT202604007',appType:'道路测试准入',company:'G公司',termType:'accident',trigger:'手动触发',time:'2026-05-12',status:'已办结',reason:'G公司测试车辆鄂F·T0020于2026年5月11日在城区开放道路测试时发生追尾事故，造成前车车辆毁损。市工作专班经评估决定终止其道路测试资格。',operator:'市工作专班',manager:'王鹏',managerPhone:'13866667777',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'G公司专属测试路线',type:'专用测试道路',status:'已关闭'},{name:'城区开放道路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012353',brand:'大通',model:'MIFA 9',level:'L4',plate:'鄂F·T0020'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']}
 ];
 
 function getTermTypeInfo(typeId){
@@ -76,10 +73,9 @@ function renderTable(){
   if(appId)data=data.filter(function(d){return d.appId.toUpperCase().indexOf(appId)>-1;});
   if(company)data=data.filter(function(d){return d.company.indexOf(company)>-1;});
   var total=data.length;
-  var totalPages=Math.ceil(total/pageSize)||1;
-  if(currentPage>totalPages)currentPage=totalPages;
-  var start=(currentPage-1)*pageSize;
-  var pageData=data.slice(start,start+pageSize);
+  var cp=pager?pager.getCurrentPage():1;var ps=pager?pager.getPageSize():10;
+  var start=(cp-1)*ps;
+  var pageData=data.slice(start,start+ps);
   var html='';
   pageData.forEach(function(d){
     var ti=getTermTypeInfo(d.termType);
@@ -88,20 +84,7 @@ function renderTable(){
     html+='<tr><td>'+d.id+'</td><td><button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">'+d.appId+'</button></td><td>'+d.appType+'</td><td>'+d.company+'</td><td><span class="ant-tag" style="background:'+ti.color+'15;color:'+ti.color+';border-color:'+ti.color+'40">'+ti.name+'</span></td><td>'+triggerTag+'</td><td>'+d.time+'</td><td>'+statusTag+'</td><td><button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">查看详情</button></td></tr>';
   });
   document.getElementById('terminateTbody').innerHTML=html;
-  document.getElementById('totalCount').textContent='共 '+total+' 条';
-  var pgHtml='<span class="page-item'+(currentPage<=1?' disabled':'')+'" onclick="goPage('+(currentPage-1)+')">‹</span>';
-  for(var i=1;i<=totalPages;i++){pgHtml+='<span class="page-item'+(i===currentPage?' active':'')+'" onclick="goPage('+i+')">'+i+'</span>';}
-  pgHtml+='<span class="page-item'+(currentPage>=totalPages?' disabled':'')+'" onclick="goPage('+(currentPage+1)+')">›</span>';
-  pgHtml+=' <span class="text-sm text-[#00000073] ml-2">'+pageSize+' 条/页</span>';
-  document.getElementById('paginationBar').innerHTML=pgHtml;
-}
-
-function goPage(p){
-  var total=termData.length;
-  var totalPages=Math.ceil(total/pageSize)||1;
-  if(p<1||p>totalPages)return;
-  currentPage=p;
-  renderTable();
+  if(pager)pager.setTotal(total);
 }
 
 function resetFilter(){
@@ -109,7 +92,7 @@ function resetFilter(){
   document.getElementById('filterCompany').value='';
   document.getElementById('filterType').innerHTML='全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
   document.getElementById('filterTrigger').innerHTML='全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
-  currentPage=1;
+  if(pager)pager.reset();
   renderTable();
 }
 
@@ -140,11 +123,11 @@ function openDetail(id){
   var ti=getTermTypeInfo(d.termType);
   var isRT=d.appId.indexOf('RT')===0;
   var isDA=d.appId.indexOf('DA')===0;
-  var typeLabel=isRT?'道路测试':isDA?'示范应用':'示范运营';
+  var typeLabel=isRT?'道路测试':isDA?'示范应用':'商业化试点';
   var periodLabel=isRT?'测试日期':typeLabel+'时间段';
   var roadLabel=typeLabel+'路段';
   var vehicleLabel=typeLabel+'车辆';
-  var schemeLabel=isRT?'测试方案':isDA?'示范应用方案':'示范运营方案';
+  var schemeLabel=isRT?'测试方案':isDA?'示范应用方案':'商业化试点方案';
 
   var h='';
   h+='<div class="bg-[#fff2f0] border border-[#ffccc7] rounded-lg p-3 mb-4"><div class="flex items-start gap-2"><span class="text-[#ff4d4f]">⚠</span><div><p class="text-sm font-medium text-[#000000d9]">该准入申请已因"'+ti.name+'"被终止资格</p><p class="text-xs text-[#00000073] mt-1">终止原因：'+d.reason.substring(0,60)+'...</p></div></div></div>';
@@ -182,7 +165,7 @@ function openDetail(id){
 
   h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">审批流程进度</h4>';
   h+='<div class="flex items-center gap-0 text-xs">';
-  var steps=[{label:'提交申请',done:true},{label:'第三方初审',done:true},{label:'联席小组审批',done:true},{label:'临牌回传',done:true},{label:'资格终止',done:true,error:true}];
+  var steps=[{label:'提交申请',done:true},{label:'第三方初审',done:true},{label:'市工作专班审核',done:true},{label:'临牌回传',done:true},{label:'资格终止',done:true,error:true}];
   steps.forEach(function(s,i){
     var bg=s.error?'#ff4d4f':s.done?'#52c41a':'#d9d9d9';
     var icon=s.error?'✗':s.done?'✓':(i+1);
@@ -213,8 +196,8 @@ function openDetail(id){
 function buildFlowLogs(d,ti){
   var logs=[];
   logs.push({title:'提交申请',handler:d.manager+'（'+d.company+'）',time:d.testPeriod.split(' 至 ')[0]+' 09:00',opinion:'提交'+d.appType+'申请',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
-  logs.push({title:'第三方初审',handler:'张三（第三方服务机构A）',time:d.time+' - 审批通过',opinion:'审核结论：通过\n审核意见：申请材料齐全、合规，建议提交联席小组审批',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
-  logs.push({title:'联席小组审批',handler:'王主任（联席工作小组）',time:d.time+' - 审批通过',opinion:'审核结论：通过\n审核意见：同意批准'+d.appType.replace('准入','').replace('新增','').replace('续期','').replace('变更','')+'申请',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
+  logs.push({title:'第三方初审',handler:'张三（第三方专业管理机构A）',time:d.time+' - 审批通过',opinion:'审核结论：通过\n审核意见：申请材料齐全、合规，建议提交市工作专班审核',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
+  logs.push({title:'市工作专班审核',handler:'王主任（市工作专班）',time:d.time+' - 审批通过',opinion:'审核结论：通过\n审核意见：同意批准'+d.appType.replace('准入','').replace('新增','').replace('延期','').replace('变更','')+'申请',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
   logs.push({title:'临牌回传',handler:'李警官（市交管部门）',time:d.time+' - 已回传',opinion:'临时牌照已发放',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
   if(d.status==='已办结'){
     logs.push({title:'资格终止 — '+ti.name,handler:d.operator,time:d.time+' - 已终止',opinion:'终止类型：'+ti.name+'（'+d.trigger+'）\n终止原因：'+d.reason,status:'已终止',color:'#ff4d4f',dot:'✗',tagClass:'ant-tag-error'});
@@ -224,7 +207,7 @@ function buildFlowLogs(d,ti){
   return logs;
 }
 
-document.addEventListener('DOMContentLoaded',function(){renderTable();});
+document.addEventListener('DOMContentLoaded',function(){pager=new Pagination({container:'paginationBar',pageSize:10,pageSizeOptions:[10,20,50,100],onPageChange:function(){renderTable();},onPageSizeChange:function(){renderTable();}});renderTable();});
 </script>
 <script src="../../common.js"></script>
 </body>

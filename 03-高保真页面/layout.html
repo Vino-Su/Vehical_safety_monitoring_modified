@@ -210,9 +210,10 @@ var accidentLevelChart = null;
 var statusMap = {
   draft: { label: '草稿', cls: 'ant-tag-default' },
   pending_review: { label: '待初审', cls: 'ant-tag-processing' },
-  pending_vehicle_report: { label: '待实车报告', cls: 'ant-tag-processing' },
-  pending_expert: { label: '待评审', cls: 'ant-tag-processing' },
-  pending_joint: { label: '待联席审批', cls: 'ant-tag-processing' },
+  pending_committee: { label: '待专班审核', cls: 'ant-tag-processing' },
+  pending_committee_confirm: { label: '待专班审核确认', cls: 'ant-tag-processing' },
+  pending_expert_review: { label: '待专家评审', cls: 'ant-tag-processing' },
+  pending_session: { label: '待专题会审议', cls: 'ant-tag-processing' },
   rejected: { label: '已退回', cls: 'ant-tag-error' },
   withdrawn: { label: '已撤回', cls: 'ant-tag-default' },
   pending_plate: { label: '待上传牌照', cls: 'ant-tag-warning' },
@@ -223,21 +224,21 @@ var statusMap = {
 
 var recentApplications = [
   { id: 'RT202604001', type: '初次申请', module: '道路测试', company: 'A公司', vehicleCount: 2, status: 'pending_review', time: '2026-04-10' },
-  { id: 'DA202604002', type: '续期申请', module: '示范应用', company: 'B公司', vehicleCount: 1, status: 'active', time: '2026-04-05' },
+  { id: 'DA202604002', type: '延期申请', module: '示范应用', company: 'B公司', vehicleCount: 1, status: 'active', time: '2026-04-05' },
   { id: 'RT202604003', type: '变更申请', module: '道路测试', company: 'D公司', vehicleCount: 1, status: 'rejected', time: '2026-04-08' },
-  { id: 'DO202604004', type: '初次申请', module: '示范运营', company: 'A公司', vehicleCount: 1, status: 'active', time: '2026-04-12' },
-  { id: 'DA202604005', type: '初次申请', module: '示范应用', company: 'D公司', vehicleCount: 1, status: 'pending_expert', time: '2026-04-24' },
+  { id: 'DO202604004', type: '初次申请', module: '商业化试点', company: 'A公司', vehicleCount: 1, status: 'active', time: '2026-04-12' },
+  { id: 'DA202604005', type: '初次申请', module: '示范应用', company: 'D公司', vehicleCount: 1, status: 'pending_expert_review', time: '2026-04-24' },
   { id: 'RT202604006', type: '初次申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'pending_plate', time: '2026-04-25' },
   { id: 'DA202604007', type: '初次申请', module: '示范应用', company: 'G公司', vehicleCount: 1, status: 'active', time: '2026-04-28' },
-  { id: 'DO202605001', type: '初次申请', module: '示范运营', company: 'J公司', vehicleCount: 1, status: 'pending_joint', time: '2026-05-01' },
-  { id: 'RT202605002', type: '续期申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'pending_joint', time: '2026-05-05' },
+  { id: 'DO202605001', type: '初次申请', module: '商业化试点', company: 'J公司', vehicleCount: 1, status: 'pending_committee', time: '2026-05-01' },
+  { id: 'RT202605002', type: '延期申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'pending_committee_confirm', time: '2026-05-05' },
   { id: 'DA202605003', type: '初次申请', module: '示范应用', company: 'S公司', vehicleCount: 1, status: 'draft', time: '2026-05-08' }
 ];
 
 function getModuleLink(item) {
   if (item.module === '道路测试') return 'monitor/access-apply/road-test.html';
   if (item.module === '示范应用') return 'monitor/access-apply/demo-apply.html';
-  if (item.module === '示范运营') return 'monitor/access-apply/demo-operate.html';
+  if (item.module === '商业化试点') return 'monitor/access-apply/demo-operate.html';
   return '#';
 }
 
@@ -327,14 +328,14 @@ function renderApplyTrendChart() {
   applyTrendChart = echarts.init(document.getElementById('applyTrendChart'));
   applyTrendChart.setOption({
     tooltip: { trigger: 'axis' },
-    legend: { data: ['道路测试', '示范应用', '示范运营'], bottom: 0, textStyle: { fontSize: 11 } },
+    legend: { data: ['道路测试', '示范应用', '商业化试点'], bottom: 0, textStyle: { fontSize: 11 } },
     grid: { left: 44, right: 16, bottom: 36, top: 8, containLabel: false },
     xAxis: { type: 'category', data: ['第1天', '第2天', '第3天', '第4天', '第5天', '第6天', '第7天'], axisLabel: { fontSize: 11 } },
     yAxis: { type: 'value', name: '件', axisLabel: { fontSize: 10 }, minInterval: 1 },
     series: [
       { name: '道路测试', type: 'line', data: [5, 3, 7, 4, 6, 8, 5], smooth: true, lineStyle: { color: '#1677ff', width: 2 }, itemStyle: { color: '#1677ff' }, areaStyle: { color: 'rgba(22,119,255,0.06)' } },
       { name: '示范应用', type: 'line', data: [2, 4, 3, 5, 2, 4, 3], smooth: true, lineStyle: { color: '#52c41a', width: 2 }, itemStyle: { color: '#52c41a' }, areaStyle: { color: 'rgba(82,196,26,0.06)' } },
-      { name: '示范运营', type: 'line', data: [1, 2, 1, 3, 2, 1, 2], smooth: true, lineStyle: { color: '#fa8c16', width: 2 }, itemStyle: { color: '#fa8c16' }, areaStyle: { color: 'rgba(250,140,22,0.06)' } }
+      { name: '商业化试点', type: 'line', data: [1, 2, 1, 3, 2, 1, 2], smooth: true, lineStyle: { color: '#fa8c16', width: 2 }, itemStyle: { color: '#fa8c16' }, areaStyle: { color: 'rgba(250,140,22,0.06)' } }
     ]
   });
 }

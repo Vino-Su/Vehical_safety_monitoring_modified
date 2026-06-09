@@ -68,7 +68,7 @@
           children: [
             { key: 'road-test', label: '道路测试准入申请', path: 'monitor/access-apply/road-test.html', roles: ['admin', 'enterprise'] },
             { key: 'demo-apply', label: '示范应用准入申请', path: 'monitor/access-apply/demo-apply.html', roles: ['admin', 'enterprise'] },
-            { key: 'demo-operate', label: '示范运营准入申请', path: 'monitor/access-apply/demo-operate.html', roles: ['admin', 'enterprise'] },
+            { key: 'demo-operate', label: '商业化试点准入申请', path: 'monitor/access-apply/demo-operate.html', roles: ['admin', 'enterprise'] },
             { key: 'business', label: '业务申请管理', path: 'monitor/access-apply/business.html', roles: ['admin', 'enterprise'] }
           ]
         },
@@ -173,7 +173,7 @@
           children: [
             { key: 'road-test-analysis', label: '道路测试分析', path: 'data-analysis/demo/road-test-analysis.html', roles: ['admin'] },
             { key: 'demo-apply-analysis', label: '示范应用分析', path: 'data-analysis/demo/demo-apply-analysis.html', roles: ['admin'] },
-            { key: 'demo-operate-analysis', label: '示范运营分析', path: 'data-analysis/demo/demo-operate-analysis.html', roles: ['admin'] }
+            { key: 'demo-operate-analysis', label: '商业化试点分析', path: 'data-analysis/demo/demo-operate-analysis.html', roles: ['admin'] }
           ]
         }
       ]
@@ -472,10 +472,11 @@
       '.ant-tag-error{color:#ff4d4f;background:#fff2f0;border-color:#ffccc7}',
       '.ant-tag-processing{color:#1677ff;background:#e6f4ff;border-color:#91caff}',
       '.ant-tag-default{color:#00000073;background:#fafafa;border-color:#d9d9d9}',
-      '.ant-pagination{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;color:#00000073}',
-      '.ant-pagination .page-item{min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid #d9d9d9;border-radius:6px;cursor:pointer;transition:all .2s;padding:0 6px}',
-      '.ant-pagination .page-item:hover{color:#1677ff;border-color:#1677ff}',
-      '.ant-pagination .page-item.active{background:#1677ff;border-color:#1677ff;color:#fff}',
+      '.ant-pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:16px;font-size:14px;color:#00000073}',
+      '.ant-pagination .page-item{min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid #DCDFE4;border-radius:2px;cursor:pointer;transition:all .2s;padding:0 12px;font-size:14px;color:#00000073;background:transparent}',
+      '.ant-pagination .page-item:hover{color:#00000073;background:#f2f3f5;border-color:#86909C}',
+      '.ant-pagination .page-item.active{background:#1677ff;border-color:#1677ff;color:#fff;border:none}',
+      '.ant-pagination .pg-ellipsis{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 12px;font-size:14px;color:#00000073;cursor:default;user-select:none}',
       '.ant-modal-mask{position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;background:rgba(0,0,0,.45)!important;z-index:1000!important;display:flex!important;align-items:center!important;justify-content:center!important}',
       '.ant-modal{background:#fff!important;border-radius:8px!important;width:600px!important;max-width:90vw!important;max-height:80vh!important;display:flex!important;flex-direction:column!important;box-shadow:0 6px 16px rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05)!important}',
       '.ant-modal.wide{width:800px!important}',
@@ -505,9 +506,9 @@
       '.ant-descriptions-label{width:140px;min-width:140px;padding:10px 12px;background:#fafafa;font-size:14px;color:#00000073;font-weight:500}',
       '.ant-descriptions-value{flex:1;padding:10px 12px;font-size:14px;color:#000000d9}',
       '.ant-modal-body .ant-table th,.ant-modal-body .ant-table td{text-align:center!important}',
-      '.ant-modal-body .ant-table-wrapper .ant-pagination-bar{padding:12px 0 0;display:flex;align-items:center;justify-content:flex-end;gap:12px;font-size:13px;color:#00000073}',
-      '.ant-modal-body .ant-pagination-bar select{width:70px;height:28px;font-size:12px;padding:0 4px;border:1px solid #d9d9d9;border-radius:6px;outline:none;background:#fff;cursor:pointer}',
-      '.ant-modal-body .ant-pagination-bar button{height:28px;padding:0 12px;font-size:12px}',
+      '.ant-modal-body .ant-table-wrapper .ant-pagination-bar{padding:12px 0 0;display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:12px;color:#00000040}',
+      '.ant-modal-body .ant-pagination-bar select{width:80px;height:24px;font-size:12px;padding:0 8px 0 12px;border:1px solid #d9d9d9;border-radius:6px;outline:none;background:#fff;cursor:pointer}',
+      '.ant-modal-body .ant-pagination-bar button{height:24px;padding:0 8px;font-size:12px}',
       '.ant-modal-body .ant-table-wrapper{box-shadow:none!important;border:1px solid #f0f0f0;border-radius:6px}'
     ].join('');
 
@@ -735,14 +736,14 @@
   var SELECT_OPTIONS_MAP = {
     '全部': ['全部'],
     '全部区域': ['全部区域','樊城区','襄城区','襄州区','南漳县','谷城县','老河口市','枣阳市','宜城市','保康县'],
-    '申请类型': ['全部','初次申请','异地已许可，申请襄阳市测试','续期申请','变更申请','新增相同配置车辆'],
-    '申请状态': ['全部','草稿','待初审','待实车报告','待专家评审','待联席审批','已退回','已撤回','待上传牌照','已生效','已过期','已终止'],
-    '道路等级': ['全部','一级公路','二级公路','三级公路','四级公路','城市主干路','城市次干路','城市支路'],
+    '申请类型': ['全部','初次申请','延期申请','变更申请','新增相同配置车辆'],
+    '申请状态': ['全部','草稿','待初审','待专班审核','待专班审核确认','待专家评审','待专题会审议','已退回','已撤回','待上传牌照','已生效','已过期','已终止'],
+    '道路等级': ['全部','主干道','次干道','支路','快速路','园区道路'],
     '开放状态': ['全部','开放','暂停','关闭','待开放'],
     '自动驾驶等级': ['全部','L0','L1','L2','L3','L4','L5'],
     '所属区域': ['全部','樊城区','襄城区','襄州区','南漳县','谷城县','老河口市','枣阳市','宜城市','保康县'],
     '所属企业': ['全部','A公司','B公司','C公司','D公司','E公司','F公司','G公司','H公司'],
-    '业务类型': ['全部','道路测试','示范应用','示范运营'],
+    '业务类型': ['全部','道路测试','示范应用','商业化试点'],
     '变更类型': ['全部','新增开放','暂停开放','恢复开放','关闭开放','等级调整'],
     '驾照类型': ['全部','A1','A2','A3','B1','B2','C1','C2'],
     '处理状态': ['全部','待处理','处理中','已处理','已关闭'],
@@ -750,13 +751,13 @@
     '故障类型': ['全部','传感器故障','通信故障','控制器故障','制动系统故障','转向系统故障'],
     '越界方向': ['全部','驶入禁入区','驶出允许区'],
     '事故类型': ['全部','追尾事故','侧面碰撞','正面碰撞','刮擦事故','单车事故','翻车事故'],
-    '当前审批节点': ['全部','第三方初审','联席小组审批','临牌回传'],
+    '当前审批节点': ['全部','第三方初审','市工作专班审核','专班审核确认','专家评审','专题会审议','待上传牌照'],
     '审核状态': ['全部','待审核','审核中','已通过','已退回'],
     '终止类型': ['全部','主动终止','强制终止','到期终止'],
     '触发方式': ['全部','自动触发','人工触发'],
     '报告类型': ['全部','月度报告','季度报告','年度报告','专项报告'],
     '报送对象': ['全部','工业和信息化部','公安部','交通运输部'],
-    '材料类型': ['全部','专家评审材料','现场实车审查材料','安全评估材料','测试报告'],
+    '材料类型': ['全部','专家评审材料','安全评估材料','测试报告'],
     '评估等级': ['全部','优秀','良好','一般','较差'],
     '生成方式': ['全部','自动生成','人工评估'],
     '信息类型': ['全部','公告公示','办事指南','测试示范报告'],
@@ -777,9 +778,9 @@
     '边缘计算节点': ['全部','有','无'],
     '适用测试场景': ['全部','城市道路','高速公路','乡村道路','停车场','交叉路口'],
     '适用自动驾驶等级': ['全部','L2','L3','L4','L5'],
-    '适用业务类型': ['全部','道路测试','示范应用','示范运营'],
+    '适用业务类型': ['全部','道路测试','示范应用','商业化试点'],
     '执行动作': ['全部','自动开放','自动暂停','人工审核'],
-    '允许测试类型': ['全部','道路测试','示范应用','示范运营'],
+    '允许测试类型': ['全部','道路测试','示范应用','商业化试点'],
     '是否必填': ['全部','是','否'],
     '性别': ['全部','男','女'],
     '有无严重交通违法行为': ['全部','有','无'],
@@ -788,7 +789,7 @@
     '是否掌握': ['全部','是','否'],
     '是否具备': ['全部','是','否'],
     '行政区域': ['全部','樊城区','襄城区','襄州区','南漳县','谷城县','老河口市','枣阳市','宜城市','保康县'],
-    '运行模式': ['全部','道路测试','示范应用','示范运营'],
+    '运行模式': ['全部','道路测试','示范应用','商业化试点'],
     '企业': ['全部','A公司','B公司','C公司','D公司','E公司','F公司','G公司','H公司'],
     '事故类型_筛选': ['全部','追尾事故','侧面碰撞','正面碰撞','刮擦事故','单车事故','翻车事故'],
     '时段': ['全部','工作日','周末','全天'],

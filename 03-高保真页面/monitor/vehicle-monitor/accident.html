@@ -214,9 +214,9 @@ function openAccDetail(accId){
     <h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">事故报告管理</h4>
     <div class="mt-4 p-3 bg-[#f5f5f5] rounded-lg">
       <div class="space-y-3">
-        <div class="flex items-center justify-between p-2 bg-white rounded"><div><div class="text-sm font-medium">交通事故报告</div><div class="text-xs text-[#00000073]">事故发生3个工作日内上报，仅需第三方服务机构审核</div></div><button class="ant-btn ant-btn-sm" onclick="openTrafficReportModal()">${isPending?'📝 上报':'✓ 已提交'}</button></div>
-        <div class="flex items-center justify-between p-2 bg-white rounded"><div><div class="text-sm font-medium">事故分析报告</div><div class="text-xs text-[#00000073]">事故认定5个工作日内上报，需第三方初审+联席小组审核</div></div><button class="ant-btn ant-btn-sm" onclick="openAnalysisReportModal()">${isReviewing?'📝 补材料':isConfirmed||isReported?'✓ 已审核':'📝 上报'}</button></div>
-        <div class="flex items-center justify-between p-2 bg-white rounded"><div><div class="text-sm font-medium">省厅上报</div><div class="text-xs text-[#00000073]">审核通过后可上报至省厅相关平台</div></div><button class="ant-btn ant-btn-sm" ${!isReported&&isConfirmed?'':'disabled'} onclick="reportToProvince()">${isReported?'✓ 已上报省厅':isConfirmed?'📤 上报省厅':'等待审核完成'}</button></div>
+        <div class="flex items-center justify-between p-2 bg-white rounded"><div><div class="text-sm font-medium">交通事故报告</div><div class="text-xs text-[#00000073]">事故发生3个工作日内上报，仅需第三方专业管理机构审核</div></div><button class="ant-btn ant-btn-sm" onclick="openTrafficReportModal()">${isPending?'上报':'已提交'}</button></div>
+        <div class="flex items-center justify-between p-2 bg-white rounded"><div><div class="text-sm font-medium">事故分析报告</div><div class="text-xs text-[#00000073]">事故认定5个工作日内上报，需第三方初审+市工作专班审核</div></div><button class="ant-btn ant-btn-sm" onclick="openAnalysisReportModal()">${isReviewing?'补材料':isConfirmed||isReported?'已审核':'上报'}</button></div>
+        <div class="flex items-center justify-between p-2 bg-white rounded"><div><div class="text-sm font-medium">省厅上报</div><div class="text-xs text-[#00000073]">审核通过后可上报至省厅相关平台</div></div><button class="ant-btn ant-btn-sm" ${!isReported&&isConfirmed?'':'disabled'} onclick="reportToProvince()">${isReported?'已上报省厅':isConfirmed?'上报省厅':'等待审核完成'}</button></div>
       </div>
     </div>
   `;
@@ -224,7 +224,7 @@ function openAccDetail(accId){
 }
 function openTrafficReportModal(){
   openModal('上报交通事故报告',
-    '<div class="bg-[#fffbe6] border border-[#ffe58f] rounded-lg p-4 mb-4"><div class="flex items-start gap-2"><span class="text-[#faad14] text-lg">⚠️</span><div><p class="text-sm font-medium text-[#000000d9]">请注意填写完整性</p><p class="text-xs text-[#00000073] mt-1">交通事故报告相关信息必须真实准确，该报告仅需第三方服务机构审核</p></div></div></div>' +
+    '<div class="bg-[#fffbe6] border border-[#ffe58f] rounded-lg p-4 mb-4"><div class="flex items-start gap-2"><span class="text-[#faad14] text-lg">⚠️</span><div><p class="text-sm font-medium text-[#000000d9]">请注意填写完整性</p><p class="text-xs text-[#00000073] mt-1">交通事故报告相关信息必须真实准确，该报告仅需第三方专业管理机构审核</p></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>事故原因简述</div><div class="ant-form-control"><textarea class="ant-input" style="height:80px;padding:8px 12px" placeholder="请简要描述事故原因"></textarea></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>责任认定结果</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入责任认定结论"></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">附件材料上传</div><div class="ant-form-control"><button class="ant-btn ant-btn-sm">选择材料上传</button><div class="text-xs text-[#00000073] mt-1">支持PDF/Word格式文档上传（行车记录视频、现场照片等）</div></div></div>',
@@ -232,7 +232,7 @@ function openTrafficReportModal(){
 }
 function openAnalysisReportModal(){
   openModal('上报事故分析报告',
-    '<div class="bg-[#fffbe6] border border-[#ffe58f] rounded-lg p-4 mb-4"><div class="flex items-start gap-2"><span class="text-[#faad14] text-lg">⚠️</span><div><p class="text-sm font-medium text-[#000000d9]">请注意填写完整性</p><p class="text-xs text-[#00000073] mt-1">事故分析报告包含事故原因、责任认定结果、完整事故分析报告等材料，需第三方服务机构初审、联席小组审核</p></div></div></div>' +
+    '<div class="bg-[#fffbe6] border border-[#ffe58f] rounded-lg p-4 mb-4"><div class="flex items-start gap-2"><span class="text-[#faad14] text-lg">⚠️</span><div><p class="text-sm font-medium text-[#000000d9]">请注意填写完整性</p><p class="text-xs text-[#00000073] mt-1">事故分析报告包含事故原因、责任认定结果、完整事故分析报告等材料，需第三方专业管理机构初审、市工作专班审核</p></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>事故原因分析</div><div class="ant-form-control"><textarea class="ant-input" style="height:80px;padding:8px 12px" placeholder="请输入事故原因分析结论"></textarea></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>责任认定结果</div><div class="ant-form-control"><textarea class="ant-input" style="height:80px;padding:8px 12px" placeholder="请输入责任认定结果"></textarea></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>完整事故分析报告</div><div class="ant-form-control"><textarea class="ant-input" style="height:120px;padding:8px 12px" placeholder="请详细描述完整的事故分析报告内容"></textarea></div></div>' +
@@ -254,7 +254,7 @@ function makeAccidentFlowLog(accId){
   if(accId==='ACC20260427001'){
     nodes=[
       {title:'事故上报',handler:'王工（D公司）',time:'2026-04-27 14:00',opinion:'提交事故基本信息报告，包含VIN码、临牌号码、事故发生地点/时间、事故经过等完整信息。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg、行车记录.mp4'},
-      {title:'交通事故报告审核',handler:'李四（第三方服务机构A）',time:'-',opinion:'',nextNode:'事故分析报告-第三方初审',status:'待处理'},
+      {title:'交通事故报告审核',handler:'李四（第三方专业管理机构A）',time:'-',opinion:'',nextNode:'事故分析报告-第三方初审',status:'待处理'},
       {title:'事故分析报告-第三方初审',handler:'-',time:'-',opinion:'',nextNode:'事故分析报告-联席审核',status:'待处理'},
       {title:'事故分析报告-联席审核',handler:'-',time:'-',opinion:'',nextNode:'省厅上报',status:'待处理'},
       {title:'省厅上报',handler:'-',time:'-',opinion:'',nextNode:'-',status:'待处理'}
@@ -262,23 +262,23 @@ function makeAccidentFlowLog(accId){
   }else if(accId==='ACC20260425001'){
     nodes=[
       {title:'事故上报',handler:'王工（D公司）',time:'2026-04-25 10:30',opinion:'提交事故基本信息报告，包含VIN码、临牌号码、事故发生地点/时间、事故经过等完整信息。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg、行车记录.mp4'},
-      {title:'交通事故报告审核',handler:'李四（第三方服务机构A）',time:'2026-04-28 09:00 - 2026-04-28 16:30',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，事故原因和责任认定清晰，现场材料齐全，符合上报要求。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
-      {title:'事故分析报告-第三方初审',handler:'张三（第三方服务机构B）',time:'2026-05-03 10:00 - 2026-05-05 14:00',opinion:'审核结论：通过\n审核意见：事故分析报告数据来源可靠，结论合理有据，符合平台事故分析标准要求。建议通过初审。',nextNode:'事故分析报告-联席审核',status:'已处理',attach:'事故分析初稿.pdf'},
-      {title:'事故分析报告-联席审核',handler:'王主任（联席小组）',time:'2026-05-06 09:30 - 2026-05-07 11:00',opinion:'审核结论：通过\n审核意见：第三方初审意见合理，经联席小组审议，认定事故系自动驾驶系统在紧急制动场景下未完全预判后车距离所致。建议企业加强制动系统的安全冗余设计。',nextNode:'省厅上报',status:'已处理',attach:'事故分析终稿.pdf'},
+      {title:'交通事故报告审核',handler:'李四（第三方专业管理机构A）',time:'2026-04-28 09:00 - 2026-04-28 16:30',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，事故原因和责任认定清晰，现场材料齐全，符合上报要求。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
+      {title:'事故分析报告-第三方初审',handler:'张三（第三方专业管理机构B）',time:'2026-05-03 10:00 - 2026-05-05 14:00',opinion:'审核结论：通过\n审核意见：事故分析报告数据来源可靠，结论合理有据，符合平台事故分析标准要求。建议通过初审。',nextNode:'事故分析报告-联席审核',status:'已处理',attach:'事故分析初稿.pdf'},
+      {title:'事故分析报告-联席审核',handler:'王主任（市工作专班）',time:'2026-05-06 09:30 - 2026-05-07 11:00',opinion:'审核结论：通过\n审核意见：第三方初审意见合理，经市工作专班审议，认定事故系自动驾驶系统在紧急制动场景下未完全预判后车距离所致。建议企业加强制动系统的安全冗余设计。',nextNode:'省厅上报',status:'已处理',attach:'事故分析终稿.pdf'},
       {title:'省厅上报',handler:'赵工（管理平台）',time:'2026-05-07 15:00',opinion:'已完成省级平台数据同步',nextNode:'-',status:'已处理',attach:'省厅上报回执.pdf'}
     ];
   }else if(accId==='ACC20260420001'){
     nodes=[
       {title:'事故上报',handler:'陈工（B公司）',time:'2026-04-20 09:15',opinion:'提交事故基本信息报告。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg'},
-      {title:'交通事故报告审核',handler:'李四（第三方服务机构A）',time:'2026-04-23 10:00 - 2026-04-23 17:00',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，予以审核通过。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
-      {title:'事故分析报告-第三方初审',handler:'赵五（第三方服务机构C）',time:'2026-04-30 09:00 - 2026-05-02 11:00',opinion:'审核结论：通过\n审核意见：事故分析逻辑清晰，结论合理。',nextNode:'事故分析报告-联席审核',status:'已处理',attach:'事故分析报告_v1.pdf'},
-      {title:'事故分析报告-联席审核',handler:'李主任（联席小组）',time:'2026-05-03 10:00 - 2026-05-05 16:00',opinion:'审核结论：通过\n审核意见：经联席审议，一致认可事故分析结论。同意上报省厅。',nextNode:'省厅上报',status:'已处理'},
+      {title:'交通事故报告审核',handler:'李四（第三方专业管理机构A）',time:'2026-04-23 10:00 - 2026-04-23 17:00',opinion:'审核结论：通过\n审核意见：交通事故报告内容完整，予以审核通过。',nextNode:'事故分析报告-第三方初审',status:'已处理',attach:'交通事故报告.pdf'},
+      {title:'事故分析报告-第三方初审',handler:'赵五（第三方专业管理机构C）',time:'2026-04-30 09:00 - 2026-05-02 11:00',opinion:'审核结论：通过\n审核意见：事故分析逻辑清晰，结论合理。',nextNode:'事故分析报告-联席审核',status:'已处理',attach:'事故分析报告_v1.pdf'},
+      {title:'事故分析报告-联席审核',handler:'李主任（市工作专班）',time:'2026-05-03 10:00 - 2026-05-05 16:00',opinion:'审核结论：通过\n审核意见：经市工作专班审议，一致认可事故分析结论。同意上报省厅。',nextNode:'省厅上报',status:'已处理'},
       {title:'省厅上报',handler:'赵工（管理平台）',time:'2026-05-06 10:00',opinion:'已完成省级平台数据同步，回执编号 PROV-2026-0452。',nextNode:'-',status:'已处理',attach:'省厅上报回执.pdf'}
     ];
   }else if(accId==='ACC20260415001'){
     nodes=[
       {title:'事故上报',handler:'李工（C公司）',time:'2026-04-15 08:45',opinion:'提交事故基本信息报告。',nextNode:'交通事故报告审核',status:'已处理',attach:'现场照片.jpg'},
-      {title:'交通事故报告审核',handler:'张三（第三方服务机构B）',time:'2026-04-18 09:00 - 2026-04-19 14:00',opinion:'审核结论：退回\n审核意见：事故原因描述不够详细，缺少完整的行车记录数据，请补充后重新提报。',nextNode:'事故分析报告-第三方初审',status:'已退回'},
+      {title:'交通事故报告审核',handler:'张三（第三方专业管理机构B）',time:'2026-04-18 09:00 - 2026-04-19 14:00',opinion:'审核结论：退回\n审核意见：事故原因描述不够详细，缺少完整的行车记录数据，请补充后重新提报。',nextNode:'事故分析报告-第三方初审',status:'已退回'},
       {title:'事故分析报告-第三方初审',handler:'-',time:'-',opinion:'',nextNode:'事故分析报告-联席审核',status:'待处理'},
       {title:'事故分析报告-联席审核',handler:'-',time:'-',opinion:'',nextNode:'省厅上报',status:'待处理'},
       {title:'省厅上报',handler:'-',time:'-',opinion:'',nextNode:'-',status:'待处理'}
