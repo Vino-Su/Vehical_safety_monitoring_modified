@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电子围栏管理与配置 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>电子围栏管理与配置</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openFenceModal()">+ 新建电子围栏</button></div></div>
+      <div class="flex gap-4" style="height:calc(100vh - 200px)">
+        <div class="w-[400px] min-w-[400px] flex flex-col gap-4 overflow-y-auto">
+          <div class="ant-table-wrapper">
+            <table class="ant-table"><thead><tr><th>电子围栏名称</th><th>运行状态</th><th>发布状态</th><th>操作按钮</th></tr></thead>
+            <tbody>
+              <tr><td>樊城区-高新区测试路段-东津新区</td><td><span class="ant-tag ant-tag-processing">正常运行中</span></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td class="flex gap-1"><button class="ant-btn-link" onclick="openFenceDetail('樊城区-高新区测试路段-东津新区')">查看</button><button class="ant-btn-link" onclick="openPropertyEditModal('樊城区-高新区测试路段-东津新区')">属性编辑</button><button class="ant-btn-link" onclick="openGraphicEdit('樊城区-高新区测试路段-东津新区')">图形绘制</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td>樊城区-襄城环线路段-B品牌试验场</td><td><span class="ant-tag ant-tag-processing">正常运行中</span></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td class="flex gap-1"><button class="ant-btn-link" onclick="openFenceDetail('樊城区-襄城环线路段-B品牌试验场')">查看</button><button class="ant-btn-link" onclick="openPropertyEditModal('樊城区-襄城环线路段-B品牌试验场')">属性编辑</button><button class="ant-btn-link" onclick="openGraphicEdit('樊城区-襄城环线路段-B品牌试验场')">图形绘制</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td>高新区产业园内部道路及停车场</td><td><span class="ant-tag ant-tag-error">运行异常</span></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td class="flex gap-1"><button class="ant-btn-link" onclick="openFenceDetail('高新区产业园内部道路及停车场')">查看</button><button class="ant-btn-link" onclick="openPropertyEditModal('高新区产业园内部道路及停车场')">属性编辑</button><button class="ant-btn-link" onclick="openGraphicEdit('高新区产业园内部道路及停车场')">图形绘制</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td>襄州区-老城区禁止驶入区域</td><td><span class="ant-tag ant-tag-warning">待配置</span></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td class="flex gap-1"><button class="ant-btn-link" onclick="openFenceDetail('襄州区-老城区禁止驶入区域')">查看</button><button class="ant-btn-link" onclick="openPropertyEditModal('襄州区-老城区禁止驶入区域')">属性编辑</button><button class="ant-btn-link" onclick="openGraphicEdit('襄州区-老城区禁止驶入区域')">图形绘制</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td>临时测试区域</td><td><span class="ant-tag ant-tag-error">运行异常</span></td><td><span class="ant-tag ant-tag-default">已停用</span></td><td class="flex gap-1"><button class="ant-btn-link" onclick="openFenceDetail('临时测试区域')">查看</button><button class="ant-btn-link" onclick="openPropertyEditModal('临时测试区域')">属性编辑</button><button class="ant-btn-link" onclick="openGraphicEdit('临时测试区域')">图形绘制</button><button class="ant-btn-link danger">删除</button></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+        <div class="flex-1 card p-0 overflow-hidden">
+          <div class="map-container w-full h-full bg-[#e8e8e8] flex items-center justify-center">
+            <div class="text-center text-[#00000040]">
+              <div class="text-5xl mb-3">🗺️</div>
+              <p class="text-base">电子围栏地图展示区域</p>
+              <p class="text-sm mt-1">选择左侧列表中的围栏项后，可在地图上查看其详细位置信息</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='fence';
+let currentEditingFence = null;
+function openFenceModal(){
+  openModal('新建电子围栏',
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏名称</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入电子围栏的名称或标识"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏类型/状态</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="text-xs text-[#00000073] mt-1">正常运行中、运行异常、待配置</div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">允许误差范围(m)</div><div class="ant-form-control"><input class="ant-input" type="number" placeholder="请输入允许的误差范围值"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">关联监控对象</div><div class="ant-form-control"><div class="space-y-2"><label class="flex items-center gap-2 text-sm"><input type="checkbox" checked> 测试车辆</label><label class="flex items-center gap-2 text-sm"><input type="checkbox" checked> 安全员状态监测</label><label class="flex items-center gap-2 text-sm"><input type="checkbox"> 已停用车辆自动移除监控范围</label></div></div></div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="saveFenceBasic()">保存基本信息并进入图形绘制阶段'});
+}
+function saveFenceBasic(){
+  closeModal();
+  alert('新建电子围栏基本信息已保存成功！接下来将进入图形绘制阶段，请在地图上通过点击来绘制电子围栏的边界区域。完成后可保存并启用该电子围栏规则。');
+}
+function openFenceDetail(name){
+  openModal('电子围栏详情 - '+name,
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">电子围栏名称</div><div class="ant-descriptions-value">'+name+'</div><div class="ant-descriptions-label">电子围栏类型/状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-processing">正常运行中</span></div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">发布状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">已启用</span></div><div class="ant-descriptions-label">围栏长度</div><div class="ant-descriptions-value">12.5 km</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">关联监控对象</div><div class="ant-descriptions-value" style="flex:3">测试车辆、安全员状态监测、已启用车辆自动移除监控范围</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">包含车辆号牌</div><div class="ant-descriptions-value" style="flex:3">鄂F·A001, 鄂F·A002, 鄂F·A003, 鄂F·A005</div></div>' +
+    '</div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+function openPropertyEditModal(name){
+  openModal('属性编辑 - '+name,
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏名称</div><div class="ant-form-control"><input class="ant-input" value="'+name+'"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏类型/状态</div><div class="ant-form-control"><div class="ant-select" style="width:100%">正常运行中 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="text-xs text-[#00000073] mt-1">正常运行中、运行异常、待配置</div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>发布状态</div><div class="ant-form-control"><div class="ant-select" style="width:100%">已启用 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="text-xs text-[#00000073] mt-1">已启用表示该围栏规则生效</div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">允许误差范围(m)</div><div class="ant-form-control"><input class="ant-input" type="number" placeholder="请输入允许的误差范围值"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">关联监控对象</div><div class="ant-form-control"><div class="space-y-2"><label class="flex items-center gap-2 text-sm"><input type="checkbox" checked> 测试车辆</label><label class="flex items-center gap-2 text-sm"><input type="checkbox" checked> 安全员状态监测</label><label class="flex items-center gap-2 text-sm"><input type="checkbox"> 已停用车辆自动移除监控范围</label></div></div></div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">确认修改'});
+}
+function openGraphicEdit(name){
+  currentEditingFence = name;
+  document.querySelector('.map-container').innerHTML='<div class="w-full h-full relative"><div class="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-3 flex gap-2"><button class="ant-btn ant-btn-primary text-sm" onclick="startDrawPolygon()">开始绘制多边形区域</button><button class="ant-btn text-sm" onclick="clearDrawing()">清除绘制</button></div><div class="w-full h-full bg-[#e8e8e8] flex items-center justify-center"><div class="text-center text-[#00000040]"><div class="text-5xl mb-3">🗺️</div><p class="text-base">电子围栏图形绘制界面</p><p class="text-sm mt-1">正在为电子围栏：'+name+' 进行图形绘制操作</p><p class="text-sm mt-1 text-primary">提示：在地图上依次点击各个顶点，完成多边形区域的绘制后即可保存</p></div></div></div>';
+}
+function startDrawPolygon(){
+  alert('请在地图上通过鼠标点击来绘制电子围栏的多边形边界区域。每次点击将添加一个新的顶点，双击或右键结束绘制。');
+}
+function clearDrawing(){
+  alert('当前绘制内容将被清除，是否继续？');
+}
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>通知公告 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .rte-toolbar{display:flex;gap:2px;padding:6px 8px;background:#fafafa;border:1px solid #d9d9d9;border-bottom:none;border-radius:6px 6px 0 0;flex-wrap:wrap}
+    .rte-toolbar button{width:28px;height:28px;border:1px solid transparent;background:transparent;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#666;transition:all .15s}
+    .rte-toolbar button:hover{background:#e6f4ff;color:#1677ff;border-color:#bae0ff}
+    .rte-toolbar button.rte-active{background:#e6f4ff;color:#1677ff;border-color:#1677ff}
+    .rte-toolbar .rte-sep{width:1px;background:#d9d9d9;margin:0 4px}
+    .rte-editor{min-height:180px;max-height:400px;padding:10px 12px;border:1px solid #d9d9d9;border-radius:0 0 6px 6px;outline:none;overflow-y:auto;font-size:14px;line-height:1.7;color:#1f1f1f;background:#fff}
+    .rte-editor:focus{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.1)}
+    .rte-editor:empty:before{content:attr(data-placeholder);color:#bfbfbf;pointer-events:none}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>通知公告</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openNoticeModal()">+ 新建信息发布申请</button></div></div>
+
+      <!-- 筛选条件 -->
+      <div class="filter-bar mb-4">
+        <div class="filter-row">
+          <div class="filter-item"><label>通知公告标题/关键词</label><input class="ant-input" placeholder="请输入标题或关键词搜索" style="width:200px"></div>
+          <div class="filter-item"><label>通知公告类型/状态</label><div class="ant-select" style="width:140px">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="filter-item"><label>发布状态</label><div class="ant-select" style="width:120px">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <button class="ant-btn ant-btn-primary">查询</button>
+          <button class="ant-btn">重置</button>
+        </div>
+      </div>
+
+      <!-- Tab页签 -->
+      <div class="ant-tabs mb-4">
+        <span class="ant-tab active" onclick="switchTab(this,'tab-all')">全部</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-draft')">草稿箱</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-pending')">待审核</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-published')">已发布</span>
+      </div>
+
+      <!-- 全部列表 -->
+      <div id="tab-all">
+        <div class="ant-table-wrapper">
+          <table class="ant-table"><thead><tr><th>通知公告编号</th><th>内容摘要</th><th>通知公告类型/状态</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead>
+          <tbody>
+            <tr><td>INF20260427001</td><td>关于开展2026年度智能网联汽车道路测试安全专项检查工作的通知</td><td><span class="ant-tag ant-tag-processing">系统公告(重要)</span></td><td>平台运营管理员</td><td>所有测试企业</td><td><span class="ant-tag ant-tag-success">已发布</span></td><td>2026-04-27 09:00</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link" style="color:#faad14">编辑</button></td></tr>
+            <tr><td>INF20260427002</td><td>关于调整测试车辆数据上报频率的说明</td><td><span class="ant-tag ant-tag-default">操作指南</span></td><td>技术支持组</td><td>所有测试企业</td><td><span class="ant-tag ant-tag-success">已发布</span></td><td>2026-04-27 10:30</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link" style="color:#faad14">编辑</button></td></tr>
+            <tr><td>INF20260427003</td><td>2026年第二季度示范应用运营数据分析报告审核通知</td><td><span class="ant-tag ant-tag-warning">业务报告-待审核确认</span></td><td>示范运营管理员</td><td>所有运营企业</td><td><span class="ant-tag ant-tag-processing">待审核</span></td><td>2026-04-27 11:00</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link">提交审核</button></td></tr>
+            <tr><td>INF20260426001</td><td>关于车辆故障告警处理流程优化的建议征集</td><td><span class="ant-tag ant-tag-processing">系统公告(重要)</span></td><td>安全管理员</td><td>所有运维人员</td><td><span class="ant-tag ant-tag-default">草稿箱</span></td><td>2026-04-26 14:00</td><td class="flex gap-1"><button class="ant-btn-link">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+            <tr><td>INF20260425001</td><td>关于近期恶劣天气下自动驾驶测试注意事项的通知</td><td><span class="ant-tag ant-tag-default">操作指南</span></td><td>技术支持组</td><td>所有测试企业</td><td><span class="ant-tag ant-tag-success">已发布</span></td><td>2026-04-25 16:00</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link" style="color:#faad14">编辑</button></td></tr>
+          </tbody></table>
+        </div>
+        <div class="ant-pagination mt-4"><span class="text-[#00000073] text-sm mr-3">共5条</span><span class="page-item active">1</span></div>
+      </div>
+
+      <!-- 草稿箱 -->
+      <div id="tab-draft" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>内容摘要</th><th>通知公告类型/状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead><tbody><tr><td>INF20260426001</td><td>关于车辆故障告警处理流程优化的建议征集</td><td>系统公告(重要) - 安全管理员</td><td>2026-04-26 14:00</td><td class="flex gap-1"><button class="ant-btn-link">编辑</button><button class="ant-btn-link danger">删除</button></td></tr></tbody></table></div></div>
+
+      <!-- 待审核 -->
+      <div id="tab-pending" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>内容摘要</th><th>通知公告类型/状态</th><th>提交审核时间</th><th>操作按钮</th></tr></thead><tbody><tr><td>INF20260427003</td><td>2026年第二季度示范应用运营数据分析报告审核通知</td><td>业务报告-待审核确认 - 示范运营管理员</td><td>2026-04-27 11:00</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link">提交审核</button></td></tr></tbody></table></div></div>
+
+      <!-- 已发布 -->
+      <div id="tab-published" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>内容摘要</th><th>通知公告类型/状态</th><th>发布时间</th><th>操作按钮</th></tr></thead><tbody><tr><td>INF20260427001</td><td>关于开展2026年度智能网联汽车道路测试安全专项检查工作的通知</td><td>系统公告(重要) - 平台运营管理员</td><td>2026-04-27 09:00</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link" style="color:#faad14">编辑</button></td></tr><tr><td>INF20260427002</td><td>关于调整测试车辆数据上报频率的说明</td><td>操作指南 - 技术支持组</td><td>2026-04-27 10:30</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link" style="color:#faad14">编辑</button></td></tr><tr><td>INF20260425001</td><td>关于近期恶劣天气下自动驾驶测试注意事项的通知</td><td>操作指南 - 技术支持组</td><td>2026-04-25 16:00</td><td class="flex gap-1"><button class="ant-btn-link">查看</button><button class="ant-btn-link" style="color:#faad14">编辑</button></td></tr></tbody></table></div></div>
+    </main>
+  </div>
+</div>
+<script>
+var RTE_TPL='<div class="rte-toolbar"><button type="button" onclick="rteExec(\'bold\')" title="加粗"><b>B</b></button><button type="button" onclick="rteExec(\'italic\')" title="斜体"><i>I</i></button><button type="button" onclick="rteExec(\'underline\')" title="下划线"><u>U</u></button><span class="rte-sep"></span><button type="button" onclick="rteExec(\'formatBlock\',\'h3\')" title="标题">H</button><button type="button" onclick="rteExec(\'formatBlock\',\'p\')" title="正文">P</button><span class="rte-sep"></span><button type="button" onclick="rteExec(\'insertUnorderedList\')" title="无序列表">•</button><button type="button" onclick="rteExec(\'insertOrderedList\')" title="有序列表">1.</button></div><div class="rte-editor" contenteditable="true" data-placeholder="请输入正文内容..."></div>';
+function rteExec(cmd,val){
+  document.execCommand(cmd,false,val||null);
+  var sel=window.getSelection();
+  if(sel.rangeCount>0){
+    var ed=sel.anchorNode;while(ed&&!ed.classList.contains('rte-editor'))ed=ed.parentNode;
+    if(ed)ed.focus();
+  }
+}
+const PAGE_ID='notice';
+function switchTab(el,tabId){
+  document.querySelectorAll('.ant-tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  ['tab-all','tab-draft','tab-pending','tab-published'].forEach(function(id){
+    document.getElementById(id).style.display=id===tabId?'':'none'
+  });
+}
+
+function openNoticeModal(){
+  openModal('新建信息发布申请',
+    '<div class="mb-4">' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">基本信息填写</h4>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>通知公告类型/状态</div><div class="ant-form-control"><select class="ant-input" id="infoTypeSelect" onchange="toggleInfoFields(this.value)" style="cursor:pointer"><option value="">请选择要发布的公告类型</option><option value="announce">系统公告(重要)</option><option value="guide">操作指南</option><option value="report">业务报告-待审核确认</option></select></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>标题</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入公告标题"></div></div>' +
+    '</div>' +
+
+    '<!-- 系统公告(重要)填写项 -->' +
+    '<div id="fields-announce" style="display:none">' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">系统公告(重要)详细内容</h4>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>创建人</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer"><option value="">请选择创建人</option><option>平台运营管理员</option><option>安全管理员</option><option>技术支持组</option><option>示范运营管理员</option><option>其他部门</option></select></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>目标受众</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer"><option value="">请选择</option><option>所有测试企业</option><option>所有运维人员</option><option>特定企业</option></select></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>有效期至</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入有效截止日期"></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>正文内容</div><div class="ant-form-control">'+RTE_TPL+'</div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label">附件上传</div><div class="ant-form-control"><button class="ant-btn ant-btn-sm">选择附件上传</button><div class="text-xs text-[#00000040] mt-1">支持PDF/Word/图片等格式上传</div></div></div>' +
+    '</div>' +
+
+    '<!-- 操作指南填写项 -->' +
+    '<div id="fields-guide" style="display:none">' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">操作指南通知公告</h4>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>适用对象</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入适用对象描述"></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>有效期至</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入有效截止日期"></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>正文内容</div><div class="ant-form-control">'+RTE_TPL+'</div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label">附件上传</div><div class="ant-form-control"><button class="ant-btn ant-btn-sm">选择附件上传</button></div></div>' +
+    '</div>' +
+
+    '<!-- 业务报告-待审核确认填写项 -->' +
+    '<div id="fields-report" style="display:none">' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">业务报告-待审核确认</h4>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>报告所属类别</div><div class="ant-form-control"><select class="ant-input" style="cursor:pointer"><option value="">请选择</option><option>示范运营数据分析报告</option><option>月度统计报表</option><option>季度运营分析报告</option><option>年度总结报告</option></select></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>报告标题</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入报告标题"></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>有效期至</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入有效截止日期"></div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>报告正文内容</div><div class="ant-form-control">'+RTE_TPL+'</div></div>' +
+      '<div class="ant-form-item"><div class="ant-form-label">附件上传</div><div class="ant-form-control"><button class="ant-btn ant-btn-sm">选择附件上传</button><div class="text-xs text-[#00000040] mt-1">支持PDF/Excel等格式上传</div></div></div>' +
+    '</div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn" onclick="closeModal()">保存为草稿</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">提交发布'});
+}
+
+function toggleInfoFields(type){
+  document.getElementById('fields-announce').style.display=type==='announce'?'':'none';
+  document.getElementById('fields-guide').style.display=type==='guide'?'':'none';
+  document.getElementById('fields-report').style.display=type==='report'?'':'none';
+}
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

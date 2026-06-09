@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>车辆信息管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>车辆信息管理</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openAddModal()">+ 新增车辆信息</button><button class="ant-btn">导出表格</button></div></div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item"><label>车牌号牌/VIN</label><input class="ant-input" placeholder="请输入号牌或VIN搜索"></div>
+          <div class="filter-item"><label>所属企业</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="filter-item"><label>车辆登记状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
+        </div>
+      </div>
+      <div class="ant-table-wrapper">
+        <div style="overflow-x:auto">
+          <table class="ant-table">
+            <thead><tr><th><input type="checkbox" class="ant-checkbox"></th><th>车牌号牌</th><th>VIN</th><th>所属企业</th><th>联系人/电话</th><th>车辆登记状态</th><th>车辆型号</th><th>自动驾驶等级</th><th>车牌号牌备案状态</th><th>备案时间</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>测试车辆01</td><td>LSVAU2180N2012345</td><td>A公司E-HS3项目组</td><td>李经理</td><td><span class="ant-tag ant-tag-success">已备案</span></td><td>Model 3</td><td>L3</td><td><span class="ant-tag ant-tag-success">已通过</span></td><td>2026-03-20</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>测试车辆02</td><td>LSVAU2180N2012346</td><td>A公司E-HS3项目组</td><td>李经理</td><td><span class="ant-tag ant-tag-success">已备案</span></td><td>Model Y</td><td>L3</td><td><span class="ant-tag ant-tag-success">已通过</span></td><td>2026-03-20</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>测试车辆03</td><td>LSVAU2180N2012347</td><td>E公司</td><td>王总</td><td><span class="ant-tag ant-tag-processing">审核中</span></td><td>ES6</td><td>L4</td><td><span class="ant-tag ant-tag-success">已通过</span></td><td>2026-03-25</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>测试车辆07</td><td>LSVAU2180N2012348</td><td>D公司</td><td>赵工</td><td><span class="ant-tag ant-tag-success">已备案</span></td><td>阿尔法T</td><td>L3</td><td><span class="ant-tag ant-tag-warning">待补充材料</span></td><td>2026-04-01</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>测试车辆10</td><td>LSVAU2180N2012349</td><td>A公司C公司智能驾驶项目组</td><td>技术负责人</td><td><span class="ant-tag ant-tag-default">已停用</span></td><td>T5</td><td>L4</td><td><span class="ant-tag ant-tag-success">已通过</span></td><td>2026-04-05</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm text-[#00000073]">共5条</span>
+          <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='vehicle';
+function openAddModal(){
+  openModal('新增车辆信息',
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>所属企业</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>VIN</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入VIN，共17位字符"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>联系人/电话</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入联系人姓名及联系电话"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>车辆登记状态</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>车辆型号</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入车辆型号名称"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>自动驾驶等级</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">备注/特殊说明</div><div class="ant-form-control"><textarea class="ant-input" style="height:60px;padding:8px 12px" placeholder="请输入其他需要说明的信息，如特殊情况等"></textarea></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">车牌号牌</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入车牌号码(选填)"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">车牌号牌备案有效期至</div><div class="ant-form-control"><input class="ant-input" type="date" placeholder="请选择备案有效期截止日期"></div></div>',
+    {wide:true});
+}
+function openDetailModal(){
+  openModal('车辆详情',
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">A公司E-HS3项目组(道路测试与示范应用主管部门)</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">VIN</div><div class="ant-descriptions-value">LSVAU2180N2012345</div><div class="ant-descriptions-label">联系人/电话</div><div class="ant-descriptions-value">李经理</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆登记状态</div><div class="ant-descriptions-value">已备案</div><div class="ant-descriptions-label">车辆型号</div><div class="ant-descriptions-value">Model 3</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自动驾驶等级</div><div class="ant-descriptions-value">L3</div><div class="ant-descriptions-label">备注/特殊说明</div><div class="ant-descriptions-value">主要用于城市道路测试，限速50km/h，工作日08:00-18:00</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号牌</div><div class="ant-descriptions-value">测试车辆01</div><div class="ant-descriptions-label">车牌号牌备案有效期至</div><div class="ant-descriptions-value">2029-09-20</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号牌备案状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">已通过</span></div><div class="ant-descriptions-label">备案时间</div><div class="ant-descriptions-value">2026-03-20 10:30</div></div>' +
+    '</div>',{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>
