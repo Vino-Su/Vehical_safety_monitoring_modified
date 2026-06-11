@@ -6,6 +6,7 @@
   <title>数据字典管理 - 智能网联汽车安全监测平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <script src="../../components/pagination-component.js"></script>
 </head>
 <body>
 <div id="app" class="flex h-screen overflow-hidden">
@@ -35,7 +36,7 @@
           <table class="ant-table">
             <thead>
               <tr>
-                <th><input type="checkbox" class="ant-checkbox"></th>
+                <th style="width:48px;text-align:center"><input type="checkbox" class="ant-checkbox" id="dictSelectAll" onchange="toggleSelectAll(this)"></th>
                 <th>字典编码</th>
                 <th>字典名称</th>
                 <th>所属应用</th>
@@ -47,106 +48,99 @@
                 <th>操作</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>VEHICLE_TYPE</td>
-                <td>车辆类型</td>
-                <td>测试车辆管理系统</td>
-                <td>vehicle_type</td>
-                <td>5</td>
-                <td>V3</td>
-                <td><span class="ant-tag ant-tag-success">已启用</span></td>
-                <td>2026-04-25 10:30</td>
-                <td class="flex gap-1">
-                  <button class="ant-btn-link" onclick="openDetailModal()">详情</button>
-                  <button class="ant-btn-link" onclick="openDictModal()">编辑</button>
-                  <button class="ant-btn-link danger" onclick="openStopModal()">停用</button>
-                </td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>AD_LEVEL</td>
-                <td>自动驾驶等级</td>
-                <td>测试车辆管理系统</td>
-                <td>ad_level</td>
-                <td>4</td>
-                <td>V2</td>
-                <td><span class="ant-tag ant-tag-success">已启用</span></td>
-                <td>2026-04-20 14:15</td>
-                <td class="flex gap-1">
-                  <button class="ant-btn-link" onclick="openDetailModal()">详情</button>
-                  <button class="ant-btn-link" onclick="openDictModal()">编辑</button>
-                  <button class="ant-btn-link danger" onclick="openStopModal()">停用</button>
-                </td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>ROAD_LEVEL</td>
-                <td>道路等级分类</td>
-                <td>道路信息管理系统</td>
-                <td>road_level</td>
-                <td>6</td>
-                <td>V1</td>
-                <td><span class="ant-tag ant-tag-success">已启用</span></td>
-                <td>2026-04-18 09:00</td>
-                <td class="flex gap-1">
-                  <button class="ant-btn-link" onclick="openDetailModal()">详情</button>
-                  <button class="ant-btn-link" onclick="openDictModal()">编辑</button>
-                  <button class="ant-btn-link danger" onclick="openStopModal()">停用</button>
-                </td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>APPLY_TYPE</td>
-                <td>申请类型</td>
-                <td>测试车辆管理系统</td>
-                <td>apply_type</td>
-                <td>4</td>
-                <td>V1</td>
-                <td><span class="ant-tag ant-tag-default">已停用</span></td>
-                <td>2026-04-10 16:45</td>
-                <td class="flex gap-1">
-                  <button class="ant-btn-link" onclick="openDetailModal()">详情</button>
-                  <button class="ant-btn-link" onclick="openDictModal()">编辑</button>
-                  <button class="ant-btn-link" style="color:#52c41a" onclick="openEnableModal()">启用</button>
-                </td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>TEST_SCENARIO</td>
-                <td>测试场景分类</td>
-                <td>道路信息管理系统</td>
-                <td>test_scenario</td>
-                <td>3</td>
-                <td>V2</td>
-                <td><span class="ant-tag ant-tag-success">已启用</span></td>
-                <td>2026-04-28 11:20</td>
-                <td class="flex gap-1">
-                  <button class="ant-btn-link" onclick="openDetailModal()">详情</button>
-                  <button class="ant-btn-link" onclick="openDictModal()">编辑</button>
-                  <button class="ant-btn-link danger" onclick="openStopModal()">停用</button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="dictTableBody"></tbody>
           </table>
         </div>
-        <div class="flex items-center justify-between px-4 py-3">
-          <span class="text-sm text-[#00000073]">共 4 条</span>
-          <div class="ant-pagination">
-            <span class="page-item">‹</span>
-            <span class="page-item active">1</span>
-            <span class="page-item">2</span>
-            <span class="page-item">3</span>
-            <span class="page-item">›</span>
-          </div>
-        </div>
+        <div id="paginationBar"></div>
       </div>
     </main>
   </div>
 </div>
 <script>
 const PAGE_ID='dict-manage';
+
+var dictData = [
+  {code:'VEHICLE_TYPE', name:'车辆类型', app:'测试车辆管理系统', key:'vehicle_type', count:5, version:'V3', status:'已启用', updateTime:'2026-04-25 10:30'},
+  {code:'AD_LEVEL', name:'自动驾驶等级', app:'测试车辆管理系统', key:'ad_level', count:4, version:'V2', status:'已启用', updateTime:'2026-04-20 14:15'},
+  {code:'ROAD_LEVEL', name:'道路等级分类', app:'道路信息管理系统', key:'road_level', count:6, version:'V1', status:'已启用', updateTime:'2026-04-18 09:00'},
+  {code:'APPLY_TYPE', name:'申请类型', app:'测试车辆管理系统', key:'apply_type', count:4, version:'V1', status:'已停用', updateTime:'2026-04-10 16:45'},
+  {code:'TEST_SCENARIO', name:'测试场景分类', app:'道路信息管理系统', key:'test_scenario', count:3, version:'V2', status:'已启用', updateTime:'2026-04-28 11:20'},
+  {code:'COMPANY_TYPE', name:'企业类型', app:'准入管理', key:'company_type', count:5, version:'V1', status:'已启用', updateTime:'2026-05-02 09:15'},
+  {code:'PERSON_TYPE', name:'人员类型', app:'准入管理', key:'person_type', count:3, version:'V1', status:'已启用', updateTime:'2026-05-02 10:00'},
+  {code:'ALARM_TYPE', name:'告警类型', app:'监测管理', key:'alarm_type', count:7, version:'V2', status:'已启用', updateTime:'2026-05-05 14:30'},
+  {code:'ACCIDENT_TYPE', name:'事故类型', app:'监测管理', key:'accident_type', count:6, version:'V3', status:'已启用', updateTime:'2026-05-06 08:45'},
+  {code:'FAULT_TYPE', name:'故障类型', app:'监测管理', key:'fault_type', count:5, version:'V1', status:'已启用', updateTime:'2026-05-06 11:20'},
+  {code:'EVAL_LEVEL', name:'评估等级', app:'数据分析', key:'eval_level', count:4, version:'V1', status:'已启用', updateTime:'2026-05-08 16:00'},
+  {code:'REPORT_TYPE', name:'报告类型', app:'数据分析', key:'report_type', count:4, version:'V2', status:'已启用', updateTime:'2026-05-10 09:30'},
+  {code:'BIZ_TYPE', name:'业务类型', app:'平台管理', key:'biz_type', count:7, version:'V1', status:'已启用', updateTime:'2026-05-12 10:15'},
+  {code:'OP_TYPE', name:'操作类型', app:'平台管理', key:'op_type', count:7, version:'V1', status:'已启用', updateTime:'2026-05-12 10:30'},
+  {code:'REGION_CODE', name:'行政区域编码', app:'道路管理', key:'region_code', count:10, version:'V2', status:'已启用', updateTime:'2026-05-15 13:00'},
+  {code:'ROAD_TYPE', name:'道路类型', app:'道路管理', key:'road_type', count:5, version:'V3', status:'已启用', updateTime:'2026-05-18 08:20'},
+  {code:'LICENSE_TYPE', name:'驾照类型', app:'准入管理', key:'license_type', count:7, version:'V1', status:'已启用', updateTime:'2026-05-20 14:45'},
+  {code:'SCENE_TYPE', name:'适用场景', app:'道路管理', key:'scene_type', count:4, version:'V1', status:'已停用', updateTime:'2026-05-22 09:10'},
+  {code:'TERMINATE_TYPE', name:'终止类型', app:'准入管理', key:'terminate_type', count:3, version:'V1', status:'已启用', updateTime:'2026-05-25 11:30'},
+  {code:'APPROVE_NODE', name:'审批节点', app:'准入管理', key:'approve_node', count:6, version:'V2', status:'已启用', updateTime:'2026-05-28 16:00'},
+  {code:'INFO_TYPE', name:'信息类型', app:'平台管理', key:'info_type', count:4, version:'V1', status:'已启用', updateTime:'2026-06-01 10:00'},
+  {code:'PUBLISH_STATUS', name:'发布状态', app:'平台管理', key:'publish_status', count:3, version:'V1', status:'已启用', updateTime:'2026-06-02 14:20'},
+  {code:'RISK_LEVEL', name:'风险等级', app:'监测管理', key:'risk_level', count:3, version:'V1', status:'已启用', updateTime:'2026-06-05 08:50'},
+  {code:'DEVICE_TYPE', name:'感知设备类型', app:'道路管理', key:'device_type', count:5, version:'V2', status:'已启用', updateTime:'2026-06-08 15:30'},
+  {code:'LANE_TYPE', name:'车道类型', app:'道路管理', key:'lane_type', count:3, version:'V1', status:'已启用', updateTime:'2026-06-10 09:45'}
+];
+
+var dictPager;
+
+function renderDictTable() {
+  var cp = dictPager ? dictPager.getCurrentPage() : 1;
+  var ps = dictPager ? dictPager.getPageSize() : 10;
+  var start = (cp - 1) * ps;
+  var end = start + ps;
+  var pageData = dictData.slice(start, end);
+  var tbody = document.getElementById('dictTableBody');
+  tbody.innerHTML = pageData.map(function(item) {
+    var statusClass = item.status === '已启用' ? 'ant-tag-success' : 'ant-tag-default';
+    var actionBtn = item.status === '已启用'
+      ? '<button class="ant-btn-link danger" onclick="openStopModal()">停用</button>'
+      : '<button class="ant-btn-link" style="color:#52c41a" onclick="openEnableModal()">启用</button>';
+    return '<tr>' +
+      '<td style="text-align:center"><input type="checkbox" class="ant-checkbox dict-row-cb"></td>' +
+      '<td>' + item.code + '</td>' +
+      '<td>' + item.name + '</td>' +
+      '<td>' + item.app + '</td>' +
+      '<td>' + item.key + '</td>' +
+      '<td style="text-align:center">' + item.count + '</td>' +
+      '<td style="text-align:center">' + item.version + '</td>' +
+      '<td style="text-align:center"><span class="ant-tag ' + statusClass + '">' + item.status + '</span></td>' +
+      '<td>' + item.updateTime + '</td>' +
+      '<td class="flex gap-1">' +
+        '<button class="ant-btn-link" onclick="openDetailModal()">详情</button>' +
+        '<button class="ant-btn-link" onclick="openDictModal()">编辑</button>' +
+        actionBtn +
+      '</td>' +
+    '</tr>';
+  }).join('');
+  if (dictPager) dictPager.setTotal(dictData.length);
+  syncSelectAllState();
+}
+
+function toggleSelectAll(el) {
+  document.querySelectorAll('#dictTableBody .dict-row-cb').forEach(function(cb) { cb.checked = el.checked; });
+}
+
+function syncSelectAllState() {
+  var rowCbs = document.querySelectorAll('#dictTableBody .dict-row-cb');
+  var allChecked = rowCbs.length > 0 && Array.prototype.every.call(rowCbs, function(cb) { return cb.checked; });
+  var sa = document.getElementById('dictSelectAll');
+  if (sa) sa.checked = allChecked;
+}
+
+dictPager = new Pagination({
+  container: 'paginationBar',
+  pageSize: 10,
+  pageSizeOptions: [10, 20, 50, 100],
+  onPageChange: function(page, size) { renderDictTable(); },
+  onPageSizeChange: function(size) { renderDictTable(); }
+});
+renderDictTable();
 function openDictModal(){
   openModal('新增字典项',
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>字典编码</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入字典编码，如：VEHICLE_TYPE"></div></div>' +

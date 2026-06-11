@@ -647,11 +647,13 @@
         '<div class="filter-item"><label>开始日期</label><input class="ant-input" type="date" id="districtDateFrom" value="2026-04-01" style="width:150px"></div>' +
         '<div class="filter-item"><label>结束日期</label><input class="ant-input" type="date" id="districtDateTo" value="2026-05-08" style="width:150px"></div>' +
         '<div class="filter-item"><label>事故类型</label><div class="ant-select" id="accidentTypeSel" style="min-width:140px;height:32px;padding:0 10px;border:1px solid #d9d9d9;border-radius:6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;color:#000000d9;background:#fff"><span>全部</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>' +
+        '<div class="filter-item"><label>车辆类型</label><div class="ant-select" id="vehicleTypeSel" style="min-width:140px;height:32px;padding:0 10px;border:1px solid #d9d9d9;border-radius:6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;color:#000000d9;background:#fff"><span>全部</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>' +
         '<div class="filter-item"><button class="ant-btn ant-btn-primary" onclick="showToastMsg(\'片区分析数据已刷新\')">查询分析</button></div>' +
         '<div class="filter-item"><button class="ant-btn" onclick="showToastMsg(\'报表导出中...\')">导出报告</button></div>' +
       '</div>';
     initSelectDropdown('districtSelect', ['全部区域', '樊城区', '襄城区', '襄州区', '南漳县', '谷城县']);
     initSelectDropdown('accidentTypeSel', ['全部', '碰撞', '刮擦', '追尾', '行人冲突']);
+    initSelectDropdown('vehicleTypeSel', ['全部', '乘用车', '商用车', '专用作业车']);
   }
 
   function initSelectDropdown(id, options) {

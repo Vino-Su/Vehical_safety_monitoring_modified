@@ -97,10 +97,13 @@
                 <th data-sort="plate" onclick="handleSort('plate')">车牌号 <i class="fas fa-sort sort-icon" id="s-plate"></i></th>
                 <th data-sort="vin" onclick="handleSort('vin')">VIN码 <i class="fas fa-sort sort-icon" id="s-vin"></i></th>
                 <th data-sort="company" onclick="handleSort('company')">所属企业 <i class="fas fa-sort sort-icon" id="s-company"></i></th>
-                <th data-sort="mileage" onclick="handleSort('mileage')">测试里程(km) <i class="fas fa-sort sort-icon" id="s-mileage"></i></th>
+                <th data-sort="mileage" onclick="handleSort('mileage')">总测试里程(km) <i class="fas fa-sort sort-icon" id="s-mileage"></i></th>
+                <th data-sort="adMileage" onclick="handleSort('adMileage')">自动驾驶里程(km) <i class="fas fa-sort sort-icon" id="s-adMileage"></i></th>
+                <th data-sort="manualMileage" onclick="handleSort('manualMileage')">人工驾驶里程(km) <i class="fas fa-sort sort-icon" id="s-manualMileage"></i></th>
                 <th data-sort="duration" onclick="handleSort('duration')">测试时长(h) <i class="fas fa-sort sort-icon" id="s-duration"></i></th>
                 <th data-sort="avgSpeed" onclick="handleSort('avgSpeed')">平均速度(km/h) <i class="fas fa-sort sort-icon" id="s-avgSpeed"></i></th>
                 <th data-sort="autoRatio" onclick="handleSort('autoRatio')">自动驾驶占比 <i class="fas fa-sort sort-icon" id="s-autoRatio"></i></th>
+                <th data-sort="lastTestDate" onclick="handleSort('lastTestDate')">最近测试日期 <i class="fas fa-sort sort-icon" id="s-lastTestDate"></i></th>
                 <th>操作</th>
               </tr></thead>
               <tbody id="vehicleTbody"></tbody>
@@ -177,7 +180,10 @@ for(var i=0;i<328;i++){
   var dur=Math.floor(m/(25+Math.random()*30));
   var sp=+(m/dur).toFixed(1);
   var auto=m*(0.5+Math.random()*0.45);
-  allVehicleData.push({plate:plates[idx],vin:vins[idx],company:randomEl(companies),mileage:m,duration:dur,avgSpeed:sp,autoRatio:+(auto/m*100).toFixed(1)});
+  var manual=m-auto;
+  var d=new Date();d.setDate(d.getDate()-Math.floor(Math.random()*90));
+  var lastDate=d.toISOString().split('T')[0];
+  allVehicleData.push({plate:plates[idx],vin:vins[idx],company:randomEl(companies),mileage:m,duration:dur,avgSpeed:sp,autoRatio:+(auto/m*100).toFixed(1),adMileage:Math.floor(auto),manualMileage:Math.floor(manual),lastTestDate:lastDate});
 }
 
 var vCurrentPage=1,vPageSize=10,vSortField='mileage',vSortOrder='desc';
@@ -229,7 +235,7 @@ function renderVehicleTable(){
   var pageData=sorted.slice(start,end);
   var html=pageData.map(function(d){
     var ratioTag=d.autoRatio>=80?'<span class="ant-tag ant-tag-success">'+d.autoRatio+'%</span>':d.autoRatio>=60?'<span class="ant-tag ant-tag-processing">'+d.autoRatio+'%</span>':'<span class="ant-tag ant-tag-warning">'+d.autoRatio+'%</span>';
-    return '<tr><td><strong>'+d.plate+'</strong></td><td style="font-size:11px;">'+d.vin+'</td><td>'+d.company+'</td><td>'+d.mileage.toLocaleString()+' km</td><td>'+d.duration.toLocaleString()+' h</td><td>'+d.avgSpeed+' km/h</td><td>'+ratioTag+'</td><td><button class="ant-btn-link" onclick="showDetail(\''+d.plate+'\',\''+d.vin+'\',\''+d.company+'\','+d.mileage+','+d.duration+','+d.avgSpeed+','+d.autoRatio+')">详情</button></td></tr>';
+    return '<tr><td><strong>'+d.plate+'</strong></td><td style="font-size:11px;">'+d.vin+'</td><td>'+d.company+'</td><td>'+d.mileage.toLocaleString()+' km</td><td>'+(d.adMileage||0).toLocaleString()+' km</td><td>'+(d.manualMileage||0).toLocaleString()+' km</td><td>'+d.duration.toLocaleString()+' h</td><td>'+d.avgSpeed+' km/h</td><td>'+ratioTag+'</td><td>'+(d.lastTestDate||'-')+'</td><td><button class="ant-btn-link" onclick="showDetail(\''+d.plate+'\',\''+d.vin+'\',\''+d.company+'\','+d.mileage+','+d.duration+','+d.avgSpeed+','+d.autoRatio+','+(d.adMileage||0)+','+(d.manualMileage||0)+',\''+(d.lastTestDate||'-')+'\')">详情</button></td></tr>';
   }).join('');
   document.getElementById('vehicleTbody').innerHTML=html;
   document.getElementById('vTotal').innerText=sorted.length;
@@ -237,17 +243,20 @@ function renderVehicleTable(){
   document.getElementById('vTotalPage').innerText=Math.ceil(sorted.length/vPageSize);
 }
 
-function showDetail(plate,vin,company,mileage,duration,avgSpeed,autoRatio){
+function showDetail(plate,vin,company,mileage,duration,avgSpeed,autoRatio,adMileage,manualMileage,lastTestDate){
   document.getElementById('drillModalTitle').innerText='车辆详情 - '+plate;
   document.getElementById('drillModalBody').innerHTML=
     '<div class="ant-descriptions">'+
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号</div><div class="ant-descriptions-value"><strong>'+plate+'</strong></div></div>'+
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value">'+vin+'</div></div>'+
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+company+'</div></div>'+
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">测试里程</div><div class="ant-descriptions-value">'+mileage.toLocaleString()+' km</div></div>'+
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">总测试里程</div><div class="ant-descriptions-value">'+mileage.toLocaleString()+' km</div></div>'+
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自动驾驶里程</div><div class="ant-descriptions-value">'+(adMileage||0).toLocaleString()+' km</div></div>'+
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">人工驾驶里程</div><div class="ant-descriptions-value">'+(manualMileage||0).toLocaleString()+' km</div></div>'+
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">测试时长</div><div class="ant-descriptions-value">'+duration.toLocaleString()+' h</div></div>'+
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">平均速度</div><div class="ant-descriptions-value">'+avgSpeed+' km/h</div></div>'+
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自动驾驶占比</div><div class="ant-descriptions-value">'+autoRatio+'%</div></div>'+
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">最近测试日期</div><div class="ant-descriptions-value">'+(lastTestDate||'-')+'</div></div>'+
     '</div>';
   document.getElementById('drillModalMask').style.setProperty('display','flex','important');
 }

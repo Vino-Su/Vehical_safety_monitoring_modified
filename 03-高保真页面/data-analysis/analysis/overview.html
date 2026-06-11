@@ -70,7 +70,7 @@
           </div>
           <div style="overflow-x:auto;">
             <table class="ant-table" id="enterpriseVehicleTable">
-              <thead><tr><th>企业名称</th><th>当日测试车辆数</th><th>正在测试车辆数</th></tr></thead>
+              <thead><tr><th>企业名称</th><th class="col-num">当日测试车辆数</th><th class="col-num">正在测试车辆数</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -245,7 +245,7 @@ function renderDailyStats() {
 function renderEnterpriseTable() {
   var tbody = document.querySelector('#enterpriseVehicleTable tbody');
   tbody.innerHTML = enterpriseVehicleStats.map(function(item) {
-    return '<tr><td>' + item.name + '</td><td>' + item.testVehicles + '</td><td><span class="ant-tag ant-tag-success">' + item.activeVehicles + '</span></td></tr>';
+    return '<tr><td>' + item.name + '</td><td class="col-num">' + item.testVehicles + '</td><td class="col-num"><span class="ant-tag ant-tag-success">' + item.activeVehicles + '</span></td></tr>';
   }).join('');
 }
 

@@ -579,12 +579,12 @@ function renderMainTrend() {
   chart.setOption({
     tooltip: { trigger: 'axis' },
     grid: { left: 55, right: 30, top: 30, bottom: 45 },
-    xAxis: { type: 'category', data: monthLabels, boundaryGap: false },
+    xAxis: { type: 'category', data: monthLabels.concat(['6月(预)','7月(预)','8月(预)','9月(预)']), boundaryGap: false },
     yAxis: { type: 'value', name: yName },
     legend: { bottom: 0 },
     series: [
       {
-        name: '实际值', type: 'line', data: data, smooth: true,
+        name: '实际值', type: 'line', data: data.concat([null,null,null,null]), smooth: true,
         lineStyle: { color: '#1677ff', width: 2.5 },
         symbol: 'circle', symbolSize: 6,
         areaStyle: { color: 'rgba(22,119,255,0.08)' },
@@ -592,9 +592,17 @@ function renderMainTrend() {
         markPoint: { data: anomalyIdx.map(function(i) { return { name: '异常', coord: [monthLabels[i], data[i]], symbol: 'pin', symbolSize: 28, itemStyle: { color: '#f5222d' }, label: { fontSize: 9, fontWeight: 'bold', formatter: '{c}' } }; }) }
       },
       {
-        name: '移动平均(3月)', type: 'line', data: movingAvg, smooth: true,
+        name: '移动平均(3月)', type: 'line', data: movingAvg.concat([null,null,null,null]), smooth: true,
         lineStyle: { color: '#fa8c16', type: 'dotted', width: 1.8 },
         symbol: 'none'
+      },
+      {
+        name: '预测值', type: 'line',
+        data: Array(data.length).fill(null).concat([185,192,195,200]),
+        smooth: true,
+        lineStyle: { color: '#ff4d4f', type: 'dashed', width: 2 },
+        symbol: 'diamond', symbolSize: 8,
+        itemStyle: { color: '#ff4d4f' }
       }
     ]
   });
@@ -914,6 +922,13 @@ function openNewReportModal() {
   var html = '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>报告名称</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入报告名称"></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>报告类型</div><div class="ant-form-control"><select class="ant-input"><option>月报</option><option>周报</option><option>季报</option><option>年报</option><option>专项报告</option></select></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>统计周期</div><div class="ant-form-control"><div style="display:flex;gap:4px;align-items:center;"><input class="ant-input" type="date" style="width:45%;display:inline-block"><span style="color:#8c8c8c;">-</span><input class="ant-input" type="date" style="width:45%;display:inline-block"></div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">包含模块</div><div class="ant-form-control"><div style="display:flex;flex-wrap:wrap;gap:8px">' +
+      '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" checked> 总体情况</label>' +
+      '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" checked> 多发地点</label>' +
+      '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" checked> 风险区域</label>' +
+      '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" checked> 趋势分析</label>' +
+      '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" checked> 管控建议</label>' +
+    '</div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">报告摘要</div><div class="ant-form-control"><textarea class="ant-input" style="height:100px;padding:8px 12px" placeholder="请输入报告摘要"></textarea></div></div>';
   openModal('新建分析报告', html, { footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="showToast(\'报告创建成功\');closeModal()">提交</button>' });
 }

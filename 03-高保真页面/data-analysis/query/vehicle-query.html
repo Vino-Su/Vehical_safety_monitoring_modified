@@ -171,23 +171,23 @@
             <div class="filter-item"><label>设备编码</label><input class="ant-input" placeholder="请输入设备编码" style="width:180px"></div>
             <div class="filter-item"><label>采集开始</label><input class="ant-input" type="date" value="2026-05-08" style="width:160px"></div>
             <div class="filter-item"><label>采集截止</label><input class="ant-input" type="date" value="2026-05-08" style="width:160px"></div>
-            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn" id="refreshToggleBtn" onclick="toggleAutoRefresh()" style="background:#f6ffed;border-color:#b7eb8f;color:#52c41a">⏸ 暂停刷新</button></div>
             <button class="ant-btn ml-auto">导出</button>
           </div>
         </div>
         <div class="ant-table-wrapper">
           <div style="overflow-x:auto">
             <table class="ant-table">
-              <thead><tr><th>VIN码</th><th>临牌号</th><th>车辆位置</th><th>车辆控制模式</th><th>车辆速度(km/h)</th><th>加速度(m/s²)</th><th>行驶方向</th><th>设备编码</th><th>采集时间</th><th>落库时间</th></tr></thead>
+              <thead><tr><th>车辆标识</th><th>车辆位置</th><th>车辆控制模式</th><th>车辆速度(km/h)</th><th>加速度(m/s²)</th><th>行驶方向</th><th>设备编码</th><th>采集时间</th><th>落库时间</th></tr></thead>
               <tbody>
-                <tr><td>LSVAG2180N2000001</td><td>鄂A·T0001</td><td><a class="ant-btn-link" onclick="showLocation('鄂A·T0001',114.3526,32.0512)">114.3526, 32.0512</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>55</td><td>1.2</td><td>北偏东15°</td><td>TB001</td><td>2026-05-08 14:30:25</td><td>2026-05-08 14:30:26</td></tr>
-                <tr><td>LSVAG2180N2000002</td><td>鄂A·T0002</td><td><a class="ant-btn-link" onclick="showLocation('鄂A·T0002',114.3685,32.0421)">114.3685, 32.0421</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>48</td><td>0.8</td><td>东偏南30°</td><td>TB002</td><td>2026-05-08 14:30:18</td><td>2026-05-08 14:30:19</td></tr>
-                <tr><td>LSVAG2180N2000003</td><td>沪A·W0003</td><td><a class="ant-btn-link" onclick="showLocation('沪A·W0003',114.3621,32.0489)">114.3621, 32.0489</a></td><td><span class="ant-tag ant-tag-default">人工驾驶</span></td><td>35</td><td>-0.5</td><td>南偏西45°</td><td>TB003</td><td>2026-05-08 14:30:12</td><td>2026-05-08 14:30:13</td></tr>
-                <tr><td>LSVAG2180N2000004</td><td>京B·T0004</td><td><a class="ant-btn-link" onclick="showLocation('京B·T0004',114.3558,32.0556)">114.3558, 32.0556</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>62</td><td>2.1</td><td>正北</td><td>TB004</td><td>2026-05-08 14:30:05</td><td>2026-05-08 14:30:06</td></tr>
-                <tr><td>LSVAG2180N2000005</td><td>粤B·T0005</td><td><a class="ant-btn-link" onclick="showLocation('粤B·T0005',114.3489,32.0498)">114.3489, 32.0498</a></td><td><span class="ant-tag ant-tag-default">人工驾驶</span></td><td>40</td><td>0.3</td><td>西偏北20°</td><td>TB005</td><td>2026-05-08 14:29:58</td><td>2026-05-08 14:29:59</td></tr>
-                <tr><td>LSVAG2180N2000006</td><td>京A·T0006</td><td><a class="ant-btn-link" onclick="showLocation('京A·T0006',114.3702,32.0445)">114.3702, 32.0445</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>0</td><td>0</td><td>-</td><td>TB006</td><td>2026-05-08 14:29:50</td><td>2026-05-08 14:29:52</td></tr>
-                <tr><td>LSVAG2180N2000007</td><td>粤A·T0007</td><td><a class="ant-btn-link" onclick="showLocation('粤A·T0007',114.3615,32.0532)">114.3615, 32.0532</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>72</td><td>3.5</td><td>东偏北10°</td><td>TB007</td><td>2026-05-08 14:30:22</td><td>2026-05-08 14:30:23</td></tr>
-                <tr><td>LSVAG2180N2000008</td><td>鄂C·T0008</td><td><a class="ant-btn-link" onclick="showLocation('鄂C·T0008',114.3589,32.0478)">114.3589, 32.0478</a></td><td><span class="ant-tag ant-tag-default">人工驾驶</span></td><td>28</td><td>-1.5</td><td>正南</td><td>TB008</td><td>2026-05-08 14:30:15</td><td>2026-05-08 14:30:16</td></tr>
+                <tr><td>鄂A·T0001</td><td><a class="ant-btn-link" onclick="showLocation('鄂A·T0001',114.3526,32.0512)">114.3526, 32.0512</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>55</td><td>1.2</td><td>北偏东15°</td><td>TB001</td><td>2026-05-08 14:30:25</td><td>2026-05-08 14:30:26</td></tr>
+                <tr><td>鄂A·T0002</td><td><a class="ant-btn-link" onclick="showLocation('鄂A·T0002',114.3685,32.0421)">114.3685, 32.0421</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>48</td><td>0.8</td><td>东偏南30°</td><td>TB002</td><td>2026-05-08 14:30:18</td><td>2026-05-08 14:30:19</td></tr>
+                <tr><td>沪A·W0003</td><td><a class="ant-btn-link" onclick="showLocation('沪A·W0003',114.3621,32.0489)">114.3621, 32.0489</a></td><td><span class="ant-tag ant-tag-default">人工驾驶</span></td><td>35</td><td>-0.5</td><td>南偏西45°</td><td>TB003</td><td>2026-05-08 14:30:12</td><td>2026-05-08 14:30:13</td></tr>
+                <tr><td>京B·T0004</td><td><a class="ant-btn-link" onclick="showLocation('京B·T0004',114.3558,32.0556)">114.3558, 32.0556</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>62</td><td>2.1</td><td>正北</td><td>TB004</td><td>2026-05-08 14:30:05</td><td>2026-05-08 14:30:06</td></tr>
+                <tr><td>粤B·T0005</td><td><a class="ant-btn-link" onclick="showLocation('粤B·T0005',114.3489,32.0498)">114.3489, 32.0498</a></td><td><span class="ant-tag ant-tag-default">人工驾驶</span></td><td>40</td><td>0.3</td><td>西偏北20°</td><td>TB005</td><td>2026-05-08 14:29:58</td><td>2026-05-08 14:29:59</td></tr>
+                <tr><td>京A·T0006</td><td><a class="ant-btn-link" onclick="showLocation('京A·T0006',114.3702,32.0445)">114.3702, 32.0445</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>0</td><td>0</td><td>-</td><td>TB006</td><td>2026-05-08 14:29:50</td><td>2026-05-08 14:29:52</td></tr>
+                <tr><td>粤A·T0007</td><td><a class="ant-btn-link" onclick="showLocation('粤A·T0007',114.3615,32.0532)">114.3615, 32.0532</a></td><td><span class="ant-tag ant-tag-processing">自动驾驶</span></td><td>72</td><td>3.5</td><td>东偏北10°</td><td>TB007</td><td>2026-05-08 14:30:22</td><td>2026-05-08 14:30:23</td></tr>
+                <tr><td>鄂C·T0008</td><td><a class="ant-btn-link" onclick="showLocation('鄂C·T0008',114.3589,32.0478)">114.3589, 32.0478</a></td><td><span class="ant-tag ant-tag-default">人工驾驶</span></td><td>28</td><td>-1.5</td><td>正南</td><td>TB008</td><td>2026-05-08 14:30:15</td><td>2026-05-08 14:30:16</td></tr>
               </tbody>
             </table>
           </div>
@@ -378,6 +378,40 @@ function switchTab(el,tabId){
 }
 function changePageSize(val){console.log('Page size changed to:',val);}
 function showLocation(plate,lng,lat){alert('车辆 '+plate+' 位置：经度 '+lng+'，纬度 '+lat+'\n（可对接地图展示）');}
+
+// 10秒自动刷新逻辑
+var autoRefreshTimer=null,autoRefreshActive=true;
+function startAutoRefresh(){
+  if(autoRefreshTimer)clearInterval(autoRefreshTimer);
+  autoRefreshTimer=setInterval(function(){
+    if(autoRefreshActive){
+      var el=document.getElementById('refreshToggleBtn');
+      var orig=el.textContent;
+      el.textContent='⏳ 刷新中...';
+      el.style.color='#1677ff';
+      el.style.background='#e6f4ff';
+      el.style.borderColor='#91caff';
+      setTimeout(function(){
+        el.textContent=orig;
+        el.style.color='#52c41a';
+        el.style.background='#f6ffed';
+        el.style.borderColor='#b7eb8f';
+      },800);
+    }
+  },10000);
+}
+function toggleAutoRefresh(){
+  autoRefreshActive=!autoRefreshActive;
+  var btn=document.getElementById('refreshToggleBtn');
+  if(autoRefreshActive){
+    btn.textContent='⏸ 暂停刷新';
+    btn.style.background='#f6ffed';btn.style.borderColor='#b7eb8f';btn.style.color='#52c41a';
+  }else{
+    btn.textContent='▶ 开始刷新';
+    btn.style.background='#fff1f0';btn.style.borderColor='#ffa39e';btn.style.color='#ff4d4f';
+  }
+}
+startAutoRefresh();
 
 renderPlateTable();
 </script>

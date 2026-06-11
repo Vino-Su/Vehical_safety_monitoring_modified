@@ -306,8 +306,8 @@ function getStepStyle(status){
   return {sc1:'#52c41a',sc2:'#1677ff',sc3:'#d9d9d9',sc4:'#d9d9d9',l1:'#52c41a',l2:'#d9d9d9',l3:'#d9d9d9',d1:'\u2713',d2:'\u25CF',d3:'\u25CB',d4:'\u25CB'};
 }
 
-function openStatusModal(action){
-  var hasTasks=action==='暂停'||action==='关闭';
+function openStatusModal(action, processCount){
+  var hasTasks=(action==='暂停'||action==='关闭')&&(typeof processCount!=='undefined'?processCount>0:false);
   var warnHTML='';
   if(hasTasks){
     warnHTML='<div class="bg-[#fffbe6] border border-[#ffe58f] rounded-lg p-4 mb-4">' +
@@ -322,14 +322,14 @@ function openStatusModal(action){
     {footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn '+(action==='关闭'?'ant-btn-danger':'ant-btn-primary')+'" onclick="closeModal()">'+action+'</button>'});
 }
 
-function openAccessConfig(){
-  openModal('差异化准入配置',
+function openAccessConfig(roadName){
+  openModal('差异化准入配置' + (roadName ? ' - ' + roadName : ''),
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>自动驾驶等级</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择(多选) <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>业务类型</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择(多选) <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">测试场景类型</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择(多选) <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>允许运行时段</div><div class="ant-form-control"><div class="flex gap-2"><input class="ant-input" type="time" value="08:00" style="width:120px"><span class="leading-8">至</span><input class="ant-input" type="time" value="20:00" style="width:120px"></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">通行管控要求</div><div class="ant-form-control"><textarea class="ant-input" style="height:80px;padding:8px 12px" placeholder="请输入通行管控要求"></textarea></div></div>',
-    {wide:true, footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">保存</button>'});
+    {width:600, footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">保存</button>'});
 }
 
 function openRoadDetail(roadId, roadName){

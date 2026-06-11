@@ -463,7 +463,8 @@
       '.ant-tab.active::after{content:""!important;position:absolute!important;bottom:-2px!important;left:0!important;right:0!important;height:2px!important;background:#1677ff!important}',
       '.ant-table-wrapper{background:#fff!important;border-radius:8px!important;overflow:hidden!important}',
       '.ant-table{width:100%!important;border-collapse:collapse!important}',
-      '.ant-table thead th{background:#fafafa!important;padding:12px 16px!important;font-weight:600!important;font-size:14px!important;color:#000000d9!important;text-align:left!important;border-bottom:1px solid #f0f0f0!important;white-space:nowrap!important}',
+      '.ant-table thead th{background:#fafafa!important;padding:12px 16px!important;font-weight:600!important;font-size:14px!important;color:#000000d9!important;border-bottom:1px solid #f0f0f0!important;white-space:nowrap!important}',
+	      '.ant-table td.col-num,.ant-table th.col-num{text-align:right!important}','.ant-table td.col-code,.ant-table th.col-code{text-align:center!important}','.ant-table td.col-action,.ant-table th.col-action{text-align:center!important}',
       '.ant-table tbody td{padding:12px 16px!important;font-size:14px!important;color:#000000d9!important;border-bottom:1px solid #f0f0f0!important}',
       '.ant-table tbody tr:hover{background:#fafafa}',
       '.ant-tag{display:inline-flex;align-items:center;height:22px;padding:0 7px;font-size:12px;border-radius:4px;border:1px solid;white-space:nowrap}',
@@ -505,7 +506,6 @@
       '.ant-descriptions-row{display:flex;border-bottom:1px solid #f0f0f0}',
       '.ant-descriptions-label{width:140px;min-width:140px;padding:10px 12px;background:#fafafa;font-size:14px;color:#00000073;font-weight:500}',
       '.ant-descriptions-value{flex:1;padding:10px 12px;font-size:14px;color:#000000d9}',
-      '.ant-modal-body .ant-table th,.ant-modal-body .ant-table td{text-align:center!important}',
       '.ant-modal-body .ant-table-wrapper .ant-pagination-bar{padding:12px 0 0;display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:12px;color:#00000040}',
       '.ant-modal-body .ant-pagination-bar select{width:80px;height:24px;font-size:12px;padding:0 8px 0 12px;border:1px solid #d9d9d9;border-radius:6px;outline:none;background:#fff;cursor:pointer}',
       '.ant-modal-body .ant-pagination-bar button{height:24px;padding:0 8px;font-size:12px}',
@@ -709,6 +709,54 @@
     initRoleSwitcherEvents();
   }
 
+  // ========== 表格自动对齐 ==========
+  var ALIGN_NUM_RE = /数量|金额|里程|时长|次数|得分|占比|百分比|速度|年龄|权重|价格|总额|总数|偏差|应收|实收|记录数|环比|同比|变化|测试里程|服务次数|载客|客流|等待|行程|客单|票价|满载|覆盖|销售|产值|营收|收入|投入|电流|电压|续航|SOC|SOH|单价|均值|比值|系数|限额|额度|上限|下限|门槛|积分|评分|规模|密度|负荷|强度|率$|率\)|率$|km|h\)|天$|m²|㎡/;
+  var ALIGN_CODE_RE = /编号|代码|序号|版本|时间$|日期|VIN|车牌|号牌|牌照|身份证|证件|有效期|起止|截止|关联|批次|事故编号|预警|事件|车架号|许可证|登记证|临牌|测试编号|报告编号|申请编号|审核单号|订单号|受理|阈值|开始|结束|起始|送审|批准|提交|发布时间|更新时间|创建时间/;
+  var ALIGN_ACTION_RE = /操作/;
+
+  function classifyColumn(text) {
+    if (!text) return null;
+    var t = text.trim();
+    if (ALIGN_ACTION_RE.test(t)) return 'col-action';
+    if (ALIGN_NUM_RE.test(t)) return 'col-num';
+    if (ALIGN_CODE_RE.test(t)) return 'col-code';
+    return null;
+  }
+
+  function applyTableAlignment(scope) {
+    var root = scope || document;
+    var tables = root.querySelectorAll('table');
+    tables.forEach(function(table) {
+      var headers = table.querySelectorAll('thead th');
+      var colClasses = [];
+      headers.forEach(function(th) {
+        var cls = classifyColumn(th.textContent);
+        if (cls && !th.classList.contains(cls)) th.classList.add(cls);
+        colClasses.push(cls);
+      });
+      var bodyRows = table.querySelectorAll('tbody tr');
+      bodyRows.forEach(function(tr) {
+        var cells = tr.children;
+        for (var i = 0; i < cells.length && i < colClasses.length; i++) {
+          var cls = colClasses[i];
+          if (cls && !cells[i].classList.contains(cls)) cells[i].classList.add(cls);
+        }
+      });
+    });
+  }
+
+  function observeDynamicTables() {
+    var pending = null;
+    var observer = new MutationObserver(function() {
+      if (pending) return;
+      pending = setTimeout(function() {
+        pending = null;
+        applyTableAlignment();
+      }, 50);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   // ========== 主初始化 ==========
   function init() {
     if (typeof PAGE_ID === 'undefined') {
@@ -731,6 +779,8 @@
     }
 
     convertStaticSelects();
+    applyTableAlignment();
+    observeDynamicTables();
   }
 
   var SELECT_OPTIONS_MAP = {
@@ -754,7 +804,7 @@
     '当前审批节点': ['全部','第三方初审','市工作专班审核','专班审核确认','专家评审','专题会审议','待上传牌照'],
     '审核状态': ['全部','待审核','审核中','已通过','已退回'],
     '终止类型': ['全部','主动终止','强制终止','到期终止'],
-    '触发方式': ['全部','自动触发','人工触发'],
+    '触发方式': ['全部','自动','手动'],
     '报告类型': ['全部','月度报告','季度报告','年度报告','专项报告'],
     '报送对象': ['全部','工业和信息化部','公安部','交通运输部'],
     '材料类型': ['全部','专家评审材料','安全评估材料','测试报告'],
@@ -767,6 +817,8 @@
     '子类型': ['全部','政策法规','技术标准','管理规范','测试公告'],
     '所属应用': ['全部','准入管理','监测管理','数据分析','道路管理','平台管理'],
     '状态': ['全部','启用','禁用'],
+    '操作状态': ['全部','成功','失败'],
+    '字典值类型': ['字符串','整数','小数','日期','布尔'],
     '操作类型': ['全部','新增','修改','删除','查询','导出','审核'],
     '在线/离线': ['全部','在线','离线'],
     '风险等级': ['全部','低风险','中风险','高风险'],
@@ -776,7 +828,7 @@
     '交通流量等级': ['全部','低','中','高'],
     '感知设备类型': ['全部','摄像头','激光雷达','毫米波雷达','超声波雷达','GNSS'],
     '边缘计算节点': ['全部','有','无'],
-    '适用测试场景': ['全部','城市道路','高速公路','乡村道路','停车场','交叉路口'],
+    '适用测试场景': ['全部','城区道路','园区道路','环卫作业道路','物流配送道路'],
     '适用自动驾驶等级': ['全部','L2','L3','L4','L5'],
     '适用业务类型': ['全部','道路测试','示范应用','商业化试点'],
     '执行动作': ['全部','自动开放','自动暂停','人工审核'],

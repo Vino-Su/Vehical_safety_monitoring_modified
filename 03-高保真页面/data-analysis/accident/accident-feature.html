@@ -241,7 +241,7 @@
       grid: { left:40, right:20, bottom:30 },
       xAxis: { data: Array.from({length:24},function(_,i){return i+'时'}) },
       yAxis: { name:'事故数' },
-      series: [{ type:'bar', data: data, itemStyle: { color:'#1677ff', borderRadius:[4,4,0,0] }, barWidth:'60%' }]
+      series: [{ type:'line', data: data, smooth:true, lineStyle:{color:'#1677ff',width:2}, itemStyle:{color:'#1677ff'}, areaStyle:{color:'rgba(22,119,255,0.08)'} }]
     });
   }
   function renderWeekday() {
@@ -614,7 +614,7 @@
     // TAB 3
     renderCrossMatrix(); renderSingleDim(); renderTagCloud();
     // Inline selectors
-    initSelectDropdown('hourFilterSelect', ['工作日', '非工作日']);
+    initSelectDropdown('hourFilterSelect', ['工作日', '周末']);
     initSelectDropdown('profileXSel', ['事故类型', '车辆类型', '测试场景', '道路类型']);
     initSelectDropdown('profileYSel', ['时段', '伤亡等级', '自动驾驶等级', '驾驶模式']);
     initSelectDropdown('singleDimSelect', ['事故类型', '车辆类型', '测试场景', '道路类型']);

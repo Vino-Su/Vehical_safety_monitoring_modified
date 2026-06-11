@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -61,7 +61,7 @@
                 <td><span class="ant-tag ant-tag-success">开放</span></td>
                 <td>08:00-20:00</td>
                 <td>2026-04-15 10:30</td>
-                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td>
+                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('长虹北路')">删除</button></td>
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
@@ -74,7 +74,7 @@
                 <td><span class="ant-tag ant-tag-success">开放</span></td>
                 <td>06:00-22:00</td>
                 <td>2026-04-14 14:20</td>
-                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td>
+                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('东风大道')">删除</button></td>
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
@@ -87,7 +87,7 @@
                 <td><span class="ant-tag ant-tag-warning">暂停</span></td>
                 <td>08:00-18:00</td>
                 <td>2026-04-13 09:15</td>
-                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td>
+                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('高新一路')">删除</button></td>
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
@@ -100,7 +100,7 @@
                 <td><span class="ant-tag ant-tag-success">开放</span></td>
                 <td>00:00-24:00</td>
                 <td>2026-04-12 16:45</td>
-                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td>
+                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('襄阳高新技术产业园路')">删除</button></td>
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
@@ -113,7 +113,7 @@
                 <td><span class="ant-tag ant-tag-error">关闭</span></td>
                 <td>-</td>
                 <td>2026-04-11 11:30</td>
-                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger">删除</button></td>
+                <td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal()">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('东风大道南延')">删除</button></td>
               </tr>
             </tbody>
           </table>
@@ -153,7 +153,8 @@ function openAddModal() {
     '<div class="ant-form-item"><div class="ant-form-label">RSU配置数量</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入路侧单元部署数量" type="number"></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">感知设备类型</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择(多选) <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">感知设备数量</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入各类感知设备总数" type="number"></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label">边缘计算节点</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">是否部署边缘计算节点</div><div class="ant-form-control"><div class="ant-select" style="width:100%" id="edgeDeploy" onchange="toggleEdgeCount()">请选择 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
+    '<div class="ant-form-item" id="edgeCountGroup" style="display:none"><div class="ant-form-label">边缘计算节点数量</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入边缘计算节点数量" type="number"></div></div>' +
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">测试场景信息</h4>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>适用测试场景</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择(多选) <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">开放管控信息</h4>' +
@@ -164,7 +165,7 @@ function openAddModal() {
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>适用业务类型</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择(多选) <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">管控要求说明</div><div class="ant-form-control"><textarea class="ant-input" style="height:80px;padding:8px 12px" placeholder="请输入管控要求说明"></textarea></div></div>' +
     '</div>';
-  openModal('新建/编辑道路信息', modalBody, { wide: true });
+  openModal('新建道路信息', modalBody, { wide: true, footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn" onclick="saveDraft()">保存草稿</button><button class="ant-btn ant-btn-primary" onclick="submitForm()">确定</button>' });
 }
 function openDetailModal() {
   openModal('道路详情 - 长虹北路',
@@ -212,6 +213,91 @@ function openImportModal() {
         '<li>3. 导入后数据将自动校验，不符合要求的数据将被标记并提示修正</li>' +
       '</ul>' +
     '</div>', { footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">确认导入</button>' });
+}
+
+function toggleEdgeCount() {
+  var sel = document.getElementById('edgeDeploy');
+  var group = document.getElementById('edgeCountGroup');
+  if (!sel || !group) return;
+  if (sel.tagName !== 'SELECT') {
+    sel = sel.querySelector('select');
+    if (!sel) { setTimeout(function(){ toggleEdgeCount(); }, 100); return; }
+  }
+  if (sel.value === '是') {
+    group.style.display = '';
+  } else {
+    group.style.display = 'none';
+    var input = group.querySelector('input');
+    if (input) input.value = '';
+  }
+}
+
+function toggleOpenHours() {
+  var selects = document.querySelectorAll('#modal-mask select');
+  var statusSelect = null;
+  for (var i = 0; i < selects.length; i++) {
+    var opts = selects[i].options;
+    var hasStatus = false;
+    for (var j = 0; j < opts.length; j++) {
+      if (['开放','暂停','关闭'].indexOf(opts[j].value) >= 0) { hasStatus = true; break; }
+    }
+    if (hasStatus) { statusSelect = selects[i]; break; }
+  }
+  if (!statusSelect) { setTimeout(function(){ toggleOpenHours(); }, 100); return; }
+  statusSelect.addEventListener('change', function() {
+    var isClosed = (this.value === '关闭');
+    var timeInputs = document.querySelectorAll('#modal-mask input[type="time"]');
+    for (var k = 0; k < timeInputs.length; k++) {
+      timeInputs[k].disabled = isClosed;
+      timeInputs[k].style.background = isClosed ? '#f5f5f5' : '';
+      timeInputs[k].style.color = isClosed ? '#00000040' : '';
+    }
+  });
+}
+
+function saveDraft() {
+  var nameInput = document.querySelector('#modal-mask input[placeholder*="道路名称"]');
+  var name = nameInput ? nameInput.value.trim() : '';
+  if (!name) {
+    showToastMsg('请填写道路名称');
+    return;
+  }
+  showToastMsg('草稿已保存');
+  closeModal();
+}
+
+function submitForm() {
+  showToastMsg('新建成功');
+  closeModal();
+}
+
+function showToastMsg(msg) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:#fff;padding:12px 20px;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,0.1);font-size:13px;border-left:3px solid #1677ff;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; t.style.transition='0.3s'; setTimeout(function(){t.remove();},300); }, 2000);
+}
+
+function confirmDelete(roadName) {
+  openModal('删除确认',
+    '<div class="text-center"><p class="text-sm text-[#000000d9] mb-2">确定删除该道路信息吗？</p><p class="text-xs text-[#00000073]">删除后数据不可恢复。</p></div>',
+    { footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="checkDeleteFlow(\'' + roadName + '\')">确定</button>' });
+}
+
+function checkDeleteFlow(roadName) {
+  var hasFlow = (roadName === '长虹北路' || roadName === '东风大道');
+  if (hasFlow) {
+    closeModal();
+    setTimeout(function() {
+      openModal('无法删除',
+        '<div class="bg-[#fff2f0] border border-[#ffccc7] rounded-lg p-4"><p class="text-sm text-[#000000d9]">该道路存在正在进行的关联申请流程，无法删除</p></div>',
+        { footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>' });
+    }, 200);
+  } else {
+    showToastMsg('删除成功');
+    closeModal();
+  }
 }
 </script>
 <script src="../../common.js"></script>

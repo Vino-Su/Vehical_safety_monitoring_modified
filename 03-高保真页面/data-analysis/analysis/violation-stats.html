@@ -55,7 +55,7 @@
         <div class="text-sm font-semibold text-[#000000d9] mb-3">事故列表</div>
         <div style="overflow-x:auto">
           <table class="ant-table">
-            <thead><tr><th>事故编号</th><th>时间</th><th>地点</th><th>事故类型</th><th>严重程度</th><th>车牌号</th><th>VIN码</th><th>所属企业</th><th>事故分类</th><th>操作</th></tr></thead>
+            <thead><tr><th class="col-code">事故编号</th><th class="col-code">时间</th><th>地点</th><th>事故类型</th><th>严重程度</th><th class="col-code">车牌号</th><th class="col-code">VIN码</th><th>所属企业</th><th>事故分类</th><th class="col-action">操作</th></tr></thead>
             <tbody id="accidentTableBody"></tbody>
           </table>
         </div>
@@ -194,16 +194,16 @@ const PAGE_ID = 'violation-stats';
     var pageData = filteredAccidents.slice(start, end);
     tbody.innerHTML = pageData.map(a => {
       return '<tr onclick="openDetail(\'' + a.id + '\')" style="cursor:pointer">' +
-        '<td><b>' + a.id + '</b></td>' +
-        '<td>' + a.time + '</td>' +
+        '<td class="col-code"><b>' + a.id + '</b></td>' +
+        '<td class="col-code">' + a.time + '</td>' +
         '<td>' + a.location + '</td>' +
         '<td><span class="' + typeTag(a.accidentType) + '">' + a.accidentType + '</span></td>' +
         '<td><span class="' + severityTag(a.severity) + '">' + a.severity + '</span></td>' +
-        '<td>' + a.plate + '</td>' +
-        '<td style="font-family:monospace;font-size:11px">' + a.vin + '</td>' +
+        '<td class="col-code">' + a.plate + '</td>' +
+        '<td class="col-code" style="font-family:monospace;font-size:11px">' + a.vin + '</td>' +
         '<td>' + a.company + '</td>' +
         '<td><span class="' + categoryTag(a.category) + '">' + a.category + '</span></td>' +
-        '<td><button class="ant-btn-link" onclick="event.stopPropagation();openDetail(\'' + a.id + '\')">详情</button></td>' +
+        '<td class="col-action"><button class="ant-btn-link" onclick="event.stopPropagation();openDetail(\'' + a.id + '\')">详情</button></td>' +
         '</tr>';
     }).join('');
     if(pager)pager.setTotal(filteredAccidents.length);

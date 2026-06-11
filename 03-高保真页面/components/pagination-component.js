@@ -127,13 +127,6 @@
     var cfg = self._getSizeConfig();
     var cid = self._container.id;
 
-    // 仅 1 页时隐藏整个组件
-    if (self._total <= self._pageSize) {
-      self._container.innerHTML = '';
-      self._container.style.display = 'none';
-      return;
-    }
-
     self._container.style.display = '';
 
     // 翻页箭头按钮
