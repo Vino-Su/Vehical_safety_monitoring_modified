@@ -26,8 +26,8 @@
           <div class="filter-item"><label>时间范围</label><div style="display:flex;gap:4px;align-items:center;"><input class="ant-input" type="date" value="2026-04-01" style="width:140px"><span class="mx-1 text-[#00000040]">~</span><input class="ant-input" type="date" value="2026-05-08" style="width:140px"></div></div>
           <div class="filter-item"><label>字典编码</label><input class="ant-input" placeholder="请输入字典编码搜索"></div>
           <div class="filter-item"><label>字典名称</label><input class="ant-input" placeholder="请输入字典名称搜索"></div>
-          <div class="filter-item"><label>所属应用</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
-          <div class="filter-item"><label>状态</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="filter-item"><label>所属应用</label><select class="ant-input" style="width:140px"><option value="all">全部</option><option>准入管理</option><option>监测管理</option><option>数据分析</option><option>道路管理</option><option>平台管理</option></select></div>
+          <div class="filter-item"><label>状态</label><select class="ant-input" style="width:120px"><option value="all">全部</option><option>已启用</option><option>已停用</option></select></div>
           <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
         </div>
       </div>
@@ -60,11 +60,11 @@
 const PAGE_ID='dict-manage';
 
 var dictData = [
-  {code:'VEHICLE_TYPE', name:'车辆类型', app:'测试车辆管理系统', key:'vehicle_type', count:5, version:'V3', status:'已启用', updateTime:'2026-04-25 10:30'},
-  {code:'AD_LEVEL', name:'自动驾驶等级', app:'测试车辆管理系统', key:'ad_level', count:4, version:'V2', status:'已启用', updateTime:'2026-04-20 14:15'},
-  {code:'ROAD_LEVEL', name:'道路等级分类', app:'道路信息管理系统', key:'road_level', count:6, version:'V1', status:'已启用', updateTime:'2026-04-18 09:00'},
-  {code:'APPLY_TYPE', name:'申请类型', app:'测试车辆管理系统', key:'apply_type', count:4, version:'V1', status:'已停用', updateTime:'2026-04-10 16:45'},
-  {code:'TEST_SCENARIO', name:'测试场景分类', app:'道路信息管理系统', key:'test_scenario', count:3, version:'V2', status:'已启用', updateTime:'2026-04-28 11:20'},
+  {code:'VEHICLE_TYPE', name:'车辆类型', app:'准入管理', key:'vehicle_type', count:5, version:'V3', status:'已启用', updateTime:'2026-04-25 10:30'},
+  {code:'AD_LEVEL', name:'自动驾驶等级', app:'准入管理', key:'ad_level', count:4, version:'V2', status:'已启用', updateTime:'2026-04-20 14:15'},
+  {code:'ROAD_LEVEL', name:'道路等级分类', app:'道路管理', key:'road_level', count:6, version:'V1', status:'已启用', updateTime:'2026-04-18 09:00'},
+  {code:'APPLY_TYPE', name:'申请类型', app:'准入管理', key:'apply_type', count:4, version:'V1', status:'已停用', updateTime:'2026-04-10 16:45'},
+  {code:'TEST_SCENARIO', name:'测试场景分类', app:'道路管理', key:'test_scenario', count:3, version:'V2', status:'已启用', updateTime:'2026-04-28 11:20'},
   {code:'COMPANY_TYPE', name:'企业类型', app:'准入管理', key:'company_type', count:5, version:'V1', status:'已启用', updateTime:'2026-05-02 09:15'},
   {code:'PERSON_TYPE', name:'人员类型', app:'准入管理', key:'person_type', count:3, version:'V1', status:'已启用', updateTime:'2026-05-02 10:00'},
   {code:'ALARM_TYPE', name:'告警类型', app:'监测管理', key:'alarm_type', count:7, version:'V2', status:'已启用', updateTime:'2026-05-05 14:30'},
@@ -143,28 +143,71 @@ dictPager = new Pagination({
 renderDictTable();
 function openDictModal(){
   openModal('新增字典项',
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>字典编码</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入字典编码，如：VEHICLE_TYPE"></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>字典名称</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入字典名称"></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>所属应用</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>字典键名</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入字典键名，如：vehicle_type"></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>字典值类型</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>' +
+    '<div class="ant-form-item" id="dictCodeItem"><div class="ant-form-label"><span class="required">*</span>字典编码</div><div class="ant-form-control"><input class="ant-input" id="dictCodeInput" placeholder="请输入字典编码，如：VEHICLE_TYPE"><div class="ant-form-error" style="display:none">请输入字典编码</div></div></div>' +
+    '<div class="ant-form-item" id="dictNameItem"><div class="ant-form-label"><span class="required">*</span>字典名称</div><div class="ant-form-control"><input class="ant-input" id="dictNameInput" placeholder="请输入字典名称"><div class="ant-form-error" style="display:none">请输入字典名称</div></div></div>' +
+    '<div class="ant-form-item" id="dictAppItem"><div class="ant-form-label"><span class="required">*</span>所属应用</div><div class="ant-form-control"><select class="ant-input" id="dictAppSelect" style="width:100%;padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px"><option value="">请选择</option><option>准入管理</option><option>监测管理</option><option>数据分析</option><option>道路管理</option><option>平台管理</option></select><div class="ant-form-error" style="display:none">请选择所属应用</div></div></div>' +
+    '<div class="ant-form-item" id="dictKeyItem"><div class="ant-form-label"><span class="required">*</span>字典键名</div><div class="ant-form-control"><input class="ant-input" id="dictKeyInput" placeholder="请输入字典键名，如：vehicle_type"><div class="ant-form-error" style="display:none">请输入字典键名</div></div></div>' +
+    '<div class="ant-form-item" id="dictTypeItem"><div class="ant-form-label"><span class="required">*</span>字典值类型</div><div class="ant-form-control"><select class="ant-input" id="dictTypeSelect" style="width:100%;padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px"><option value="">请选择</option><option>字符串</option><option>整数</option><option>小数</option><option>日期</option><option>布尔</option></select><div class="ant-form-error" style="display:none">请选择字典值类型</div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">排序序号</div><div class="ant-form-control"><input class="ant-input" type="number" placeholder="请输入排序序号"></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">是否必填</div><div class="ant-form-control"><label class="inline-flex items-center gap-2"><input type="radio" name="required" checked> 是</label><label class="inline-flex items-center gap-2 ml-4"><input type="radio" name="required"> 否</label></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">备注说明</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入备注说明"></div></div>' +
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">字典值列表</h4>' +
-    '<div class="ant-table-wrapper mb-2"><table class="ant-table"><thead><tr><th>字典键</th><th>字典值</th><th>排序</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
-    '<tr><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" type="number" value="1" style="width:60px"></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td><button class="ant-btn-link danger">删除</button></td></tr>' +
-    '<tr><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" type="number" value="2" style="width:60px"></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td><button class="ant-btn-link danger">删除</button></td></tr>' +
+    '<div class="ant-table-wrapper mb-2"><table class="ant-table"><thead><tr><th>字典键</th><th>字典值</th><th>排序</th><th>状态</th><th>操作</th></tr></thead><tbody id="dictValueRows">' +
+    '<tr><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" type="number" value="1" style="width:60px"></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td><button class="ant-btn-link danger" onclick="this.closest(\'tr\').remove()">删除</button></td></tr>' +
+    '<tr><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" type="number" value="2" style="width:60px"></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td><button class="ant-btn-link danger" onclick="this.closest(\'tr\').remove()">删除</button></td></tr>' +
     '</tbody></table></div>' +
-    '<button class="ant-btn ant-btn-sm">+ 添加字典值</button>',
-    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal();alert(\'字典项创建成功\')">确认提交</button>'});
+    '<button class="ant-btn ant-btn-sm" onclick="addDictValueRow()">+ 添加字典值</button>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitDictForm()">确认提交</button>'});
+}
+function addDictValueRow(){
+  var tbody=document.getElementById('dictValueRows');
+  if(!tbody)return;
+  var rows=tbody.querySelectorAll('tr');
+  var newRow=tbody.insertRow();
+  newRow.innerHTML='<td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" placeholder="请输入"></td><td><input class="ant-input ant-input-sm" type="number" value="'+(rows.length+1)+'" style="width:60px"></td><td><span class="ant-tag ant-tag-success">已启用</span></td><td><button class="ant-btn-link danger" onclick="this.closest(\'tr\').remove()">删除</button></td>';
+}
+function submitDictForm(){
+  var isValid=true;
+  var checks=[
+    {inputId:'dictCodeInput',itemId:'dictCodeItem',msg:'请输入字典编码'},
+    {inputId:'dictNameInput',itemId:'dictNameItem',msg:'请输入字典名称'},
+    {inputId:'dictKeyInput',itemId:'dictKeyItem',msg:'请输入字典键名'}
+  ];
+  checks.forEach(function(c){
+    var el=document.getElementById(c.inputId);
+    var item=document.getElementById(c.itemId);
+    var err=item.querySelector('.ant-form-error');
+    if(!el||!el.value.trim()){
+      item.classList.add('error');if(err){err.textContent=c.msg;err.style.display='block';}
+      isValid=false;
+    }else{
+      item.classList.remove('error');if(err)err.style.display='none';
+    }
+  });
+  var appEl=document.getElementById('dictAppSelect');
+  var appItem=document.getElementById('dictAppItem');
+  var appErr=appItem.querySelector('.ant-form-error');
+  if(!appEl||!appEl.value){
+    appItem.classList.add('error');if(appErr){appErr.textContent='请选择所属应用';appErr.style.display='block';}
+    isValid=false;
+  }else{appItem.classList.remove('error');if(appErr)appErr.style.display='none';}
+  var typeEl=document.getElementById('dictTypeSelect');
+  var typeItem=document.getElementById('dictTypeItem');
+  var typeErr=typeItem.querySelector('.ant-form-error');
+  if(!typeEl||!typeEl.value){
+    typeItem.classList.add('error');if(typeErr){typeErr.textContent='请选择字典值类型';typeErr.style.display='block';}
+    isValid=false;
+  }else{typeItem.classList.remove('error');if(typeErr)typeErr.style.display='none';}
+  if(!isValid)return;
+  closeModal();
+  showToast('字典项创建成功','#52c41a');
 }
 function openDetailModal(){
   openModal('字典详情 - VEHICLE_TYPE',
     '<div class="ant-descriptions">' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">字典编码</div><div class="ant-descriptions-value">VEHICLE_TYPE</div><div class="ant-descriptions-label">字典名称</div><div class="ant-descriptions-value">车辆类型</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属应用</div><div class="ant-descriptions-value">测试车辆管理系统</div><div class="ant-descriptions-label">字典键名</div><div class="ant-descriptions-value">vehicle_type</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">字典值类型</div><div class="ant-descriptions-value">枚举</div><div class="ant-descriptions-label">排序序号</div><div class="ant-descriptions-value">50</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属应用</div><div class="ant-descriptions-value">准入管理</div><div class="ant-descriptions-label">字典键名</div><div class="ant-descriptions-value">vehicle_type</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">字典值类型</div><div class="ant-descriptions-value">字符串</div><div class="ant-descriptions-label">排序序号</div><div class="ant-descriptions-value">50</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">是否必填</div><div class="ant-descriptions-value">是</div><div class="ant-descriptions-label">备注说明</div><div class="ant-descriptions-value">车辆类型</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">已启用</span></div><div class="ant-descriptions-label">版本</div><div class="ant-descriptions-value">V3</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">创建时间</div><div class="ant-descriptions-value">2026-01-10 09:00</div><div class="ant-descriptions-label">最后更新时间</div><div class="ant-descriptions-value">2026-04-25 10:30</div></div>' +

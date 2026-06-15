@@ -6,6 +6,18 @@
   <title>人员信息查询 - 智能网联汽车安全监测平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .ms-wrap{position:relative;display:inline-block;width:100%}
+    .ms-trigger{width:100%;min-height:32px;border:1px solid #d9d9d9;border-radius:6px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;background:#fff}
+    .ms-trigger:hover{border-color:#1677ff}
+    .ms-panel{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);min-width:100%;z-index:20;max-height:260px;overflow-y:auto;padding:8px 0}
+    .ms-panel.show{display:block}
+    .ms-panel label{display:flex;align-items:center;padding:5px 12px;cursor:pointer;font-size:13px;color:#000000d9}
+    .ms-panel label:hover{background:#f5f5f5}
+    .ms-panel input[type=checkbox]{margin-right:8px}
+    .ms-tags{display:flex;gap:4px;flex-wrap:wrap}
+    .ms-tags .ant-tag{margin:0}
+  </style>
 </head>
 <body>
 <div id="app" class="flex h-screen overflow-hidden">
@@ -13,7 +25,7 @@
   <div class="flex-1 flex flex-col overflow-hidden">
     <header id="topnav"></header>
     <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
-      <div class="page-header"><h2>人员信息查询</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openAddModal()">+ 新增人员备案</button><button class="ant-btn">导出表格</button></div></div>
+      <div class="page-header"><h2>人员信息查询</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openAddModal()">+ 新增人员备案</button><button class="ant-btn" onclick="exportPersonTable()">导出</button></div></div>
       <div class="filter-bar">
         <div class="filter-row" style="flex-wrap:wrap">
           <div class="filter-item"><label>姓名</label><input class="ant-input" placeholder="请输入姓名搜索"></div>
@@ -21,20 +33,18 @@
           <div class="filter-item"><label>所属企业</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
           <div class="filter-item"><label>人员类型</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
           <div class="filter-item"><label>驾照类型</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
-          <div class="filter-item"><label>有无严重交通违法行为</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
-          <div class="filter-item"><label>登记时间</label><input class="ant-input" type="date" style="width:130px"><span class="self-end mb-1 text-sm text-[#00000073]">—</span><input class="ant-input" type="date" style="width:130px"></div>
           <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
         </div>
       </div>
       <div class="ant-table-wrapper">
         <div style="overflow-x:auto">
           <table class="ant-table">
-            <thead><tr><th><input type="checkbox" class="ant-checkbox"></th><th>姓名</th><th>性别</th><th>年龄</th><th>身份证号</th><th>所属企业</th><th>人员类型</th><th>驾照类型</th><th>驾龄</th><th>有无严重交通违法行为</th><th>有无酒驾/醉驾/精神药品记录</th><th>交通事故记录</th><th>登记时间</th><th>操作</th></tr></thead>
+            <thead><tr><th style="width:40px;text-align:center"><input type="checkbox" class="ant-checkbox" id="selectAllCb" onchange="toggleSelectAll(this)"></th><th>姓名</th><th>性别</th><th>年龄</th><th>身份证号</th><th>所属企业</th><th>人员类型</th><th>驾照类型</th><th>驾龄</th><th>有无严重交通违法行为</th><th>有无酒驾/醉驾/精神药品记录</th><th>交通事故记录</th><th>登记时间</th><th>操作</th></tr></thead>
             <tbody>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>张伟</td><td>男</td><td>41</td><td>4206**********12</td><td>A公司</td><td><span class="ant-tag ant-tag-processing">安全员</span><span class="ant-tag ant-tag-processing" style="margin-left:4px">远程操控员</span></td><td>A1</td><td>17年</td><td>无</td><td>无</td><td>无</td><td>2026-03-15</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(0)">详情</button><button class="ant-btn-link" onclick="openAddModal(0)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>韩梅梅</td><td>女</td><td>36</td><td>4206**********34</td><td>E公司</td><td><span class="ant-tag ant-tag-processing">驾驶人</span></td><td>A2</td><td>12年</td><td>无</td><td>无</td><td>无</td><td>2026-03-18</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(1)">详情</button><button class="ant-btn-link" onclick="openAddModal(1)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>王小明</td><td>男</td><td>33</td><td>4206**********56</td><td>C公司</td><td><span class="ant-tag ant-tag-processing">驾驶人</span></td><td>B1</td><td>9年</td><td>无</td><td>无</td><td>无</td><td>2026-04-20</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(2)">详情</button><button class="ant-btn-link" onclick="openAddModal(2)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>刘勇辉</td><td>男</td><td>45</td><td>4206**********78</td><td>A公司</td><td><span class="ant-tag ant-tag-processing">驾驶人</span><span class="ant-tag ant-tag-processing" style="margin-left:4px">安全员</span></td><td>C1</td><td>21年</td><td>无</td><td>无</td><td>无</td><td>2026-03-22</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(3)">详情</button><button class="ant-btn-link" onclick="openAddModal(3)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox row-cb" onchange="syncSelectAll()"></td><td>张伟</td><td>男</td><td>41</td><td>4206**********12</td><td>A公司</td><td><span class="ant-tag ant-tag-processing">安全员</span><span class="ant-tag ant-tag-processing" style="margin-left:4px">远程操控员</span></td><td>A1</td><td>17年</td><td>无</td><td>无</td><td>无</td><td>2026-03-15</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(0)">详情</button><button class="ant-btn-link" onclick="openAddModal(0)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox row-cb" onchange="syncSelectAll()"></td><td>韩梅梅</td><td>女</td><td>36</td><td>4206**********34</td><td>E公司</td><td><span class="ant-tag ant-tag-processing">驾驶人</span></td><td>A2</td><td>12年</td><td>无</td><td>无</td><td>无</td><td>2026-03-18</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(1)">详情</button><button class="ant-btn-link" onclick="openAddModal(1)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox row-cb" onchange="syncSelectAll()"></td><td>王小明</td><td>男</td><td>33</td><td>4206**********56</td><td>C公司</td><td><span class="ant-tag ant-tag-processing">驾驶人</span></td><td>B1</td><td>9年</td><td>无</td><td>无</td><td>无</td><td>2026-04-20</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(2)">详情</button><button class="ant-btn-link" onclick="openAddModal(2)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox row-cb" onchange="syncSelectAll()"></td><td>刘勇辉</td><td>男</td><td>45</td><td>4206**********78</td><td>A公司</td><td><span class="ant-tag ant-tag-processing">驾驶人</span><span class="ant-tag ant-tag-processing" style="margin-left:4px">安全员</span></td><td>C1</td><td>21年</td><td>无</td><td>无</td><td>无</td><td>2026-03-22</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(3)">详情</button><button class="ant-btn-link" onclick="openAddModal(3)">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -64,6 +74,44 @@ function inputField(placeholder, type) {
 function selectField(placeholder) {
   return '<div class="ant-select" style="width:100%">' + placeholder + ' <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>';
 }
+
+function multiSelectField(id, options, selectedArr) {
+  var selected = selectedArr || [];
+  var tagsHtml = selected.length > 0 ? selected.map(function(t){return '<span class="ant-tag ant-tag-processing">'+t+'</span>';}).join('') : '<span style="color:#00000073">请选择（可多选）</span>';
+  var optsHtml = options.map(function(o){
+    var ck = selected.indexOf(o) >= 0 ? ' checked' : '';
+    return '<label><input type="checkbox" value="'+o+'"'+ck+'> '+o+'</label>';
+  }).join('');
+  return '<div class="ms-wrap" id="'+id+'"><div class="ms-trigger" onclick="toggleMsPanel(\''+id+'\')"><div class="ms-tags">'+tagsHtml+'</div><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="ms-panel" id="'+id+'Panel">'+optsHtml+'</div></div>';
+}
+var personTypeOptions = ['驾驶人','安全员','远程操控员','其他'];
+var licenseTypeOptions = ['A1','A2','A3','B1','B2','C1','C2','C3','C4','C5','D','E'];
+var illegalTypeOptions = ['超速50%以上','超员','超载','违反交通信号灯通行'];
+
+function toggleMsPanel(id) {
+  var panel = document.getElementById(id+'Panel');
+  if(panel) panel.classList.toggle('show');
+}
+document.addEventListener('click', function(e) {
+  document.querySelectorAll('.ms-wrap').forEach(function(w) {
+    if (!w.contains(e.target)) {
+      var p = w.querySelector('.ms-panel');
+      if (p) p.classList.remove('show');
+    }
+  });
+});
+document.addEventListener('change', function(e) {
+  if (e.target.closest('.ms-panel')) {
+    var panel = e.target.closest('.ms-panel');
+    var wrap = panel.closest('.ms-wrap');
+    var tags = wrap.querySelector('.ms-tags');
+    var cbs = panel.querySelectorAll('input[type=checkbox]');
+    var sel = [];
+    cbs.forEach(function(cb){if(cb.checked) sel.push(cb.value);});
+    tags.innerHTML = sel.length > 0 ? sel.map(function(t){return '<span class="ant-tag ant-tag-processing">'+t+'</span>';}).join('') : '<span style="color:#00000073">请选择（可多选）</span>';
+  }
+});
+
 
 function uploadField(hint) {
   return '<button class="ant-btn ant-btn-sm">点击或拖拽文件上传</button><div class="text-xs text-[#00000040] mt-1">' + hint + '</div>';
@@ -99,7 +147,7 @@ function openAddModal(index){
 
   // 分组2: 驾驶资质信息
   body += formGroup('驾驶资质信息',
-    formItem('驾照类型', selectField(d ? d.licenseType : '请选择驾照类型'), true) +
+    formItem('驾照类型', '<select class="ant-input" style="width:100%;padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px"><option value="">请选择驾照类型</option>' + licenseTypeOptions.map(function(lt){return '<option value="'+lt+'"'+(d&&d.licenseType===lt?' selected':'')+'>'+lt+'</option>';}).join('') + '</select>', true) +
     formItem('机动车驾驶证附件', uploadField('支持PDF/JPG/PNG格式') + (d && d.driverLicenseFile ? '<div class="text-xs text-[#1677ff] mt-1">已上传：' + d.driverLicenseFile + '</div>' : ''), true) +
     formItem('初次领证日期', '<input class="ant-input" type="date" value="' + (d ? d.firstLicenseDate : '') + '" onchange="updateDrivingYears(this.value)"><div class="text-xs text-[#00000073] mt-1" id="drivingYearsHint">' + (d ? '当前驾龄：' + d.drivingYears : '选择后自动计算驾龄') + '</div>', true) +
     formItem('安全驾驶证明', uploadField('支持PDF/JPG/PNG格式，由交管部门出具') + (d && d.safeDriveFile ? '<div class="text-xs text-[#1677ff] mt-1">已上传：' + d.safeDriveFile + '</div>' : ''), true)
@@ -107,7 +155,7 @@ function openAddModal(index){
 
   // 分组3: 人员类型信息
   body += formGroup('人员类型信息',
-    formItem('人员类型', selectField(d ? d.personType : '请选择（可多选）'), true) +
+    formItem('人员类型', multiSelectField('personTypeMs', personTypeOptions, d ? d.personType.split(',') : []), true) +
     '<div class="text-xs text-[#00000040] mb-3">枚举值：驾驶人、安全员、远程操控员、其他，至少选择1项</div>'
   );
 
@@ -115,7 +163,7 @@ function openAddModal(index){
   body += formGroup('交通违法与事故记录',
     formItem('最近1年内有无严重交通违法行为记录', '<select class="ant-input illegal-record-select" onchange="toggleIllegalType(this.value)" style="width:100%;padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px"><option value="">请选择</option><option value="无"' + (d && d.illegalRecord === '无' ? ' selected' : '') + '>无</option><option value="有"' + (d && d.illegalRecord === '有' ? ' selected' : '') + '>有</option></select>', true) +
     '<div id="illegalTypeGroup" style="display:' + (d && d.illegalRecord === '有' ? 'block' : 'none') + '">' +
-    formItem('严重交通违法行为类型', selectField(d && d.illegalType ? d.illegalType : '请选择（可多选）'), true) +
+    formItem('严重交通违法行为类型', multiSelectField('illegalTypeMs', illegalTypeOptions, d && d.illegalType ? d.illegalType.split(',') : []), true) +
     '</div>' +
     formItem('有无酒驾/醉驾/精神药品记录', selectField(d ? d.drinkDriveRecord : '请选择'), true) +
     formItem('连续3个记分周期未记满12分承诺', '<select class="ant-input score-commitment-select" style="width:100%;padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px"><option value="">请选择</option><option value="是"' + (d && d.scoreCommitment === '是' ? ' selected' : '') + '>是</option><option value="否"' + (d && d.scoreCommitment === '否' ? ' selected' : '') + '>否</option></select>', true) +
@@ -226,6 +274,34 @@ function submitPersonForm() {
     }
   }
   closeModal();
+}
+
+function toggleSelectAll(el) {
+  document.querySelectorAll('.row-cb').forEach(function(cb) { cb.checked = el.checked; });
+}
+
+function syncSelectAll() {
+  var rows = document.querySelectorAll('.row-cb');
+  var allChecked = rows.length > 0 && Array.prototype.every.call(rows, function(cb) { return cb.checked; });
+  var sa = document.getElementById('selectAllCb');
+  if (sa) sa.checked = allChecked;
+}
+
+function exportPersonTable() {
+  var selected = document.querySelectorAll('.row-cb:checked');
+  if (selected.length > 0) {
+    showToast('已导出选中的 ' + selected.length + ' 条人员数据', '#52c41a');
+  } else {
+    showToast('已导出全部人员数据', '#52c41a');
+  }
+}
+
+function showToast(msg, bgColor) {
+  var t = document.createElement('div');
+  t.innerText = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:' + (bgColor || '#1677ff') + ';color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 1800);
 }
 </script>
 <script src="../../common.js"></script>

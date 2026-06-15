@@ -40,7 +40,7 @@
         <h2>企业信息登记</h2>
         <div class="flex gap-2">
           <button class="ant-btn ant-btn-primary" onclick="openAddModal()">+ 新增企业信息</button>
-          <button class="ant-btn" onclick="exportTable()">导出表格</button>
+          <button class="ant-btn" onclick="exportTable()">导出</button>
         </div>
       </div>
       <div class="filter-bar">
@@ -176,7 +176,7 @@
           <div class="ant-form-control">
             <div class="ant-upload" onclick="document.getElementById('licenseFile').click()">
               <div class="ant-upload-text">点击或拖拽文件上传</div>
-              <div class="ant-upload-hint">支持PDF、JPG、PNG格式，单个文件不超过10MB</div>
+              <div class="ant-upload-hint">支持PDF、JPG、PNG格式，单个文件不超过20MB</div>
               <div id="uploadedFileName" style="margin-top:8px;color:#1677ff;display:none"></div>
             </div>
             <input type="file" id="licenseFile" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this)">

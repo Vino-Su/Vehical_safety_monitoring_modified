@@ -24,8 +24,8 @@
         <div class="filter-row">
           <div class="filter-item"><label>模块名称</label><input class="ant-input" placeholder="请输入模块名称"></div>
           <div class="filter-item"><label>操作人员</label><input class="ant-input" placeholder="请输入操作人员用户名"></div>
-          <div class="filter-item"><label>操作类型</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
-          <div class="filter-item"><label>操作状态</label><div class="ant-select">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="filter-item"><label>操作类型</label><select class="ant-input" style="width:120px"><option value="all">全部</option><option>新增</option><option>修改</option><option>删除</option><option>查询</option><option>导出</option><option>审批</option><option>导入</option></select></div>
+          <div class="filter-item"><label>状态</label><select class="ant-input" style="width:120px"><option value="all">全部</option><option>成功</option><option>失败</option></select></div>
           <div class="filter-item"><label>操作日期</label><input class="ant-input" type="date" style="width:140px"></div>
           <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
         </div>
@@ -33,7 +33,7 @@
       <div class="ant-table-wrapper">
         <div style="overflow-x:auto">
           <table class="ant-table">
-            <thead><tr><th style="width:80px;text-align:center">ID</th><th style="width:140px">模块名称</th><th style="width:100px;text-align:center">业务类型</th><th style="width:90px;text-align:center">请求方式</th><th style="width:90px;text-align:center">操作人员</th><th style="width:130px">IP地址</th><th style="width:80px;text-align:center">状态</th><th style="width:80px;text-align:center">用时</th><th style="width:170px">操作时间</th><th style="width:130px">操作</th></tr></thead>
+            <thead><tr><th style="width:80px;text-align:center">ID</th><th style="width:140px">模块名称</th><th style="width:100px;text-align:center">业务类型</th><th style="width:90px;text-align:center">请求方法</th><th style="width:90px;text-align:center">操作人员</th><th style="width:130px">IP地址</th><th style="width:80px;text-align:center">状态</th><th style="width:80px;text-align:center">用时</th><th style="width:170px">操作时间</th><th style="width:130px">操作</th></tr></thead>
             <tbody id="logTableBody"></tbody>
           </table>
         </div>
@@ -112,7 +112,7 @@ function openDetailModal(){
   openModal('操作日志详情',
     '<div class="ant-descriptions">' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">模块名称</div><div class="ant-descriptions-value">用户管理模块</div><div class="ant-descriptions-label">业务类型</div><div class="ant-descriptions-value">导出</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">请求方式</div><div class="ant-descriptions-value">GET</div><div class="ant-descriptions-label">操作人员</div><div class="ant-descriptions-value">admin</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">请求方法</div><div class="ant-descriptions-value">GET</div><div class="ant-descriptions-label">操作人员</div><div class="ant-descriptions-value">admin</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">IP地址</div><div class="ant-descriptions-value">192.168.1.36</div><div class="ant-descriptions-label">请求路径</div><div class="ant-descriptions-value">/api/sys/user/export</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">方法名称</div><div class="ant-descriptions-value">com.example.sys.controller.SysUserController.export()</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">耗时</div><div class="ant-descriptions-value">139ms</div><div class="ant-descriptions-label">操作状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">成功</span></div></div>' +
@@ -134,7 +134,7 @@ function openClearModal(){
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>清空日期范围</div><div class="ant-form-control"><label class="inline-flex items-center gap-2"><input type="radio" name="clearRange" checked> 全部日志</label><label class="inline-flex items-center gap-2 ml-4"><input type="radio" name="clearRange"> 指定日期之前的日志</label></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>输入管理员密码确认</div><div class="ant-form-control"><input class="ant-input" type="password" placeholder="请输入当前登录管理员密码以确认清空操作"></div></div>' +
     '<div class="p-3 bg-[#fff2f0] border border-[#ffccc7] rounded text-sm text-[#ff4d4f]"><strong>警告提示</strong>清空日志为不可逆操作，所有操作记录将被物理删除，且在系统审计中将无法追溯。请务必确认数据已导出备份。</div>',
-    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="closeModal()">确认清空</button>'});
+    {width:600,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="closeModal()">确认清空</button>'});
 }
 </script>
 <script src="../../common.js"></script>
