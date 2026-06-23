@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企业信息登记 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <script src="../../components/pagination-component.js"></script>
+  <style>
+    .ant-form-label{width:140px;flex-shrink:0;text-align:right;padding-right:12px;padding-top:5px;font-size:14px;color:#000000d9}
+    .ant-form-label .required{color:#ff4d4f;margin-right:4px}
+    .ant-form-hint{font-size:12px;color:#00000073;margin-top:4px}
+    .ant-form-error{font-size:12px;color:#ff4d4f;margin-top:4px;display:none}
+    .ant-form-item.error .ant-input,.ant-form-item.error .ant-select{border-color:#ff4d4f}
+    .ant-form-item.error .ant-form-error{display:block}
+    .ant-upload{border:1px dashed #d9d9d9;border-radius:6px;padding:16px;text-align:center;cursor:pointer;background:#fafafa;transition:all 0.3s}
+    .ant-upload:hover{border-color:#1677ff}
+    .ant-upload-text{color:#000000d9;font-size:14px;margin-bottom:4px}
+    .ant-upload-hint{color:#00000073;font-size:12px}
+    .char-count{text-align:right;font-size:12px;color:#00000073;margin-top:4px}
+    .char-count.warning{color:#faad14}
+    .char-count.error{color:#ff4d4f}
+    .dd-panel{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);min-width:100%;z-index:20;max-height:260px;overflow-y:auto}
+    .dd-panel.show{display:block}
+    .dd-item{padding:5px 12px;cursor:pointer;font-size:13px;color:#000000d9}
+    .dd-item:hover{background:#f5f5f5}
+    /* PRD F01 3.1.3 明确要求本表所有数据列左对齐，覆盖common.js自动识别的col-code居中效果 */
+    #tableBody tr > td:nth-child(2), .ant-table thead th:nth-child(2) { text-align: left !important; }
+    #tableBody tr > td:nth-child(6), .ant-table thead th:nth-child(6) { text-align: left !important; }
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header">
+        <h2>企业信息登记</h2>
+        <div class="flex gap-2">
+          <button class="ant-btn ant-btn-primary" onclick="openAddModal()">+ 新增企业信息</button>
+          <button class="ant-btn" onclick="exportTable()">导出</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item" style="width:280px">
+            <label>公司名称</label>
+            <input class="ant-input" id="filterName" placeholder="请输入公司名称关键词搜索">
+          </div>
+          <div class="flex gap-2 items-end">
+            <button class="ant-btn ant-btn-primary" onclick="searchData()">查询</button>
+            <button class="ant-btn" onclick="resetFilter()">重置</button>
+          </div>
+        </div>
+      </div>
+      <div class="ant-table-wrapper">
+        <div style="overflow-x:auto">
+          <table class="ant-table">
+            <thead>
+              <tr>
+                <th style="width:200px">公司名称</th>
+                <th style="width:180px">统一信用代码</th>
+                <th style="width:140px">申请主体类型</th>
+                <th style="width:100px">联系人</th>
+                <th style="width:140px">联系方式</th>
+                <th style="width:160px">登记时间</th>
+                <th style="width:150px;text-align:center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div id="paginationBar"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="ant-modal-mask" id="addModal" style="display:none!important">
+  <div class="ant-modal">
+    <div class="ant-modal-header">
+      <h3 id="modalTitle">新增企业信息</h3>
+      <span class="ant-modal-close" onclick="closeAddModal()">✕</span>
+    </div>
+    <div class="ant-modal-body">
+      <form id="companyForm">
+        <div class="ant-form-item">
+          <div class="ant-form-label"><span class="required">*</span>公司名称</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="companyName" placeholder="请输入工商注册的全称" maxlength="100">
+            <div class="ant-form-error">请输入公司名称</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label"><span class="required">*</span>统一信用代码</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="creditCode" placeholder="请输入18位统一社会信用代码" maxlength="18">
+            <div class="ant-form-error">请输入正确的18位统一社会信用代码</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label"><span class="required">*</span>申请主体类型</div>
+          <div class="ant-form-control" style="position:relative">
+            <div class="ant-select" id="typeSelect" onclick="toggleTypeDropdown(event)">
+              <span id="typeText">请选择申请主体类型</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </div>
+            <div id="typeDropdown" class="dd-panel">
+              <div class="dd-item" onclick="selectType('整车厂')">整车厂</div>
+              <div class="dd-item" onclick="selectType('系统运营商')">系统运营商</div>
+              <div class="dd-item" onclick="selectType('零部件制造商')">零部件制造商</div>
+              <div class="dd-item" onclick="selectType('互联网服务商')">互联网服务商</div>
+              <div class="dd-item" onclick="selectType('科研院所/高校')">科研院所/高校</div>
+              <div class="dd-item" onclick="selectType('其他')">其他</div>
+            </div>
+            <div class="ant-form-error">请选择申请主体类型</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label">注册资本</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="registeredCapital" placeholder="请输入注册资本金额（万元）">
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label">业务范围</div>
+          <div class="ant-form-control">
+            <textarea class="ant-input" id="businessScope" placeholder="请输入业务范围" maxlength="300" oninput="updateCharCount('businessScope', 'businessScopeCount', 300)"></textarea>
+            <div class="char-count" id="businessScopeCount">0/300</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label">研发、制造及试验能力说明</div>
+          <div class="ant-form-control">
+            <textarea class="ant-input" id="capabilityDesc" placeholder="请输入研发、制造及试验能力说明" maxlength="300" oninput="updateCharCount('capabilityDesc', 'capabilityCount', 300)"></textarea>
+            <div class="char-count" id="capabilityCount">0/300</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label">单位联系地址</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="contactAddress" placeholder="请输入单位联系地址" maxlength="200">
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label">单位联系电话</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="contactPhone" placeholder="请输入单位联系电话">
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label">单位联系邮箱</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="contactEmail" placeholder="请输入单位联系邮箱">
+            <div class="ant-form-error">请输入正确的邮箱格式</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label"><span class="required">*</span>联系人</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="contactPerson" placeholder="请输入联系人姓名" maxlength="50">
+            <div class="ant-form-error">请输入联系人</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label"><span class="required">*</span>联系方式</div>
+          <div class="ant-form-control">
+            <input class="ant-input" id="contactMobile" placeholder="请输入联系人手机号码" maxlength="11">
+            <div class="ant-form-error">请输入正确的11位手机号码</div>
+          </div>
+        </div>
+        <div class="ant-form-item">
+          <div class="ant-form-label"><span class="required">*</span>营业执照</div>
+          <div class="ant-form-control">
+            <div class="ant-upload" onclick="document.getElementById('licenseFile').click()">
+              <div class="ant-upload-text">点击或拖拽文件上传</div>
+              <div class="ant-upload-hint">支持PDF、JPG、PNG格式，单个文件不超过20MB</div>
+              <div id="uploadedFileName" style="margin-top:8px;color:#1677ff;display:none"></div>
+            </div>
+            <input type="file" id="licenseFile" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this)">
+            <div class="ant-form-error">请上传营业执照</div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="ant-modal-footer">
+      <button class="ant-btn" onclick="closeAddModal()">取消</button>
+      <button class="ant-btn ant-btn-primary" onclick="saveCompany()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="ant-modal-mask" id="detailModal" style="display:none!important">
+  <div class="ant-modal wide">
+    <div class="ant-modal-header">
+      <h3>企业详情</h3>
+      <span class="ant-modal-close" onclick="closeDetailModal()">✕</span>
+    </div>
+    <div class="ant-modal-body">
+      <div class="ant-descriptions" id="detailContent"></div>
+    </div>
+    <div class="ant-modal-footer">
+      <button class="ant-btn" onclick="closeDetailModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PAGE_ID='company';
+const subjectTypes = ['整车厂', '系统运营商', '零部件制造商', '互联网服务商', '科研院所/高校', '其他'];
+
+let companyData = [
+  {id:1, companyName:'A公司', creditCode:'91420600MA4F2X5K8T', subjectType:'系统运营商', registeredCapital:'5000', businessScope:'智能网联汽车测试商业化试点服务、自动驾驶技术研发与应用推广', capabilityDesc:'拥有完善的自动驾驶测试场地，具备L3-L4级自动驾驶车辆测试能力', contactAddress:'湖北省襄阳市高新区汽车工业园', contactPhone:'0710-3366888', contactEmail:'contact@zhixing.com', contactPerson:'张伟', contactMobile:'13812345678', licenseFile:'营业执照.pdf', registerTime:'2026-03-15 10:30'},
+  {id:2, companyName:'E公司', creditCode:'91420000176047888Y', subjectType:'整车厂', registeredCapital:'30000', businessScope:'新能源汽车整车制造、销售及售后服务', capabilityDesc:'具备完整的新能源汽车研发制造体系，拥有先进的智能网联汽车试验中心', contactAddress:'上海市嘉定区安亭镇', contactPhone:'021-33668899', contactEmail:'service@nio.com', contactPerson:'韩梅', contactMobile:'13987654321', licenseFile:'营业执照.pdf', registerTime:'2026-03-18 14:20'},
+  {id:3, companyName:'C公司', creditCode:'91440300715286438Q', subjectType:'互联网服务商', registeredCapital:'10000', businessScope:'自动驾驶技术研发、智能交通解决方案', capabilityDesc:'全球领先的自动驾驶技术提供商，具备完整的自动驾驶软硬件开发能力', contactAddress:'北京市海淀区上地十街', contactPhone:'010-59928888', contactEmail:'apollo@baidu.com', contactPerson:'王小明', contactMobile:'13611112222', licenseFile:'营业执照.pdf', registerTime:'2026-04-20 09:15'},
+  {id:4, companyName:'襄阳汽车零部件有限公司', creditCode:'91420600MA49C5RL2D', subjectType:'零部件制造商', registeredCapital:'8000', businessScope:'汽车零部件研发、生产与销售', capabilityDesc:'专注于智能网联汽车传感器、控制器的研发生产', contactAddress:'湖北省襄阳市襄州区', contactPhone:'0710-3566999', contactEmail:'sales@parts.com', contactPerson:'刘勇', contactMobile:'13733334444', licenseFile:'营业执照.pdf', registerTime:'2026-03-22 16:45'}
+];
+
+var pager;
+let editingId = null;
+let uploadedLicenseFile = null;
+
+function renderTable() {
+  var cp = pager ? pager.getCurrentPage() : 1;
+  var ps = pager ? pager.getPageSize() : 10;
+  var start = (cp - 1) * ps;
+  var end = start + ps;
+  var pageData = companyData.slice(start, end);
+  var tbody = document.getElementById('tableBody');
+  tbody.innerHTML = pageData.map(function(item) {
+    return '<tr>' +
+      '<td>' + item.companyName + '</td>' +
+      '<td>' + item.creditCode + '</td>' +
+      '<td>' + item.subjectType + '</td>' +
+      '<td>' + item.contactPerson + '</td>' +
+      '<td>' + item.contactMobile + '</td>' +
+      '<td>' + item.registerTime + '</td>' +
+      '<td class="col-action"><button class="ant-btn-link" onclick="openDetailModal(' + item.id + ')">详情</button><button class="ant-btn-link" onclick="openEditModal(' + item.id + ')">编辑</button><button class="ant-btn-link danger" onclick="deleteCompany(' + item.id + ')">删除</button></td>' +
+    '</tr>';
+  }).join('');
+  if (pager) pager.setTotal(companyData.length);
+}
+
+function searchData() {
+  var nameFilter = document.getElementById('filterName').value.toLowerCase();
+  showToast('查询功能：名称=' + nameFilter, '#1677ff');
+}
+
+function resetFilter() {
+  document.getElementById('filterName').value = '';
+  renderTable();
+}
+
+function toggleTypeDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('typeDropdown').classList.toggle('show');
+}
+
+function selectType(type) {
+  document.getElementById('typeText').textContent = type;
+  document.getElementById('typeText').dataset.value = type;
+  document.getElementById('typeDropdown').classList.remove('show');
+}
+
+function updateCharCount(inputId, countId, max) {
+  var input = document.getElementById(inputId);
+  var count = document.getElementById(countId);
+  var len = input.value.length;
+  count.textContent = len + '/' + max;
+  count.className = 'char-count';
+  if (len >= max * 0.9) count.classList.add('warning');
+  if (len >= max) count.classList.add('error');
+}
+
+function handleFileUpload(input) {
+  if (input.files && input.files[0]) {
+    uploadedLicenseFile = input.files[0];
+    var nameDiv = document.getElementById('uploadedFileName');
+    nameDiv.textContent = '已选择: ' + uploadedLicenseFile.name;
+    nameDiv.style.display = 'block';
+  }
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '新增企业信息';
+  resetForm();
+  document.getElementById('addModal').style.setProperty('display', 'flex', 'important');
+}
+
+function openEditModal(id) {
+  editingId = id;
+  document.getElementById('modalTitle').textContent = '编辑企业信息';
+  resetForm();
+  var data = companyData.find(function(item) { return item.id === id; });
+  if (data) {
+    document.getElementById('companyName').value = data.companyName;
+    document.getElementById('creditCode').value = data.creditCode;
+    document.getElementById('typeText').textContent = data.subjectType;
+    document.getElementById('typeText').dataset.value = data.subjectType;
+    document.getElementById('registeredCapital').value = data.registeredCapital || '';
+    document.getElementById('businessScope').value = data.businessScope || '';
+    updateCharCount('businessScope', 'businessScopeCount', 300);
+    document.getElementById('capabilityDesc').value = data.capabilityDesc || '';
+    updateCharCount('capabilityDesc', 'capabilityCount', 300);
+    document.getElementById('contactAddress').value = data.contactAddress || '';
+    document.getElementById('contactPhone').value = data.contactPhone || '';
+    document.getElementById('contactEmail').value = data.contactEmail || '';
+    document.getElementById('contactPerson').value = data.contactPerson;
+    document.getElementById('contactMobile').value = data.contactMobile;
+    if (data.licenseFile) {
+      uploadedLicenseFile = { name: data.licenseFile };
+      var nameDiv = document.getElementById('uploadedFileName');
+      nameDiv.textContent = '已上传: ' + data.licenseFile;
+      nameDiv.style.display = 'block';
+    }
+  }
+  document.getElementById('addModal').style.setProperty('display', 'flex', 'important');
+}
+
+function resetForm() {
+  document.getElementById('companyForm').reset();
+  document.getElementById('typeText').textContent = '请选择申请主体类型';
+  delete document.getElementById('typeText').dataset.value;
+  uploadedLicenseFile = null;
+  document.getElementById('uploadedFileName').style.display = 'none';
+  document.getElementById('businessScopeCount').textContent = '0/300';
+  document.getElementById('businessScopeCount').className = 'char-count';
+  document.getElementById('capabilityCount').textContent = '0/300';
+  document.getElementById('capabilityCount').className = 'char-count';
+  document.querySelectorAll('.ant-form-item').forEach(function(item) { item.classList.remove('error'); });
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').style.setProperty('display', 'none', 'important');
+}
+
+function validateForm() {
+  var isValid = true;
+  var checks = [
+    {id:'companyName', regex:/.+/, msg:'请输入公司名称'},
+    {id:'creditCode', regex:/^[A-Z0-9]{18}$/i, msg:'请输入正确的18位统一社会信用代码'},
+    {id:'contactPerson', regex:/.+/, msg:'请输入联系人'},
+    {id:'contactMobile', regex:/^1[3-9]\d{9}$/, msg:'请输入正确的11位手机号码'}
+  ];
+  checks.forEach(function(c) {
+    var el = document.getElementById(c.id);
+    var item = el.closest('.ant-form-item');
+    if (!c.regex.test(el.value.trim())) {
+      item.classList.add('error');
+      isValid = false;
+    } else {
+      item.classList.remove('error');
+    }
+  });
+
+  var typeEl = document.getElementById('typeText');
+  var typeItem = typeEl.closest('.ant-form-item');
+  if (!typeEl.dataset.value) {
+    typeItem.classList.add('error');
+    isValid = false;
+  } else {
+    typeItem.classList.remove('error');
+  }
+
+  var licenseItem = document.getElementById('licenseFile').closest('.ant-form-item');
+  if (!uploadedLicenseFile) {
+    licenseItem.classList.add('error');
+    isValid = false;
+  } else {
+    licenseItem.classList.remove('error');
+  }
+
+  var emailEl = document.getElementById('contactEmail');
+  var emailItem = emailEl.closest('.ant-form-item');
+  if (emailEl.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim())) {
+    emailItem.classList.add('error');
+    isValid = false;
+  } else {
+    emailItem.classList.remove('error');
+  }
+
+  return isValid;
+}
+
+function saveCompany() {
+  if (!validateForm()) return;
+  var now = new Date();
+  var timeStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  var formData = {
+    companyName: document.getElementById('companyName').value.trim(),
+    creditCode: document.getElementById('creditCode').value.trim().toUpperCase(),
+    subjectType: document.getElementById('typeText').dataset.value,
+    registeredCapital: document.getElementById('registeredCapital').value.trim(),
+    businessScope: document.getElementById('businessScope').value.trim(),
+    capabilityDesc: document.getElementById('capabilityDesc').value.trim(),
+    contactAddress: document.getElementById('contactAddress').value.trim(),
+    contactPhone: document.getElementById('contactPhone').value.trim(),
+    contactEmail: document.getElementById('contactEmail').value.trim(),
+    contactPerson: document.getElementById('contactPerson').value.trim(),
+    contactMobile: document.getElementById('contactMobile').value.trim(),
+    licenseFile: uploadedLicenseFile ? uploadedLicenseFile.name : ''
+  };
+  if (editingId) {
+    var index = companyData.findIndex(function(item) { return item.id === editingId; });
+    if (index !== -1) companyData[index] = Object.assign({}, companyData[index], formData);
+  } else {
+    var newId = companyData.length > 0 ? Math.max.apply(null, companyData.map(function(d) { return d.id; })) + 1 : 1;
+    companyData.push(Object.assign({id: newId, registerTime: timeStr}, formData));
+  }
+  closeAddModal();
+  renderTable();
+  showToast('保存成功', '#52c41a');
+}
+
+function openDetailModal(id) {
+  var data = companyData.find(function(item) { return item.id === id; });
+  if (!data) return;
+  var html =
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">公司名称</div><div class="ant-descriptions-value">' + data.companyName + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">统一信用代码</div><div class="ant-descriptions-value">' + data.creditCode + '</div><div class="ant-descriptions-label">申请主体类型</div><div class="ant-descriptions-value">' + data.subjectType + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">注册资本</div><div class="ant-descriptions-value">' + (data.registeredCapital ? data.registeredCapital + '万元' : '-') + '</div><div class="ant-descriptions-label">登记时间</div><div class="ant-descriptions-value">' + data.registerTime + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">业务范围</div><div class="ant-descriptions-value" style="flex:3">' + (data.businessScope || '-') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">研发、制造及试验能力说明</div><div class="ant-descriptions-value" style="flex:3">' + (data.capabilityDesc || '-') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">单位联系地址</div><div class="ant-descriptions-value">' + (data.contactAddress || '-') + '</div><div class="ant-descriptions-label">单位联系电话</div><div class="ant-descriptions-value">' + (data.contactPhone || '-') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">单位联系邮箱</div><div class="ant-descriptions-value">' + (data.contactEmail || '-') + '</div><div class="ant-descriptions-label">联系人</div><div class="ant-descriptions-value">' + data.contactPerson + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">联系方式</div><div class="ant-descriptions-value">' + data.contactMobile + '</div><div class="ant-descriptions-label">营业执照</div><div class="ant-descriptions-value"><a href="#" style="color:#1677ff">' + data.licenseFile + '</a></div></div>';
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailModal').style.setProperty('display', 'flex', 'important');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').style.setProperty('display', 'none', 'important');
+}
+
+function deleteCompany(id) {
+  if (confirm('确定要删除该企业信息吗？')) {
+    companyData = companyData.filter(function(item) { return item.id !== id; });
+    renderTable();
+    showToast('删除成功', '#52c41a');
+  }
+}
+
+function exportTable() {
+  showToast('导出请求已提交，请稍候', '#1677ff');
+}
+
+function showToast(msg, bgColor) {
+  var t = document.createElement('div');
+  t.innerText = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:' + (bgColor || '#1677ff') + ';color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 1800);
+}
+
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('typeDropdown');
+  var sel = document.getElementById('typeSelect');
+  if (dd && dd.classList.contains('show') && !sel.contains(e.target) && !dd.contains(e.target)) {
+    dd.classList.remove('show');
+  }
+});
+
+pager = new Pagination({container:'paginationBar',pageSize:10,pageSizeOptions:[10,20,50,100],onPageChange:function(){renderTable();},onPageSizeChange:function(){renderTable();}});
+renderTable();
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

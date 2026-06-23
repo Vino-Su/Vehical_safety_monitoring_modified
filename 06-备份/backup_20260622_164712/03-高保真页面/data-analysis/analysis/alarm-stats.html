@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>异常告警情况统计 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff'}}}}}</script>
+  <style>
+    html,body{margin:0;padding:0;overflow-x:hidden;font-family:"Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .stat-card{background:#fff;border-radius:8px;padding:16px 20px;display:flex;align-items:center;gap:14px;border:1px solid #f0f0f0;box-shadow:0 1px 2px rgba(0,0,0,.03);transition:all .2s}
+    .stat-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);transform:translateY(-1px)}
+    .stat-card .icon-box{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;font-weight:700;color:#fff}
+    .stat-card .info-box{display:flex;flex-direction:column;gap:4px;min-width:0}
+    .stat-card .sv{font-size:24px;font-weight:700;line-height:1.2;color:#000000d9;letter-spacing:-.5px}
+    .stat-card .sl{font-size:12px;color:#00000073;line-height:1.4}
+    .row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    .table-wrap{overflow-x:auto}
+    .table-wrap table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .table-wrap th{background:#fafafa;font-weight:600;border-bottom:1px solid #f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:12px 12px;height:48px;font-size:13px;color:#00000073}
+    .table-wrap td{padding:12px 12px;text-align:left;font-size:13px;border-bottom:1px solid #f5f5f5;overflow:hidden;text-overflow:ellipsis;height:48px;color:#000000d9}
+    .table-wrap tr:hover{background:#f5f5f5}
+    .map-container{height:340px;border-radius:6px;overflow:hidden}
+    .map-container .leaflet-container{z-index:1}
+    .quick-btn{display:inline-flex;align-items:center;height:32px;padding:0 16px;font-size:14px;border-radius:6px;cursor:pointer;transition:all .2s;border:1px solid #d9d9d9;background:#fff;color:#000000d9;white-space:nowrap}
+    .quick-btn:hover{color:#1677ff;border-color:#1677ff}
+    .quick-btn.active{background:#1677ff;border-color:#1677ff;color:#fff}
+    .compare-select-wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:32px}
+    .compare-tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;background:#e6f4ff;border:1px solid #91caff;border-radius:4px;font-size:12px;color:#1677ff;gap:4px}
+    .compare-tag .remove{cursor:pointer;font-size:14px;line-height:1;color:#1677ff;opacity:.6}
+    .compare-tag .remove:hover{opacity:1}
+    @media(max-width:1400px){.stat-cards{grid-template-columns:repeat(4,1fr)}}
+    @media(max-width:1200px){.stat-cards{grid-template-columns:repeat(2,1fr)}.row-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#f0f2f5] p-6 min-w-0">
+      <div class="page-header"><h2>异常告警情况统计</h2></div>
+
+      <!-- Tab Navigation -->
+      <div class="ant-tabs" id="tabNav">
+        <button class="ant-tab active" onclick="switchTab('overview')">告警概览</button>
+        <button class="ant-tab" onclick="switchTab('trend')">告警趋势</button>
+        <button class="ant-tab" onclick="switchTab('rank')">企业排名</button>
+      </div>
+
+      <!-- ==================== Tab1: 告警概览 ==================== -->
+      <div id="tab-overview">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>开始日期</label><input class="ant-input" type="date" id="startDate" style="width:140px"></div>
+            <div class="filter-item"><label>结束日期</label><input class="ant-input" type="date" id="endDate" style="width:140px"></div>
+            <div class="filter-item"><label>告警大类</label><select class="ant-input" id="filterCategory" style="width:120px" onchange="onCategoryChange()"><option value="all">全部</option><option value="device">设备异常</option><option value="behavior">行为异常</option></select></div>
+            <div class="filter-item"><label>告警类型</label><select class="ant-input" id="filterType" style="width:140px"><option value="all">全部</option><option>车辆运行异常</option><option>临牌有效期预警</option><option>电子围栏越界</option><option>终端通信异常</option><option>设备故障告警</option><option>其他告警</option></select></div>
+            <div class="filter-item"><label>告警级别</label><select class="ant-input" id="filterLevel" style="width:100px"><option value="all">全部</option><option>严重</option><option>一般</option><option>提示</option></select></div>
+            <div class="filter-item"><label>所属企业</label><select class="ant-input" id="filterCompany" style="width:120px"><option value="all">全部</option><option>B公司</option><option>L公司</option><option>C公司</option><option>M公司</option><option>N公司</option><option>O公司</option><option>P公司</option><option>A公司</option></select></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" id="filterPlate" placeholder="请输入" style="width:110px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="doQuery()">查询</button><button class="ant-btn" onclick="showToast('导出功能开发中','#1677ff')">导出</button></div>
+          </div>
+        </div>
+
+        <!-- 8 Stat Cards -->
+        <div class="stat-cards" id="statCards">
+          <div class="stat-card"><div class="icon-box" style="background:#ff4d4f;">⚠</div><div class="info-box"><div class="sv" style="color:#ff4d4f" id="sv_total">186</div><div class="sl">当日告警总数</div></div></div>
+          <div class="stat-card"><div class="icon-box" style="background:#fa8c16;">⚙</div><div class="info-box"><div class="sv" style="color:#fa8c16" id="sv_device">52</div><div class="sl">设备异常告警</div></div></div>
+          <div class="stat-card"><div class="icon-box" style="background:#1677ff;">🚗</div><div class="info-box"><div class="sv" style="color:#1677ff" id="sv_behavior">134</div><div class="sl">行为异常告警</div></div></div>
+          <div class="stat-card"><div class="icon-box" style="background:#52c41a;">✓</div><div class="info-box"><div class="sv" style="color:#52c41a" id="sv_handled">144</div><div class="sl">已处理告警</div></div></div>
+          <div class="stat-card"><div class="icon-box" style="background:#f0f5ff;">%</div><div class="info-box"><div class="sv" id="sv_rate">77.4%</div><div class="sl">告警处理率</div></div></div>
+          <div class="stat-card"><div class="icon-box" style="background:#fff2f0;">!</div><div class="info-box"><div class="sv" style="color:#ff4d4f" id="sv_severe">32.3%</div><div class="sl">严重告警占比</div></div></div>
+          <div class="stat-card"><div class="icon-box" style="background:#f9f0ff;">⏱</div><div class="info-box"><div class="sv" style="color:#722ed1" id="sv_duration">3.2h</div><div class="sl">平均持续时长</div></div></div>
+          <div class="stat-card"><div class="icon-box" style="background:#e6fffb;">🚙</div><div class="info-box"><div class="sv" style="color:#13c2c2" id="sv_vehicles">28</div><div class="sl">影响车辆数</div></div></div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="row-2">
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">告警大类分布</div><div id="nestedPie" style="height:320px"></div></div>
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">告警级别分布</div><div id="groupedBar" style="height:320px"></div></div>
+        </div>
+        <!-- Charts Row 2 -->
+        <div class="row-2">
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">告警趋势（近30天）</div><div id="trendArea" style="height:300px"></div></div>
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">影响范围分析</div><div id="scopeCombo" style="height:300px"></div></div>
+        </div>
+        <!-- Charts Row 3 -->
+        <div class="row-2">
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">持续时长分布</div><div id="durationBox" style="height:300px"></div></div>
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;color:#000000d9"><span>告警热点地图</span><span style="font-weight:400;font-size:12px;color:#00000073">点位颜色按级别：<span style="color:#ff4d4f">●严重</span> <span style="color:#fa8c16">●一般</span> <span style="color:#1677ff">●提示</span></span></div><div id="alertMap" class="map-container"></div></div>
+        </div>
+
+        <!-- Alarm Table -->
+        <div class="card" style="padding:20px;border-radius:8px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:16px;color:#000000d9">告警明细列表</div>
+          <div class="table-wrap">
+            <table><thead><tr>
+              <th style="width:110px" class="col-code">告警编号</th><th style="width:120px" class="col-code">时间</th><th style="width:80px" class="col-code">车牌号</th><th style="width:110px" class="col-code">VIN码</th><th style="width:80px">所属企业</th><th style="width:100px">告警类型</th><th style="width:80px">告警大类</th><th style="width:80px">告警级别</th><th style="width:130px">地点</th><th style="width:80px" class="col-num">持续时长</th><th style="width:80px">处理状态</th><th style="width:60px" class="col-action">操作</th>
+            </tr></thead><tbody id="tableBody"></tbody></table>
+          </div>
+          <div id="paginationBar"></div>
+        </div>
+      </div>
+
+      <!-- ==================== Tab2: 告警趋势 ==================== -->
+      <div id="tab-trend" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="flex gap-2 items-center">
+              <button class="quick-btn active" onclick="setTrendPeriod('7d',this)">最近7天</button>
+              <button class="quick-btn" onclick="setTrendPeriod('30d',this)">最近30天</button>
+              <button class="quick-btn" onclick="setTrendPeriod('90d',this)">最近90天</button>
+            </div>
+            <div class="filter-item"><label>告警大类</label><select class="ant-input" id="trendCategory" style="width:120px" onchange="refreshTrend()"><option value="all">全部</option><option value="device">设备异常</option><option value="behavior">行为异常</option></select></div>
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">告警频次趋势</div><div id="freqTrend" style="height:320px"></div></div>
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">告警级别趋势</div><div id="levelStack" style="height:320px"></div></div>
+        </div>
+        <div class="row-2">
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">持续时长趋势</div><div id="durTrend" style="height:300px"></div></div>
+          <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">告警类型环比</div><div id="typeCompare" style="height:300px"></div></div>
+        </div>
+        <!-- Trend Summary Table -->
+        <div class="card" style="padding:20px;border-radius:8px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:16px;color:#000000d9">趋势汇总表</div>
+          <div class="table-wrap">
+            <table><thead><tr>
+              <th>告警类型</th><th class="col-num">当期数量</th><th class="col-num">上期数量</th><th class="col-num">环比变化</th><th class="col-num">平均持续时长</th><th class="col-num">影响车辆数</th>
+            </tr></thead><tbody id="trendTableBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== Tab3: 企业排名 ==================== -->
+      <div id="tab-rank" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="flex gap-2 items-center">
+              <button class="quick-btn active" onclick="setRankPeriod('today',this)">今日</button>
+              <button class="quick-btn" onclick="setRankPeriod('yesterday',this)">昨日</button>
+              <button class="quick-btn" onclick="setRankPeriod('7d',this)">最近7天</button>
+              <button class="quick-btn" onclick="setRankPeriod('30d',this)">最近30天</button>
+              <button class="quick-btn" onclick="setRankPeriod('month',this)">本月</button>
+            </div>
+            <div class="filter-item"><label>对比企业</label>
+              <select class="ant-input" id="compareSelect" style="width:140px" onchange="addCompareCompany()"><option value="">选择企业...</option><option>B公司</option><option>L公司</option><option>C公司</option><option>M公司</option><option>N公司</option><option>O公司</option><option>P公司</option><option>A公司</option></select>
+            </div>
+            <div class="compare-select-wrap" id="compareTags"></div>
+          </div>
+        </div>
+        <!-- Top10 Chart -->
+        <div class="card" style="padding:20px;border-radius:8px;margin-bottom:20px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">企业告警排名 Top10</div>
+          <div id="rankBar" style="height:400px"></div>
+        </div>
+        <!-- Rank Table -->
+        <div class="card" style="padding:20px;border-radius:8px;margin-bottom:20px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:16px;color:#000000d9">企业告警对比表格</div>
+          <div class="table-wrap">
+            <table><thead><tr>
+              <th class="col-code">排名</th><th>企业名称</th><th class="col-num">告警总数</th><th>设备异常</th><th>行为异常</th><th>严重</th><th>一般</th><th>提示</th><th class="col-num">处理率</th><th class="col-num">平均持续时长</th>
+            </tr></thead><tbody id="rankTableBody"></tbody></table>
+          </div>
+        </div>
+        <!-- Compare Charts -->
+        <div id="compareSection" style="display:none">
+          <div style="font-size:15px;font-weight:600;margin-bottom:16px;color:#000000d9">企业对比分析</div>
+          <div class="row-2">
+            <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:14px;font-weight:500;margin-bottom:12px;color:#000000d9">告警趋势对比</div><div id="compareTrend" style="height:300px"></div></div>
+            <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:14px;font-weight:500;margin-bottom:12px;color:#000000d9">告警类型分布对比</div><div id="comparePie" style="height:300px"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="ant-modal-mask" id="modalMask" style="display:none!important">
+  <div class="ant-modal wide">
+    <div class="ant-modal-header"><h3>告警详情</h3><span class="ant-modal-close" onclick="closeDetail()">✕</span></div>
+    <div class="ant-modal-body" id="modalBody"></div>
+    <div class="ant-modal-footer"><button class="ant-btn" onclick="closeDetail()">关闭</button></div>
+  </div>
+</div>
+
+<script>
+const PAGE_ID = 'alarm-stats';
+
+// ============ Constants ============
+const alarmTypeColors = {'车辆运行异常':'#ff4d4f','临牌有效期预警':'#faad14','电子围栏越界':'#1677ff','终端通信异常':'#722ed1','设备故障告警':'#52c41a','其他告警':'#8c8c8c'};
+const alarmTypeList = ['车辆运行异常','临牌有效期预警','电子围栏越界','终端通信异常','设备故障告警','其他告警'];
+const deviceTypes = ['终端通信异常','设备故障告警'];
+const behaviorTypes = ['车辆运行异常','临牌有效期预警','电子围栏越界','其他告警'];
+const enterpriseList = ['B公司','L公司','C公司','M公司','N公司','O公司','P公司','A公司'];
+const levels = ['严重','一般','提示'];
+const statuses = ['待处理','处理中','已完成'];
+const locations = ['长虹路建华路口','檀溪路铁佛寺路口','航空路金富士路口','人民路天元四季城','建设路银城大道口','邓城大道与卧龙大道交叉口','胜利街与环城东路交叉口','襄州大道与机场路交叉口','东津新区南山路','鱼梁洲绿洲大道'];
+
+let mockAlarms = [];
+var pager;
+let chartNestedPie, chartGroupedBar, chartTrendArea, chartScopeCombo, chartDurationBox;
+let chartFreqTrend, chartLevelStack, chartDurTrend, chartTypeCompare;
+let chartRankBar, chartCompareTrend, chartComparePie;
+let alertMap = null, mapInitialized = false;
+let currentPeriod = '7d';
+let trendPeriod = '7d';
+let rankPeriod = 'today';
+let compareCompanies = [];
+
+// ============ Mock Data ============
+function genAlarms() {
+  var alarms = [];
+  var now = new Date();
+  for (var i = 0; i < 86; i++) {
+    var d = new Date(now); d.setMinutes(d.getMinutes() - i * 15 + Math.floor(Math.random() * 10));
+    var t = d.toLocaleString('zh-CN', {hour12:false}).replace(/\//g,'-');
+    var type = alarmTypeList[Math.floor(Math.random() * alarmTypeList.length)];
+    var category = deviceTypes.indexOf(type) >= 0 ? '设备异常' : '行为异常';
+    var lv = levels[Math.floor(Math.random() * 3)];
+    var ent = enterpriseList[Math.floor(Math.random() * enterpriseList.length)];
+    var st = statuses[Math.floor(Math.random() * 3)];
+    var plate = '鄂F·' + String.fromCharCode(65+Math.floor(Math.random()*26)) + String(Math.floor(Math.random()*900)+100).padStart(3,'0');
+    var vin = 'LSVA' + String(Math.floor(Math.random()*89999)+10000).padStart(5,'0') + 'N2' + String(Math.floor(Math.random()*899)+100).padStart(3,'0');
+    var loc = locations[Math.floor(Math.random() * locations.length)];
+    var durH = Math.floor(Math.random()*8);
+    var durM = Math.floor(Math.random()*60);
+    var dur = st === '已完成' ? durH + 'h ' + durM + 'min' : '进行中';
+    alarms.push({id:'ALT-'+t.replace(/[-\s:]/g,'').slice(0,10)+'-'+String(i+1).padStart(4,'0'),time:t,plate:plate,vin:vin,enterprise:ent,type:type,category:category,level:lv,status:st,location:loc,duration:dur});
+  }
+  alarms.sort(function(a,b){return b.time.localeCompare(a.time);});
+  return alarms;
+}
+
+// ============ Category-Type Linkage ============
+function onCategoryChange() {
+  var cat = document.getElementById('filterCategory').value;
+  var sel = document.getElementById('filterType');
+  var opts = sel.querySelectorAll('option');
+  opts.forEach(function(o){ o.style.display=''; });
+  if (cat === 'device') {
+    opts.forEach(function(o){ if(o.value!=='all' && deviceTypes.indexOf(o.textContent)===-1) o.style.display='none'; });
+  } else if (cat === 'behavior') {
+    opts.forEach(function(o){ if(o.value!=='all' && behaviorTypes.indexOf(o.textContent)===-1) o.style.display='none'; });
+  }
+  sel.value = 'all';
+}
+
+// ============ Tab Switch ============
+function switchTab(tab) {
+  var tabs = document.querySelectorAll('#tabNav .ant-tab');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  var map = {overview:0,trend:1,rank:2};
+  tabs[map[tab]].classList.add('active');
+  document.getElementById('tab-overview').style.display = tab==='overview'?'':'none';
+  document.getElementById('tab-trend').style.display = tab==='trend'?'':'none';
+  document.getElementById('tab-rank').style.display = tab==='rank'?'':'none';
+  if(tab==='trend') refreshTrend();
+  if(tab==='rank') refreshRank();
+  if(tab==='overview') setTimeout(function(){resizeAllCharts();if(!mapInitialized)initAlertMap();},100);
+}
+
+// ============ Tab1: Overview ============
+function doQuery() {
+  if(pager) pager.reset();
+  refreshOverview();
+  showToast('数据已更新','#1677ff');
+}
+
+function getFilteredAlarms() {
+  var cat = document.getElementById('filterCategory').value;
+  var level = document.getElementById('filterLevel').value;
+  var type = document.getElementById('filterType').value;
+  var company = document.getElementById('filterCompany').value;
+  var plate = document.getElementById('filterPlate').value;
+  return mockAlarms.filter(function(a){
+    if(cat==='device'&&a.category!=='设备异常')return false;
+    if(cat==='behavior'&&a.category!=='行为异常')return false;
+    if(level!=='all'&&a.level!==level)return false;
+    if(type!=='all'&&a.type!==type)return false;
+    if(company!=='all'&&a.enterprise!==company)return false;
+    if(plate&&a.plate.indexOf(plate)===-1)return false;
+    return true;
+  });
+}
+
+function refreshOverview() {
+  var filtered = getFilteredAlarms();
+  var total = filtered.length;
+  var devCount = filtered.filter(function(a){return a.category==='设备异常'}).length;
+  var behCount = filtered.filter(function(a){return a.category==='行为异常'}).length;
+  var handled = filtered.filter(function(a){return a.status==='已完成'}).length;
+  var severe = filtered.filter(function(a){return a.level==='严重'}).length;
+  var rate = total>0?(handled/total*100).toFixed(1)+'%':'0%';
+  var sevRate = total>0?(severe/total*100).toFixed(1)+'%':'0%';
+  var vehicles = new Set(filtered.map(function(a){return a.plate})).size;
+  document.getElementById('sv_total').textContent=total;
+  document.getElementById('sv_device').textContent=devCount;
+  document.getElementById('sv_behavior').textContent=behCount;
+  document.getElementById('sv_handled').textContent=handled;
+  document.getElementById('sv_rate').textContent=rate;
+  document.getElementById('sv_severe').textContent=sevRate;
+  document.getElementById('sv_duration').textContent='3.2h';
+  document.getElementById('sv_vehicles').textContent=vehicles;
+  renderNestedPie(filtered);
+  renderGroupedBar(filtered);
+  renderTrendArea();
+  renderScopeCombo();
+  renderDurationBox();
+  renderTable(filtered);
+  if(!mapInitialized) setTimeout(initAlertMap, 200);
+}
+
+// Nested pie: inner=大类, outer=细分类型
+function renderNestedPie(filtered) {
+  var devCount=0,behCount=0;
+  var typeMap={};
+  filtered.forEach(function(a){
+    if(a.category==='设备异常')devCount++;else behCount++;
+    typeMap[a.type]=(typeMap[a.type]||0)+1;
+  });
+  if(chartNestedPie)chartNestedPie.dispose();
+  chartNestedPie=echarts.init(document.getElementById('nestedPie'));
+  chartNestedPie.setOption({
+    tooltip:{trigger:'item',formatter:function(p){return p.seriesName+'<br/>'+p.name+': '+p.value+' 起 ('+p.percent+'%)'}},
+    legend:{orient:'vertical',right:10,top:'center',textStyle:{fontSize:11}},
+    series:[
+      {name:'告警大类',type:'pie',radius:[0,'38%'],label:{formatter:'{b}\n{d}%',fontSize:12},itemStyle:{borderWidth:2,borderColor:'#fff'},data:[
+        {value:devCount,name:'设备异常',itemStyle:{color:'#fa8c16'}},
+        {value:behCount,name:'行为异常',itemStyle:{color:'#1677ff'}}
+      ]},
+      {name:'告警类型',type:'pie',radius:['50%','68%'],label:{show:false},emphasis:{label:{show:true,fontSize:11}},itemStyle:{borderWidth:2,borderColor:'#fff'},data:alarmTypeList.map(function(t){return{name:t,value:typeMap[t]||0,itemStyle:{color:alarmTypeColors[t]}}}).filter(function(d){return d.value>0})}
+    ]
+  });
+}
+
+// Grouped bar: 设备异常 vs 行为异常 x 严重/一般/提示
+function renderGroupedBar(filtered) {
+  var dev={severe:0,general:0,info:0},beh={severe:0,general:0,info:0};
+  filtered.forEach(function(a){
+    var bucket=a.category==='设备异常'?dev:beh;
+    if(a.level==='严重')bucket.severe++;else if(a.level==='一般')bucket.general++;else bucket.info++;
+  });
+  if(chartGroupedBar)chartGroupedBar.dispose();
+  chartGroupedBar=echarts.init(document.getElementById('groupedBar'));
+  chartGroupedBar.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['设备异常','行为异常'],top:0},
+    grid:{left:'10%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:['严重','一般','提示']},
+    yAxis:{type:'value',name:'告警数'},
+    series:[
+      {name:'设备异常',type:'bar',data:[dev.severe,dev.general,dev.info],barWidth:'30%',itemStyle:{color:'#fa8c16',borderRadius:[4,4,0,0]},label:{show:true,position:'top',fontSize:11}},
+      {name:'行为异常',type:'bar',data:[beh.severe,beh.general,beh.info],barWidth:'30%',itemStyle:{color:'#1677ff',borderRadius:[4,4,0,0]},label:{show:true,position:'top',fontSize:11}}
+    ]
+  });
+}
+
+// Trend area chart
+function renderTrendArea() {
+  var dates=[];for(var i=29;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}
+  var data=dates.map(function(){return Math.floor(Math.random()*30)+10});
+  if(chartTrendArea)chartTrendArea.dispose();
+  chartTrendArea=echarts.init(document.getElementById('trendArea'));
+  chartTrendArea.setOption({
+    tooltip:{trigger:'axis'},grid:{left:'10%',right:'5%',containLabel:true},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:10,interval:4}},
+    yAxis:{type:'value',name:'告警数'},
+    series:[{type:'line',data:data,smooth:true,lineStyle:{color:'#1677ff',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(22,119,255,0.25)'},{offset:1,color:'rgba(22,119,255,0.02)'}]}},
+      markLine:{data:[{type:'average',name:'平均值'}],lineStyle:{color:'#ff4d4f',type:'dashed'}},itemStyle:{color:'#1677ff'}}]
+  });
+}
+
+// Scope combo: bar=vehicles, line=enterprises
+function renderScopeCombo() {
+  var dates=[];for(var i=13;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}
+  var vData=dates.map(function(){return Math.floor(Math.random()*15)+3});
+  var eData=[];var cum=0;for(var i=0;i<dates.length;i++){cum+=Math.random()>0.7?1:0;eData.push(Math.min(cum+3,8));}
+  if(chartScopeCombo)chartScopeCombo.dispose();
+  chartScopeCombo=echarts.init(document.getElementById('scopeCombo'));
+  chartScopeCombo.setOption({
+    tooltip:{trigger:'axis'},legend:{data:['影响车辆数','累计影响企业数'],top:0},grid:{left:'10%',right:'10%',top:40,containLabel:true},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:10}},
+    yAxis:[{type:'value',name:'车辆数'},{type:'value',name:'企业数',min:0,max:10}],
+    series:[
+      {name:'影响车辆数',type:'bar',data:vData,itemStyle:{color:'#13c2c2',borderRadius:[4,4,0,0]},barWidth:'40%'},
+      {name:'累计影响企业数',type:'line',yAxisIndex:1,data:eData,smooth:true,lineStyle:{color:'#722ed1',width:2},itemStyle:{color:'#722ed1'}}
+    ]
+  });
+}
+
+// Duration box plot
+function renderDurationBox() {
+  if(chartDurationBox)chartDurationBox.dispose();
+  chartDurationBox=echarts.init(document.getElementById('durationBox'));
+  var typeData=alarmTypeList.map(function(t){
+    var base=[1,2,4,6,8,10,12,16,20,24];
+    if(t==='终端通信异常'||t==='设备故障告警')base=[0.5,1,2,3,4,6,8,12,18,24];
+    return{type:'boxplot',name:t,data:[getBoxPlotData(base)]};
+  });
+  // Simplified: use grouped bar as box approximation
+  var types=['车辆运行异常','临牌有效期预警','电子围栏越界','终端通信异常','设备故障告警','其他告警'];
+  var p25=[1.5,0.5,0.8,0.3,0.5,0.2],p50=[3.2,1.8,2.1,1.2,2.5,0.8],p75=[6.5,3.2,4.5,3.8,5.2,2.1];
+  chartDurationBox.setOption({
+    tooltip:{trigger:'axis'},legend:{data:['P25','P50(中位数)','P75'],top:0},grid:{left:'10%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:types,axisLabel:{fontSize:10,interval:0,rotate:15}},
+    yAxis:{type:'value',name:'时长(h)'},
+    series:[
+      {name:'P25',type:'bar',stack:'dur',data:p25,itemStyle:{color:'#b7eb8f'},barWidth:'50%'},
+      {name:'P50(中位数)',type:'bar',stack:'dur',data:p50.map(function(v,i){return v-p25[i]}),itemStyle:{color:'#52c41a'}},
+      {name:'P75',type:'bar',stack:'dur',data:p75.map(function(v,i){return v-p50[i]}),itemStyle:{color:'#389e0d'}}
+    ]
+  });
+}
+
+function getBoxPlotData(arr){arr.sort(function(a,b){return a-b});var n=arr.length;return[arr[0],arr[Math.floor(n*.25)],arr[Math.floor(n*.5)],arr[Math.floor(n*.75)],arr[n-1]];}
+
+// Alert Map
+function initAlertMap() {
+  if(mapInitialized)return;
+  var container=document.getElementById('alertMap');
+  if(!container||container._leaflet_id)return;
+  try{
+    alertMap=L.map(container).setView([32.02,112.12],12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(alertMap);
+    var levelColors={'严重':'#ff4d4f','一般':'#fa8c16','提示':'#1677ff'};
+    for(var i=0;i<60;i++){
+      var lat=31.76+Math.random()*0.48,lng=111.70+Math.random()*0.65;
+      var lv=levels[Math.floor(Math.random()*3)];
+      var loc=locations[Math.floor(Math.random()*locations.length)];
+      L.circleMarker([lat,lng],{radius:5+Math.random()*5,fillColor:levelColors[lv],color:'#fff',weight:1.5,fillOpacity:0.75})
+       .addTo(alertMap).bindPopup('<b>'+lv+'告警</b><br>地点：'+loc);
+    }
+    mapInitialized=true;
+    setTimeout(function(){if(alertMap)alertMap.invalidateSize();},300);
+  }catch(e){}
+}
+
+// Table rendering
+function renderTable(filtered) {
+  var cp=pager?pager.getCurrentPage():1,ps=pager?pager.getPageSize():10;
+  var totalPages=Math.ceil(filtered.length/ps);
+  if(cp>totalPages)cp=Math.max(1,totalPages);
+  var start=(cp-1)*ps,end=Math.min(start+ps,filtered.length);
+  var pageData=filtered.slice(start,end);
+  var tbody=document.getElementById('tableBody');
+  tbody.innerHTML=pageData.map(function(a){
+    var catTag=a.category==='设备异常'?'<span class="ant-tag ant-tag-warning">设备异常</span>':'<span class="ant-tag ant-tag-processing">行为异常</span>';
+    var lt=a.level==='严重'?'<span class="ant-tag ant-tag-error">严重</span>':a.level==='一般'?'<span class="ant-tag ant-tag-warning">一般</span>':'<span class="ant-tag ant-tag-processing">提示</span>';
+    var sgt=a.status==='待处理'?'<span class="ant-tag ant-tag-processing">待处理</span>':a.status==='处理中'?'<span class="ant-tag ant-tag-warning">处理中</span>':'<span class="ant-tag ant-tag-success">已完成</span>';
+    return '<tr><td class="col-code" style="font-size:11px;color:#00000073">'+a.id+'</td><td class="col-code">'+a.time+'</td><td class="col-code">'+a.plate+'</td><td class="col-code" style="font-size:11px">'+a.vin+'</td><td>'+a.enterprise+'</td><td>'+a.type+'</td><td>'+catTag+'</td><td>'+lt+'</td><td>'+a.location+'</td><td class="col-num">'+a.duration+'</td><td>'+sgt+'</td><td class="col-action"><button class="ant-btn-link" onclick="openDetail(\''+a.id+'\')">详情</button></td></tr>';
+  }).join('');
+  if(pager)pager.setTotal(filtered.length);
+}
+
+// Detail modal
+function openDetail(id) {
+  var a = mockAlarms.find(function(x){return x.id===id}) || mockAlarms[0];
+  var catTag=a.category==='设备异常'?'<span class="ant-tag ant-tag-warning">设备异常</span>':'<span class="ant-tag ant-tag-processing">行为异常</span>';
+  var lt=a.level==='严重'?'<span class="ant-tag ant-tag-error">严重</span>':a.level==='一般'?'<span class="ant-tag ant-tag-warning">一般</span>':'<span class="ant-tag ant-tag-processing">提示</span>';
+  var sgt=a.status==='待处理'?'<span class="ant-tag ant-tag-processing">待处理</span>':a.status==='处理中'?'<span class="ant-tag ant-tag-warning">处理中</span>':'<span class="ant-tag ant-tag-success">已完成</span>';
+  document.getElementById('modalBody').innerHTML=
+    '<div class="ant-descriptions">'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">告警编号</div><div class="ant-descriptions-value">'+a.id+'</div><div class="ant-descriptions-label">告警时间</div><div class="ant-descriptions-value">'+a.time+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">告警类型</div><div class="ant-descriptions-value">'+a.type+'</div><div class="ant-descriptions-label">告警大类</div><div class="ant-descriptions-value">'+catTag+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">告警级别</div><div class="ant-descriptions-value">'+lt+'</div><div class="ant-descriptions-label">车辆号牌</div><div class="ant-descriptions-value">'+a.plate+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value">'+a.vin+'</div><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+a.enterprise+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">告警地点</div><div class="ant-descriptions-value">'+a.location+'</div><div class="ant-descriptions-label">处理状态</div><div class="ant-descriptions-value">'+sgt+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">持续时长</div><div class="ant-descriptions-value">'+a.duration+'</div><div class="ant-descriptions-label">影响范围</div><div class="ant-descriptions-value">关联同类型告警 3 起，波及车辆 2 辆</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">关联事件</div><div class="ant-descriptions-value">前方障碍物检测、自动紧急制动触发</div><div class="ant-descriptions-label">数据来源</div><div class="ant-descriptions-value">车端CAN总线 + 路侧RSU</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">告警详情</div><div class="ant-descriptions-value" style="flex:3">车辆'+a.plate+'在'+a.location+'附近触发「'+a.type+'」告警，'+(a.level==='严重'?'需立即处理，请相关企业及时排查并反馈处理结果。':a.level==='一般'?'请企业关注并在规定时间内完成处理。':'已记录告警信息，供后续分析参考。')+'</div></div>'+
+    '</div>';
+  document.getElementById('modalMask').style.setProperty('display','flex','important');
+}
+
+function closeDetail(){document.getElementById('modalMask').style.setProperty('display','none','important');}
+
+// ============ Tab2: Trend ============
+function setTrendPeriod(p,btn) {
+  trendPeriod=p;
+  btn.parentElement.querySelectorAll('.quick-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  refreshTrend();
+}
+
+function refreshTrend() {
+  renderFreqTrend();
+  renderLevelStack();
+  renderDurTrendChart();
+  renderTypeCompare();
+  renderTrendTable();
+}
+
+function renderFreqTrend() {
+  var n=trendPeriod==='7d'?7:trendPeriod==='30d'?30:90;
+  var dates=[];for(var i=n-1;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}
+  var devData=dates.map(function(){return Math.floor(Math.random()*15)+5});
+  var behData=dates.map(function(){return Math.floor(Math.random()*25)+10});
+  var totalData=dates.map(function(_,i){return devData[i]+behData[i]});
+  if(chartFreqTrend)chartFreqTrend.dispose();
+  chartFreqTrend=echarts.init(document.getElementById('freqTrend'));
+  chartFreqTrend.setOption({
+    tooltip:{trigger:'axis'},legend:{data:['总数','设备异常','行为异常'],top:0},grid:{left:'10%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:9,interval:Math.floor(n/8)}},
+    yAxis:{type:'value',name:'告警数'},
+    series:[
+      {name:'总数',type:'line',data:totalData,smooth:true,lineStyle:{width:2,color:'#000000d9'},itemStyle:{color:'#000000d9'}},
+      {name:'设备异常',type:'line',data:devData,smooth:true,lineStyle:{width:2,color:'#fa8c16'},itemStyle:{color:'#fa8c16'}},
+      {name:'行为异常',type:'line',data:behData,smooth:true,lineStyle:{width:2,color:'#1677ff'},itemStyle:{color:'#1677ff'}}
+    ]
+  });
+}
+
+function renderLevelStack() {
+  var n=trendPeriod==='7d'?7:trendPeriod==='30d'?4:12;
+  var dates=[];if(trendPeriod==='7d'){for(var i=6;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}}else if(trendPeriod==='30d'){dates=['第1周','第2周','第3周','第4周'];}else{for(var i=2;i>=0;i--){dates.push((i+1)+'月前');}}
+  var severe=dates.map(function(){return Math.floor(Math.random()*20)+5});
+  var general=dates.map(function(){return Math.floor(Math.random()*30)+10});
+  var info=dates.map(function(){return Math.floor(Math.random()*15)+5});
+  if(chartLevelStack)chartLevelStack.dispose();
+  chartLevelStack=echarts.init(document.getElementById('levelStack'));
+  chartLevelStack.setOption({
+    tooltip:{trigger:'axis'},legend:{data:['严重','一般','提示'],top:0},grid:{left:'10%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:dates},
+    yAxis:{type:'value',name:'告警数'},
+    series:[
+      {name:'严重',type:'line',stack:'total',areaStyle:{color:'rgba(255,77,79,0.3)'},data:severe,itemStyle:{color:'#ff4d4f'},lineStyle:{color:'#ff4d4f'}},
+      {name:'一般',type:'line',stack:'total',areaStyle:{color:'rgba(250,140,22,0.3)'},data:general,itemStyle:{color:'#fa8c16'},lineStyle:{color:'#fa8c16'}},
+      {name:'提示',type:'line',stack:'total',areaStyle:{color:'rgba(22,119,255,0.3)'},data:info,itemStyle:{color:'#1677ff'},lineStyle:{color:'#1677ff'}}
+    ]
+  });
+}
+
+function renderDurTrendChart() {
+  var n=trendPeriod==='7d'?7:trendPeriod==='30d'?4:12;
+  var dates=[];if(trendPeriod==='7d'){for(var i=6;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}}else if(trendPeriod==='30d'){dates=['第1周','第2周','第3周','第4周'];}else{for(var i=2;i>=0;i--){dates.push((i+1)+'月前');}}
+  var devDur=dates.map(function(){return (Math.random()*4+1).toFixed(1)});
+  var behDur=dates.map(function(){return (Math.random()*6+2).toFixed(1)});
+  if(chartDurTrend)chartDurTrend.dispose();
+  chartDurTrend=echarts.init(document.getElementById('durTrend'));
+  chartDurTrend.setOption({
+    tooltip:{trigger:'axis'},legend:{data:['设备异常','行为异常'],top:0},grid:{left:'10%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:dates},
+    yAxis:{type:'value',name:'平均时长(h)'},
+    series:[
+      {name:'设备异常',type:'line',data:devDur,smooth:true,lineStyle:{color:'#fa8c16',width:2},itemStyle:{color:'#fa8c16'}},
+      {name:'行为异常',type:'line',data:behDur,smooth:true,lineStyle:{color:'#1677ff',width:2},itemStyle:{color:'#1677ff'}}
+    ]
+  });
+}
+
+function renderTypeCompare() {
+  var cur=[42,18,25,15,12,8],prev=[38,22,20,18,10,6];
+  if(chartTypeCompare)chartTypeCompare.dispose();
+  chartTypeCompare=echarts.init(document.getElementById('typeCompare'));
+  chartTypeCompare.setOption({
+    tooltip:{trigger:'axis'},legend:{data:['当期','上期'],top:0},grid:{left:'10%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:alarmTypeList,axisLabel:{fontSize:10,rotate:15}},
+    yAxis:{type:'value',name:'告警数'},
+    series:[
+      {name:'当期',type:'bar',data:cur,barWidth:'30%',itemStyle:{color:'#1677ff',borderRadius:[4,4,0,0]},label:{show:true,position:'top',fontSize:10}},
+      {name:'上期',type:'bar',data:prev,barWidth:'30%',itemStyle:{color:'#85a5cc',borderRadius:[4,4,0,0]},label:{show:true,position:'top',fontSize:10}}
+    ]
+  });
+}
+
+function renderTrendTable() {
+  var data=[
+    {type:'车辆运行异常',cur:42,prev:38,dur:'3.5h',v:12},
+    {type:'临牌有效期预警',cur:18,prev:22,dur:'1.2h',v:6},
+    {type:'电子围栏越界',cur:25,prev:20,dur:'2.8h',v:9},
+    {type:'终端通信异常',cur:15,prev:18,dur:'4.1h',v:5},
+    {type:'设备故障告警',cur:12,prev:10,dur:'5.6h',v:4},
+    {type:'其他告警',cur:8,prev:6,dur:'0.8h',v:3}
+  ];
+  document.getElementById('trendTableBody').innerHTML=data.map(function(d){
+    var change=((d.cur-d.prev)/d.prev*100).toFixed(1);
+    var arrow=change>0?'↑':'↓';
+    var color=change>0?'color:#ff4d4f':'color:#52c41a';
+    return '<tr><td>'+d.type+'</td><td class="col-num">'+d.cur+'</td><td class="col-num">'+d.prev+'</td><td class="col-num" style="'+color+';font-weight:500">'+arrow+' '+Math.abs(change)+'%</td><td class="col-num">'+d.dur+'</td><td class="col-num">'+d.v+'</td></tr>';
+  }).join('');
+}
+
+// ============ Tab3: Rank ============
+function setRankPeriod(p,btn) {
+  rankPeriod=p;
+  btn.parentElement.querySelectorAll('.quick-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  refreshRank();
+}
+
+function addCompareCompany() {
+  var sel=document.getElementById('compareSelect');
+  var name=sel.value;
+  if(!name||compareCompanies.indexOf(name)>=0||compareCompanies.length>=4)return;
+  compareCompanies.push(name);
+  sel.value='';
+  renderCompareTags();
+  refreshCompareCharts();
+}
+
+function removeCompareCompany(name) {
+  compareCompanies=compareCompanies.filter(function(c){return c!==name});
+  renderCompareTags();
+  refreshCompareCharts();
+}
+
+function renderCompareTags() {
+  var wrap=document.getElementById('compareTags');
+  wrap.innerHTML=compareCompanies.map(function(c){return '<span class="compare-tag">'+c+'<span class="remove" onclick="removeCompareCompany(\''+c+'\')">✕</span></span>';}).join('');
+  document.getElementById('compareSection').style.display=compareCompanies.length>=2?'':'none';
+}
+
+function refreshRank() {
+  renderRankBar();
+  renderRankTable();
+  if(compareCompanies.length>=2)refreshCompareCharts();
+}
+
+function renderRankBar() {
+  var companies=enterpriseList.slice(0,8);
+  var vals=[86,72,65,58,45,38,32,28];
+  if(chartRankBar)chartRankBar.dispose();
+  chartRankBar=echarts.init(document.getElementById('rankBar'));
+  chartRankBar.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},grid:{left:'8%',right:'8%',containLabel:true},
+    xAxis:{type:'value',name:'告警数'},
+    yAxis:{type:'category',data:companies.slice().reverse(),axisLabel:{fontSize:12}},
+    series:[{type:'bar',data:vals.slice().reverse().map(function(v){return{value:v,itemStyle:{color:v>=30?'#ff4d4f':v>=20?'#fa8c16':'#1677ff',borderRadius:[0,4,4,0]}}}),barWidth:'55%',
+      label:{show:true,position:'right',formatter:function(p){return p.value+' 起'},fontSize:11}}]
+  });
+}
+
+function renderRankTable() {
+  var data=[
+    {rank:1,name:'B公司',total:86,dev:22,beh:64,severe:28,general:38,info:20,rate:'82.6%',dur:'2.8h'},
+    {rank:2,name:'L公司',total:72,dev:18,beh:54,severe:22,general:32,info:18,rate:'79.2%',dur:'3.1h'},
+    {rank:3,name:'C公司',total:65,dev:15,beh:50,severe:18,general:30,info:17,rate:'76.9%',dur:'3.5h'},
+    {rank:4,name:'M公司',total:58,dev:14,beh:44,severe:16,general:26,info:16,rate:'74.1%',dur:'3.8h'},
+    {rank:5,name:'N公司',total:45,dev:12,beh:33,severe:12,general:20,info:13,rate:'71.1%',dur:'4.2h'},
+    {rank:6,name:'O公司',total:38,dev:10,beh:28,severe:10,general:18,info:10,rate:'68.4%',dur:'4.5h'},
+    {rank:7,name:'P公司',total:32,dev:8,beh:24,severe:8,general:15,info:9,rate:'65.6%',dur:'5.0h'},
+    {rank:8,name:'A公司',total:28,dev:6,beh:22,severe:6,general:14,info:8,rate:'60.7%',dur:'5.3h'}
+  ];
+  document.getElementById('rankTableBody').innerHTML=data.map(function(d){
+    return '<tr><td style="font-weight:600">'+d.rank+'</td><td style="font-weight:500">'+d.name+'</td><td>'+d.total+'</td><td style="color:#fa8c16">'+d.dev+'</td><td style="color:#1677ff">'+d.beh+'</td><td style="color:#ff4d4f">'+d.severe+'</td><td style="color:#fa8c16">'+d.general+'</td><td style="color:#1677ff">'+d.info+'</td><td>'+d.rate+'</td><td>'+d.dur+'</td></tr>';
+  }).join('');
+}
+
+function refreshCompareCharts() {
+  if(compareCompanies.length<2)return;
+  // Compare trend
+  var dates=[];for(var i=6;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}
+  var colors=['#1677ff','#ff4d4f','#52c41a','#722ed1'];
+  var series=compareCompanies.map(function(c,idx){
+    return {name:c,type:'line',data:dates.map(function(){return Math.floor(Math.random()*30)+10}),smooth:true,lineStyle:{width:2,color:colors[idx]},itemStyle:{color:colors[idx]}};
+  });
+  if(chartCompareTrend)chartCompareTrend.dispose();
+  chartCompareTrend=echarts.init(document.getElementById('compareTrend'));
+  chartCompareTrend.setOption({
+    tooltip:{trigger:'axis'},legend:{data:compareCompanies,top:0},grid:{left:'10%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:dates},yAxis:{type:'value',name:'告警数'},
+    series:series
+  });
+  // Compare pie
+  if(chartComparePie)chartComparePie.dispose();
+  chartComparePie=echarts.init(document.getElementById('comparePie'));
+  chartComparePie.setOption({
+    tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{fontSize:11}},
+    series:compareCompanies.map(function(c,idx){
+      var total=Math.floor(Math.random()*40)+30;
+      return {name:c,type:'pie',radius:[20+idx*25+'%',40+idx*25+'%'],data:alarmTypeList.map(function(t){return{name:t,value:Math.floor(Math.random()*15)+2,itemStyle:{color:alarmTypeColors[t]}}}),label:{show:idx===compareCompanies.length-1,fontSize:10},emphasis:{label:{show:true}}};
+    })
+  });
+}
+
+// ============ Utilities ============
+function showToast(msg,bgColor) {
+  var t=document.createElement('div');t.innerText=msg;
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:'+(bgColor||'#1677ff')+';color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+  document.body.appendChild(t);setTimeout(function(){t.remove()},1500);
+}
+
+function resizeAllCharts() {
+  [chartNestedPie,chartGroupedBar,chartTrendArea,chartScopeCombo,chartDurationBox,chartFreqTrend,chartLevelStack,chartDurTrend,chartTypeCompare,chartRankBar,chartCompareTrend,chartComparePie].forEach(function(c){if(c)c.resize();});
+  if(alertMap)alertMap.invalidateSize();
+}
+
+// ============ Init ============
+document.addEventListener('DOMContentLoaded',function(){
+  mockAlarms=genAlarms();
+  pager=new Pagination({container:'paginationBar',pageSize:10,pageSizeOptions:[10,20,50,100],onPageChange:function(){renderTable(getFilteredAlarms());}});
+  // Default dates
+  var now=new Date(),start=new Date(now);start.setDate(start.getDate()-7);
+  document.getElementById('startDate').value=start.toISOString().split('T')[0];
+  document.getElementById('endDate').value=now.toISOString().split('T')[0];
+  refreshOverview();
+});
+
+window.addEventListener('resize',resizeAllCharts);
+</script>
+<script src="../../common.js"></script>
+<script src="../../components/pagination-component.js"></script>
+</body>
+</html>

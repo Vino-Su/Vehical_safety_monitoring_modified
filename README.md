@@ -62,7 +62,7 @@ php -S localhost:8080
 ```
 index.html                          ← 入口，自动跳转
 03-高保真页面/
-├── layout.html                     ← 首页工作台（统计卡片 + 图表 + 待办 + 导航）
+├── layout.html                     ← 首页工作台（统计卡片 + 最近准入申请 + 待办 + 公告 + 功能导航）
 ├── common.js                       ← 全局公共模块（侧边栏 / 顶栏 / 样式 / 弹窗 / 下拉框）
 ├── components/
 │   └── pagination-component.js     ← 可复用分页组件
