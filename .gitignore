@@ -14,6 +14,9 @@ Desktop.ini
 # 备份文件
 backup/
 
+# 自测截图
+07-bugs/
+
 # 日志文件
 *.log
 

@@ -54,12 +54,23 @@
     .side-panel .panel-header .count-badge{background:#f0f5ff;color:#1677ff;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:500}
     .side-panel .filter-section{padding:14px 20px;border-bottom:1px solid #f5f5f5;flex-shrink:0}
     .side-panel .filter-section .filter-label{font-size:12px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
-    .side-panel .filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-    .side-panel .filter-chip{padding:5px 12px;border-radius:14px;font-size:12px;cursor:pointer;border:1px solid #d9d9d9;background:#fff;transition:all .2s;user-select:none;white-space:nowrap}
-    .side-panel .filter-chip:hover{border-color:#1677ff;color:#1677ff}
-    .side-panel .filter-chip.active{background:#1677ff;color:#fff;border-color:#1677ff}
     .side-panel .filter-select{width:100%;padding:7px 10px;border:1px solid #d9d9d9;border-radius:6px;font-size:12px;outline:none;margin-bottom:8px;color:#333;background:#fff;cursor:pointer}
     .side-panel .filter-select:focus{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.1)}
+    .multi-select{position:relative;width:100%;margin-bottom:8px}
+    .ms-trigger{width:100%;padding:7px 10px;border:1px solid #d9d9d9;border-radius:6px;font-size:12px;color:#333;background:#fff;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .2s;box-sizing:border-box}
+    .ms-trigger:hover{border-color:#1677ff}
+    .ms-trigger.open{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.1)}
+    .ms-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ms-arrow{color:#bfbfbf;font-size:10px;margin-left:6px;transition:transform .2s}
+    .ms-trigger.open .ms-arrow{transform:rotate(180deg)}
+    .ms-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);z-index:100;display:none;max-height:220px;overflow-y:auto;padding:4px 0}
+    .ms-dropdown.show{display:block}
+    .ms-dropdown::-webkit-scrollbar{width:4px}
+    .ms-dropdown::-webkit-scrollbar-thumb{background:#d9d9d9;border-radius:2px}
+    .ms-option{display:flex;align-items:center;padding:7px 12px;font-size:12px;color:#333;cursor:pointer;transition:background .15s;gap:8px;user-select:none}
+    .ms-option:hover{background:#f0f5ff}
+    .ms-option input{margin:0;cursor:pointer;accent-color:#1677ff;width:14px;height:14px;flex-shrink:0}
+    .ms-option.all-option{border-bottom:1px solid #f0f0f0;margin-bottom:2px}
     .side-panel .btn-row{display:flex;gap:8px;margin-top:4px}
     .side-panel .btn-reset{flex:1;padding:7px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;transition:all .2s;color:#666}
     .side-panel .btn-reset:hover{border-color:#1677ff;color:#1677ff}
@@ -68,7 +79,7 @@
     .side-panel .road-list::-webkit-scrollbar-thumb{background:#d9d9d9;border-radius:2px}
     .filter-toggle{font-size:12px;color:#1677ff;cursor:pointer;margin-left:auto;user-select:none;padding:4px 8px;border-radius:4px;transition:all .2s;white-space:nowrap}
     .filter-toggle:hover{background:#f0f5ff}
-    .filter-collapse{overflow:hidden;transition:max-height .3s ease;flex-shrink:0}
+    .filter-collapse{flex-shrink:0}
     .road-item{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #fafafa;cursor:pointer;transition:all .2s;gap:10px}
     .road-item:hover{background:#fafafa}
     .road-item.selected{background:#e6f4ff;border-left:3px solid #1677ff}
@@ -134,7 +145,7 @@
       <!-- 右侧筛选面板 -->
       <div class="side-panel" id="sidePanel">
         <div class="panel-header">
-          数据过滤面板<span class="count-badge" id="roadCount">共 12 条</span>
+          道路列表<span class="count-badge" id="roadCount">共 12 条</span>
           <span class="filter-toggle" id="filterToggle" onclick="toggleFilters()">展开筛选 ▾</span>
         </div>
 
@@ -153,55 +164,78 @@
         <!-- 可收起筛选组 -->
         <div class="filter-collapse" id="filterCollapse" style="display:none">
           <div class="filter-section">
-            <div class="filter-label">测试场景</div>
-            <div class="filter-row" id="filterScenes">
-              <span class="filter-chip active" data-value="all" onclick="toggleChip(this,'scene')">全部</span>
-              <span class="filter-chip" data-value="城区道路" onclick="toggleChip(this,'scene')">城区道路</span>
-              <span class="filter-chip" data-value="园区道路" onclick="toggleChip(this,'scene')">园区道路</span>
-              <span class="filter-chip" data-value="环卫作业道路" onclick="toggleChip(this,'scene')">环卫作业</span>
-              <span class="filter-chip" data-value="物流配送道路" onclick="toggleChip(this,'scene')">物流配送</span>
+            <div class="filter-label">适用业务类型</div>
+            <div class="multi-select" data-filter="bizType">
+              <div class="ms-trigger" onclick="toggleMultiSelect(this)">
+                <span class="ms-text">全部</span><span class="ms-arrow">▾</span>
+              </div>
+              <div class="ms-dropdown">
+                <label class="ms-option all-option"><input type="checkbox" value="all" checked onchange="onMultiSelectChange(this)"> 全部</label>
+                <label class="ms-option"><input type="checkbox" value="道路测试" onchange="onMultiSelectChange(this)"> 道路测试</label>
+                <label class="ms-option"><input type="checkbox" value="示范应用" onchange="onMultiSelectChange(this)"> 示范应用</label>
+                <label class="ms-option"><input type="checkbox" value="商业化试点" onchange="onMultiSelectChange(this)"> 商业化试点</label>
+              </div>
             </div>
           </div>
 
           <div class="filter-section">
             <div class="filter-label">基础设施覆盖</div>
-            <div class="filter-row" id="filterFacilities">
-              <span class="filter-chip active" data-value="all" onclick="toggleChip(this,'facility')">全部</span>
-              <span class="filter-chip" data-value="RSU" onclick="toggleChip(this,'facility')">RSU</span>
-              <span class="filter-chip" data-value="激光雷达" onclick="toggleChip(this,'facility')">激光雷达</span>
-              <span class="filter-chip" data-value="摄像头" onclick="toggleChip(this,'facility')">摄像头</span>
+            <div class="multi-select" data-filter="facility">
+              <div class="ms-trigger" onclick="toggleMultiSelect(this)">
+                <span class="ms-text">全部</span><span class="ms-arrow">▾</span>
+              </div>
+              <div class="ms-dropdown">
+                <label class="ms-option all-option"><input type="checkbox" value="all" checked onchange="onMultiSelectChange(this)"> 全部</label>
+                <label class="ms-option"><input type="checkbox" value="RSU" onchange="onMultiSelectChange(this)"> RSU</label>
+                <label class="ms-option"><input type="checkbox" value="激光雷达" onchange="onMultiSelectChange(this)"> 激光雷达</label>
+                <label class="ms-option"><input type="checkbox" value="摄像头" onchange="onMultiSelectChange(this)"> 摄像头</label>
+              </div>
             </div>
           </div>
 
           <div class="filter-section">
             <div class="filter-label">开放状态</div>
-            <div class="filter-row" id="filterStatus">
-              <span class="filter-chip active" data-value="all" onclick="toggleChip(this,'status')">全部</span>
-              <span class="filter-chip" data-value="开放" onclick="toggleChip(this,'status')">开放</span>
-              <span class="filter-chip" data-value="暂停" onclick="toggleChip(this,'status')">暂停</span>
-              <span class="filter-chip" data-value="关闭" onclick="toggleChip(this,'status')">关闭</span>
+            <div class="multi-select" data-filter="status">
+              <div class="ms-trigger" onclick="toggleMultiSelect(this)">
+                <span class="ms-text">全部</span><span class="ms-arrow">▾</span>
+              </div>
+              <div class="ms-dropdown">
+                <label class="ms-option all-option"><input type="checkbox" value="all" checked onchange="onMultiSelectChange(this)"> 全部</label>
+                <label class="ms-option"><input type="checkbox" value="开放" onchange="onMultiSelectChange(this)"> 开放</label>
+                <label class="ms-option"><input type="checkbox" value="暂停" onchange="onMultiSelectChange(this)"> 暂停</label>
+                <label class="ms-option"><input type="checkbox" value="关闭" onchange="onMultiSelectChange(this)"> 关闭</label>
+              </div>
             </div>
           </div>
 
           <div class="filter-section">
             <div class="filter-label">道路类型</div>
-            <select class="filter-select" id="filterRoadType" onchange="applyFilters()">
-              <option value="all">全部类型</option>
-              <option value="主干道">主干道</option>
-              <option value="次干道">次干道</option>
-              <option value="支路">支路</option>
-              <option value="快速路">快速路</option>
-              <option value="园区道路">园区道路</option>
-            </select>
+            <div class="multi-select" data-filter="roadType">
+              <div class="ms-trigger" onclick="toggleMultiSelect(this)">
+                <span class="ms-text">全部</span><span class="ms-arrow">▾</span>
+              </div>
+              <div class="ms-dropdown">
+                <label class="ms-option all-option"><input type="checkbox" value="all" checked onchange="onMultiSelectChange(this)"> 全部</label>
+                <label class="ms-option"><input type="checkbox" value="主干道" onchange="onMultiSelectChange(this)"> 主干道</label>
+                <label class="ms-option"><input type="checkbox" value="次干道" onchange="onMultiSelectChange(this)"> 次干道</label>
+                <label class="ms-option"><input type="checkbox" value="支路" onchange="onMultiSelectChange(this)"> 支路</label>
+                <label class="ms-option"><input type="checkbox" value="快速路" onchange="onMultiSelectChange(this)"> 快速路</label>
+              </div>
+            </div>
           </div>
 
           <div class="filter-section">
             <div class="filter-label">自动驾驶等级</div>
-            <div class="filter-row" id="filterADLevel">
-              <span class="filter-chip active" data-value="all" onclick="toggleChip(this,'adLevel')">全部</span>
-              <span class="filter-chip" data-value="L2" onclick="toggleChip(this,'adLevel')">L2</span>
-              <span class="filter-chip" data-value="L3" onclick="toggleChip(this,'adLevel')">L3</span>
-              <span class="filter-chip" data-value="L4" onclick="toggleChip(this,'adLevel')">L4</span>
+            <div class="multi-select" data-filter="adLevel">
+              <div class="ms-trigger" onclick="toggleMultiSelect(this)">
+                <span class="ms-text">全部</span><span class="ms-arrow">▾</span>
+              </div>
+              <div class="ms-dropdown">
+                <label class="ms-option all-option"><input type="checkbox" value="all" checked onchange="onMultiSelectChange(this)"> 全部</label>
+                <label class="ms-option"><input type="checkbox" value="L2" onchange="onMultiSelectChange(this)"> L2</label>
+                <label class="ms-option"><input type="checkbox" value="L3" onchange="onMultiSelectChange(this)"> L3</label>
+                <label class="ms-option"><input type="checkbox" value="L4" onchange="onMultiSelectChange(this)"> L4</label>
+              </div>
             </div>
           </div>
 
@@ -225,63 +259,61 @@ const PAGE_ID='road-map';
 const roadData = [
     { id: 'R001', name: '长虹北路', district: '樊城区', level: '主干道', lanes: 6, length: 3200,
         scenes: ['城区道路', '物流配送道路'], facilities: ['RSU', '激光雷达', '摄像头'], status: '开放',
-        openHours: '06:00-22:00', adLevels: ['L2', 'L3', 'L4'], bizTypes: ['载人', '载货'], complexity: 72,
+        openHours: '06:00-22:00', adLevels: ['L2', 'L3', 'L4'], bizTypes: ['道路测试', '示范应用'], complexity: 72,
         risk: 35, sceneFit: '载人', openLevel: '完全开放',
         points: [{ lat: 32.030, lng: 112.130 }, { lat: 32.068, lng: 112.130 }] },
     { id: 'R002', name: '汉江路', district: '樊城区', level: '次干道', lanes: 4, length: 2800, scenes: ['城区道路',
             '环卫作业道路'
         ], facilities: ['RSU', '摄像头'], status: '开放', openHours: '08:00-20:00', adLevels: ['L3', 'L4'],
-        bizTypes: ['载人', '环卫'], complexity: 55, risk: 28, sceneFit: '环卫', openLevel: '完全开放',
+        bizTypes: ['示范应用', '商业化试点'], complexity: 55, risk: 28, sceneFit: '环卫', openLevel: '完全开放',
         points: [{ lat: 32.030, lng: 112.140 }, { lat: 32.068, lng: 112.140 }] },
     { id: 'R003', name: '中原路', district: '高新区', level: '主干道', lanes: 8, length: 4500, scenes: ['城区道路'],
         facilities: ['RSU', '激光雷达', '摄像头'], status: '开放', openHours: '06:00-23:00', adLevels: ['L2',
             'L3', 'L4'
-        ], bizTypes: ['载人', '载货'], complexity: 85, risk: 62, sceneFit: '载人', openLevel: '条件开放',
+        ], bizTypes: ['道路测试', '示范应用'], complexity: 85, risk: 62, sceneFit: '载人', openLevel: '条件开放',
         points: [{ lat: 32.048, lng: 112.118 }, { lat: 32.048, lng: 112.165 }] },
     { id: 'R004', name: '春园路', district: '樊城区', level: '次干道', lanes: 4, length: 2600, scenes: ['城区道路',
             '园区道路'
-        ], facilities: ['摄像头'], status: '暂停', openHours: '08:00-18:00', adLevels: ['L3'], bizTypes: ['载人'],
+        ], facilities: ['摄像头'], status: '暂停', openHours: '08:00-18:00', adLevels: ['L3'], bizTypes: ['道路测试'],
         complexity: 48, risk: 45, sceneFit: '载人', openLevel: '条件开放',
         points: [{ lat: 32.040, lng: 112.118 }, { lat: 32.040, lng: 112.165 }] },
     { id: 'R005', name: '前进路', district: '高新区', level: '支路', lanes: 2, length: 1800, scenes: ['园区道路',
             '物流配送道路'
-        ], facilities: ['RSU'], status: '开放', openHours: '07:00-21:00', adLevels: ['L4'], bizTypes: ['载货',
-            '物流'
-        ], complexity: 30, risk: 18, sceneFit: '物流', openLevel: '完全开放',
+        ], facilities: ['RSU'], status: '开放', openHours: '07:00-21:00', adLevels: ['L4'], bizTypes: ['商业化试点'], complexity: 30, risk: 18, sceneFit: '物流', openLevel: '完全开放',
         points: [{ lat: 32.035, lng: 112.135 }, { lat: 32.060, lng: 112.135 }] },
     { id: 'R006', name: '大庆东路', district: '襄城区', level: '主干道', lanes: 6, length: 3800, scenes: ['城区道路'],
         facilities: ['RSU', '激光雷达'], status: '关闭', openHours: '06:00-20:00', adLevels: ['L2', 'L3'],
-        bizTypes: ['载人'], complexity: 78, risk: 80, sceneFit: '载人', openLevel: '禁止开放',
+        bizTypes: ['道路测试'], complexity: 78, risk: 80, sceneFit: '载人', openLevel: '禁止开放',
         points: [{ lat: 32.055, lng: 112.118 }, { lat: 32.055, lng: 112.165 }] },
     { id: 'R007', name: '人民路', district: '樊城区', level: '主干道', lanes: 6, length: 3500, scenes: ['城区道路',
             '环卫作业道路'
         ], facilities: ['RSU', '摄像头'], status: '开放', openHours: '06:00-22:00', adLevels: ['L3', 'L4'],
-        bizTypes: ['载人', '环卫'], complexity: 68, risk: 40, sceneFit: '环卫', openLevel: '完全开放',
+        bizTypes: ['示范应用', '商业化试点'], complexity: 68, risk: 40, sceneFit: '环卫', openLevel: '完全开放',
         points: [{ lat: 32.043, lng: 112.118 }, { lat: 32.043, lng: 112.165 }] },
     { id: 'R008', name: '襄阳大道', district: '高新区', level: '快速路', lanes: 8, length: 5200, scenes: ['城区道路',
             '物流配送道路'
         ], facilities: ['RSU', '激光雷达', '摄像头'], status: '开放', openHours: '00:00-24:00', adLevels: ['L2',
             'L3', 'L4'
-        ], bizTypes: ['载人', '载货', '物流'], complexity: 90, risk: 55, sceneFit: '载货', openLevel: '条件开放',
+        ], bizTypes: ['道路测试', '示范应用', '商业化试点'], complexity: 90, risk: 55, sceneFit: '载货', openLevel: '条件开放',
         points: [{ lat: 32.058, lng: 112.128 }, { lat: 32.058, lng: 112.170 }] },
     { id: 'R009', name: '建设路', district: '东津新区', level: '次干道', lanes: 4, length: 2100, scenes: ['园区道路'],
-        facilities: ['摄像头'], status: '开放', openHours: '08:00-18:00', adLevels: ['L4'], bizTypes: ['载人'],
+        facilities: ['摄像头'], status: '开放', openHours: '08:00-18:00', adLevels: ['L4'], bizTypes: ['示范应用'],
         complexity: 42, risk: 22, sceneFit: '载人', openLevel: '完全开放',
         points: [{ lat: 32.025, lng: 112.145 }, { lat: 32.045, lng: 112.145 }] },
     { id: 'R010', name: '航天路', district: '高新区', level: '支路', lanes: 2, length: 1500, scenes: ['园区道路',
             '物流配送道路'
-        ], facilities: [], status: '开放', openHours: '07:00-19:00', adLevels: ['L4'], bizTypes: ['物流'],
+        ], facilities: [], status: '开放', openHours: '07:00-19:00', adLevels: ['L4'], bizTypes: ['商业化试点'],
         complexity: 25, risk: 10, sceneFit: '物流', openLevel: '完全开放',
         points: [{ lat: 32.052, lng: 112.150 }, { lat: 32.065, lng: 112.150 }] },
     { id: 'R011', name: '环城南路', district: '襄城区', level: '快速路', lanes: 8, length: 6000, scenes: ['城区道路'],
         facilities: ['RSU', '激光雷达', '摄像头'], status: '暂停', openHours: '06:00-21:00', adLevels: ['L2',
-            'L3'], bizTypes: ['载人', '载货'], complexity: 88, risk: 70, sceneFit: '载人', openLevel: '限制开放',
+            'L3'], bizTypes: ['道路测试', '示范应用'], complexity: 88, risk: 70, sceneFit: '载人', openLevel: '限制开放',
         points: [{ lat: 32.050, lng: 112.110 }, { lat: 32.050, lng: 112.175 }] },
     { id: 'R012', name: '邓城大道', district: '樊城区', level: '主干道', lanes: 6, length: 4000, scenes: ['城区道路',
             '环卫作业道路', '物流配送道路'
         ], facilities: ['RSU', '激光雷达', '摄像头'], status: '开放', openHours: '05:00-23:00', adLevels: ['L2',
             'L3', 'L4'
-        ], bizTypes: ['载人', '载货', '环卫', '物流'], complexity: 80, risk: 48, sceneFit: '载货', openLevel: '完全开放',
+        ], bizTypes: ['道路测试', '示范应用', '商业化试点'], complexity: 80, risk: 48, sceneFit: '载货', openLevel: '完全开放',
         points: [{ lat: 32.062, lng: 112.122 }, { lat: 32.062, lng: 112.168 }] }
 ];
 
@@ -289,7 +321,7 @@ const roadData = [
 let activeLayer = 'base';
 let selectedRoadId = null;
 let filters = {
-    district: 'all', scene: 'all', facility: 'all', status: 'all', roadType: 'all', adLevel: 'all'
+    district: 'all', bizType: ['all'], facility: ['all'], status: ['all'], roadType: ['all'], adLevel: ['all']
 };
 
 // ==================== DOM引用 ====================
@@ -474,11 +506,11 @@ function buildRoadPolylines() {
 function getFilteredRoads() {
     return roadData.filter(r => {
         if (filters.district !== 'all' && r.district !== filters.district) return false;
-        if (filters.scene !== 'all' && !r.scenes.includes(filters.scene)) return false;
-        if (filters.facility !== 'all' && !r.facilities.includes(filters.facility)) return false;
-        if (filters.status !== 'all' && r.status !== filters.status) return false;
-        if (filters.roadType !== 'all' && r.level !== filters.roadType) return false;
-        if (filters.adLevel !== 'all' && !r.adLevels.includes(filters.adLevel)) return false;
+        if (!filters.bizType.includes('all') && !filters.bizType.some(v => r.bizTypes.includes(v))) return false;
+        if (!filters.facility.includes('all') && !filters.facility.some(v => r.facilities.includes(v))) return false;
+        if (!filters.status.includes('all') && !filters.status.includes(r.status)) return false;
+        if (!filters.roadType.includes('all') && !filters.roadType.includes(r.level)) return false;
+        if (!filters.adLevel.includes('all') && !filters.adLevel.some(v => r.adLevels.includes(v))) return false;
         return true;
     });
 }
@@ -610,44 +642,58 @@ function closeTooltip() {
     renderRoadList();
 }
 
-// ==================== 筛选交互 ====================
-function toggleChip(chip, filterType) {
-    const parent = chip.parentElement;
-    const chips = parent.querySelectorAll('.filter-chip');
-    const value = chip.dataset.value;
+// ==================== 筛选交互（下拉多选） ====================
+function toggleMultiSelect(trigger) {
+    const ms = trigger.parentElement;
+    const dropdown = ms.querySelector('.ms-dropdown');
+    const isOpen = dropdown.classList.contains('show');
+    document.querySelectorAll('.ms-dropdown.show').forEach(d => {
+        d.classList.remove('show');
+        d.parentElement.querySelector('.ms-trigger').classList.remove('open');
+    });
+    if (!isOpen) {
+        dropdown.classList.add('show');
+        trigger.classList.add('open');
+    }
+}
+
+function onMultiSelectChange(checkbox) {
+    const ms = checkbox.closest('.multi-select');
+    const filterType = ms.dataset.filter;
+    const allCheckbox = ms.querySelector('input[value="all"]');
+    const value = checkbox.value;
+    const arr = filters[filterType];
 
     if (value === 'all') {
-        chips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        updateFilter(filterType, 'all');
-    } else {
-        const allChip = parent.querySelector('[data-value="all"]');
-        if (allChip) allChip.classList.remove('active');
-        chip.classList.toggle('active');
-        const activeChips = parent.querySelectorAll('.filter-chip.active');
-        if (activeChips.length === 0) {
-            if (allChip) allChip.classList.add('active');
-            updateFilter(filterType, 'all');
+        if (checkbox.checked) {
+            ms.querySelectorAll('input:not([value="all"])').forEach(c => c.checked = false);
+            filters[filterType] = ['all'];
         } else {
-            const values = Array.from(activeChips).map(c => c.dataset.value);
-            updateFilter(filterType, values[0]);
+            checkbox.checked = true;
+            return;
+        }
+    } else {
+        if (checkbox.checked) {
+            const allIdx = arr.indexOf('all');
+            if (allIdx >= 0) { arr.splice(allIdx, 1); allCheckbox.checked = false; }
+            if (!arr.includes(value)) arr.push(value);
+        } else {
+            const idx = arr.indexOf(value);
+            if (idx >= 0) arr.splice(idx, 1);
+            if (arr.length === 0) { arr.push('all'); allCheckbox.checked = true; }
         }
     }
+    updateMsTriggerText(ms);
     applyFilters();
 }
 
-function updateFilter(filterType, value) {
-    switch (filterType) {
-        case 'scene': filters.scene = value; break;
-        case 'facility': filters.facility = value; break;
-        case 'status': filters.status = value; break;
-        case 'adLevel': filters.adLevel = value; break;
-    }
+function updateMsTriggerText(ms) {
+    const arr = filters[ms.dataset.filter];
+    ms.querySelector('.ms-text').textContent = arr.includes('all') ? '全部' : arr.join('、');
 }
 
 function applyFilters() {
     filters.district = document.getElementById('filterDistrict').value;
-    filters.roadType = document.getElementById('filterRoadType').value;
     selectedRoadId = null;
     mapTooltip.classList.remove('visible');
     buildRoadPolylines();
@@ -655,12 +701,14 @@ function applyFilters() {
 }
 
 function resetAllFilters() {
-    filters = { district: 'all', scene: 'all', facility: 'all', status: 'all', roadType: 'all',
-    adLevel: 'all' };
+    filters = { district: 'all', bizType: ['all'], facility: ['all'], status: ['all'], roadType: ['all'], adLevel: ['all'] };
     document.getElementById('filterDistrict').value = 'all';
-    document.getElementById('filterRoadType').value = 'all';
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.filter-chip[data-value="all"]').forEach(c => c.classList.add('active'));
+    document.querySelectorAll('.multi-select').forEach(ms => {
+        ms.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+        const allCb = ms.querySelector('input[value="all"]');
+        if (allCb) allCb.checked = true;
+        ms.querySelector('.ms-text').textContent = '全部';
+    });
     selectedRoadId = null;
     mapTooltip.classList.remove('visible');
     searchInput.value = '';
@@ -735,10 +783,16 @@ map.on('click', function() {
     closeTooltip();
 });
 
-// ==================== 外部点击关闭搜索 ====================
+// ==================== 外部点击关闭搜索与下拉 ====================
 document.addEventListener('click', (e) => {
     if (!searchResults.contains(e.target) && e.target !== searchInput) {
         searchResults.classList.remove('show');
+    }
+    if (!e.target.closest('.multi-select')) {
+        document.querySelectorAll('.ms-dropdown.show').forEach(d => {
+            d.classList.remove('show');
+            d.parentElement.querySelector('.ms-trigger').classList.remove('open');
+        });
     }
 });
 

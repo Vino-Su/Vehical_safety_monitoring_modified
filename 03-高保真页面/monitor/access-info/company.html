@@ -8,7 +8,7 @@
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <script src="../../components/pagination-component.js"></script>
   <style>
-    .ant-form-label{width:140px;flex-shrink:0;text-align:right;padding-right:12px;padding-top:5px;font-size:14px;color:#000000d9}
+    .ant-form-label{width:200px;flex-shrink:0;text-align:right;padding-right:12px;padding-top:5px;font-size:14px;color:#000000d9}
     .ant-form-label .required{color:#ff4d4f;margin-right:4px}
     .ant-form-hint{font-size:12px;color:#00000073;margin-top:4px}
     .ant-form-error{font-size:12px;color:#ff4d4f;margin-top:4px;display:none}
@@ -23,11 +23,13 @@
     .char-count.error{color:#ff4d4f}
     .dd-panel{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);min-width:100%;z-index:20;max-height:260px;overflow-y:auto}
     .dd-panel.show{display:block}
-    .dd-item{padding:5px 12px;cursor:pointer;font-size:13px;color:#000000d9}
+    .dd-item{padding:5px 12px;cursor:pointer;font-size:14px;color:#000000d9}
     .dd-item:hover{background:#f5f5f5}
-    /* PRD F01 3.1.3 明确要求本表所有数据列左对齐，覆盖common.js自动识别的col-code居中效果 */
-    #tableBody tr > td:nth-child(2), .ant-table thead th:nth-child(2) { text-align: left !important; }
-    #tableBody tr > td:nth-child(6), .ant-table thead th:nth-child(6) { text-align: left !important; }
+    /* PRD F01 3.1.6 弹窗宽度 720px */
+    #addModal .ant-modal, #detailModal .ant-modal { width: 720px !important; }
+    /* PRD F01 3.1.3 列表复选框列居中对齐 */
+    .ant-table th.col-checkbox, .ant-table td.col-checkbox { text-align: center !important; width: 40px; }
+    .ant-table th.col-checkbox input[type="checkbox"], .ant-table td.col-checkbox input[type="checkbox"] { cursor: pointer; }
   </style>
 </head>
 <body>
@@ -60,6 +62,7 @@
           <table class="ant-table">
             <thead>
               <tr>
+                <th class="col-checkbox"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                 <th style="width:200px">公司名称</th>
                 <th style="width:180px">统一信用代码</th>
                 <th style="width:140px">申请主体类型</th>
@@ -119,9 +122,10 @@
           </div>
         </div>
         <div class="ant-form-item">
-          <div class="ant-form-label">注册资本</div>
+          <div class="ant-form-label">注册资本（万元）</div>
           <div class="ant-form-control">
             <input class="ant-input" id="registeredCapital" placeholder="请输入注册资本金额（万元）">
+            <div class="ant-form-error">注册资本必须为有效数值</div>
           </div>
         </div>
         <div class="ant-form-item">
@@ -147,7 +151,8 @@
         <div class="ant-form-item">
           <div class="ant-form-label">单位联系电话</div>
           <div class="ant-form-control">
-            <input class="ant-input" id="contactPhone" placeholder="请输入单位联系电话">
+            <input class="ant-input" id="contactPhone" placeholder="请输入单位联系电话" maxlength="20">
+            <div class="ant-form-error">请输入正确的电话号码格式</div>
           </div>
         </div>
         <div class="ant-form-item">
@@ -218,19 +223,35 @@ let companyData = [
   {id:4, companyName:'襄阳汽车零部件有限公司', creditCode:'91420600MA49C5RL2D', subjectType:'零部件制造商', registeredCapital:'8000', businessScope:'汽车零部件研发、生产与销售', capabilityDesc:'专注于智能网联汽车传感器、控制器的研发生产', contactAddress:'湖北省襄阳市襄州区', contactPhone:'0710-3566999', contactEmail:'sales@parts.com', contactPerson:'刘勇', contactMobile:'13733334444', licenseFile:'营业执照.pdf', registerTime:'2026-03-22 16:45'}
 ];
 
+// PRD 3.1.3：默认按登记时间倒序排列
+companyData.sort(function(a, b) { return new Date(b.registerTime.replace(/-/g, '/')) - new Date(a.registerTime.replace(/-/g, '/')); });
+
 var pager;
 let editingId = null;
 let uploadedLicenseFile = null;
+let selectedIds = new Set();
+let currentFilteredData = [];
+
+function getDisplayData() {
+  var nameFilter = document.getElementById('filterName').value.trim().toLowerCase();
+  if (!nameFilter) return companyData.slice();
+  return companyData.filter(function(item) {
+    return item.companyName.toLowerCase().indexOf(nameFilter) !== -1;
+  });
+}
 
 function renderTable() {
+  currentFilteredData = getDisplayData();
   var cp = pager ? pager.getCurrentPage() : 1;
   var ps = pager ? pager.getPageSize() : 10;
   var start = (cp - 1) * ps;
   var end = start + ps;
-  var pageData = companyData.slice(start, end);
+  var pageData = currentFilteredData.slice(start, end);
   var tbody = document.getElementById('tableBody');
   tbody.innerHTML = pageData.map(function(item) {
+    var checked = selectedIds.has(item.id) ? 'checked' : '';
     return '<tr>' +
+      '<td class="col-checkbox"><input type="checkbox" value="' + item.id + '" ' + checked + ' onchange="toggleRowSelect(' + item.id + ', this.checked)"></td>' +
       '<td>' + item.companyName + '</td>' +
       '<td>' + item.creditCode + '</td>' +
       '<td>' + item.subjectType + '</td>' +
@@ -240,17 +261,56 @@ function renderTable() {
       '<td class="col-action"><button class="ant-btn-link" onclick="openDetailModal(' + item.id + ')">详情</button><button class="ant-btn-link" onclick="openEditModal(' + item.id + ')">编辑</button><button class="ant-btn-link danger" onclick="deleteCompany(' + item.id + ')">删除</button></td>' +
     '</tr>';
   }).join('');
-  if (pager) pager.setTotal(companyData.length);
+  updateSelectAllState();
+  if (pager) pager.setTotal(currentFilteredData.length);
+}
+
+function updateSelectAllState() {
+  var selectAll = document.getElementById('selectAll');
+  if (!selectAll) return;
+  var pageIds = currentFilteredData.slice(
+    ((pager ? pager.getCurrentPage() : 1) - 1) * (pager ? pager.getPageSize() : 10),
+    (pager ? pager.getCurrentPage() : 1) * (pager ? pager.getPageSize() : 10)
+  ).map(function(item) { return item.id; });
+  if (pageIds.length === 0) {
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+    return;
+  }
+  var selectedCount = pageIds.filter(function(id) { return selectedIds.has(id); }).length;
+  selectAll.checked = selectedCount === pageIds.length;
+  selectAll.indeterminate = selectedCount > 0 && selectedCount < pageIds.length;
+}
+
+function toggleRowSelect(id, checked) {
+  if (checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  updateSelectAllState();
+}
+
+function toggleSelectAll() {
+  var selectAll = document.getElementById('selectAll');
+  var pageIds = currentFilteredData.slice(
+    ((pager ? pager.getCurrentPage() : 1) - 1) * (pager ? pager.getPageSize() : 10),
+    (pager ? pager.getCurrentPage() : 1) * (pager ? pager.getPageSize() : 10)
+  ).map(function(item) { return item.id; });
+  pageIds.forEach(function(id) {
+    if (selectAll.checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+  });
+  renderTable();
 }
 
 function searchData() {
-  var nameFilter = document.getElementById('filterName').value.toLowerCase();
-  showToast('查询功能：名称=' + nameFilter, '#1677ff');
+  if (pager) pager.reset();
+  else renderTable();
 }
 
 function resetFilter() {
   document.getElementById('filterName').value = '';
-  renderTable();
+  selectedIds.clear();
+  if (pager) pager.reset();
+  else renderTable();
 }
 
 function toggleTypeDropdown(e) {
@@ -382,6 +442,28 @@ function validateForm() {
     emailItem.classList.remove('error');
   }
 
+  // PRD 3.1.4：注册资本数值校验
+  var capitalEl = document.getElementById('registeredCapital');
+  var capitalItem = capitalEl.closest('.ant-form-item');
+  var capitalVal = capitalEl.value.trim();
+  if (capitalVal && !/^\d+(\.\d+)?$/.test(capitalVal)) {
+    capitalItem.classList.add('error');
+    isValid = false;
+  } else {
+    capitalItem.classList.remove('error');
+  }
+
+  // PRD 3.1.4：单位联系电话合法格式校验
+  var phoneEl = document.getElementById('contactPhone');
+  var phoneItem = phoneEl.closest('.ant-form-item');
+  var phoneVal = phoneEl.value.trim();
+  if (phoneVal && !/^[0-9\-\(\)\s]+$/.test(phoneVal)) {
+    phoneItem.classList.add('error');
+    isValid = false;
+  } else {
+    phoneItem.classList.remove('error');
+  }
+
   return isValid;
 }
 
@@ -408,9 +490,13 @@ function saveCompany() {
     if (index !== -1) companyData[index] = Object.assign({}, companyData[index], formData);
   } else {
     var newId = companyData.length > 0 ? Math.max.apply(null, companyData.map(function(d) { return d.id; })) + 1 : 1;
-    companyData.push(Object.assign({id: newId, registerTime: timeStr}, formData));
+    var newItem = Object.assign({id: newId, registerTime: timeStr}, formData);
+    companyData.unshift(newItem);
+    // 保持倒序
+    companyData.sort(function(a, b) { return new Date(b.registerTime.replace(/-/g, '/')) - new Date(a.registerTime.replace(/-/g, '/')); });
   }
   closeAddModal();
+  if (pager) pager.reset();
   renderTable();
   showToast('保存成功', '#52c41a');
 }
@@ -436,15 +522,25 @@ function closeDetailModal() {
 }
 
 function deleteCompany(id) {
-  if (confirm('确定要删除该企业信息吗？')) {
+  // PRD 附录 A.2 标准删除确认文案
+  if (confirm('确定要删除该记录吗？删除后不可恢复。')) {
     companyData = companyData.filter(function(item) { return item.id !== id; });
+    selectedIds.delete(id);
     renderTable();
     showToast('删除成功', '#52c41a');
   }
 }
 
 function exportTable() {
-  showToast('导出请求已提交，请稍候', '#1677ff');
+  // PRD 附录 A.3：选中导出选中数据，未选择提示是否导出所有数据
+  var selectedData = companyData.filter(function(item) { return selectedIds.has(item.id); });
+  if (selectedData.length > 0) {
+    showToast('已导出选中的 ' + selectedData.length + ' 条记录', '#1677ff');
+  } else {
+    if (confirm('是否导出所有数据？')) {
+      showToast('已导出当前筛选条件下共 ' + currentFilteredData.length + ' 条记录', '#1677ff');
+    }
+  }
 }
 
 function showToast(msg, bgColor) {
