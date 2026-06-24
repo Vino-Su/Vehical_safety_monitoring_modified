@@ -115,21 +115,75 @@
                 <td>2026-04-11 11:30</td>
                 <td class="flex gap-1" style="width:160px;min-width:160px;white-space:nowrap"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal(ROAD_ROWS[4])">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('东风大道南延')">删除</button></td>
               </tr>
+              <tr>
+                <td><input type="checkbox" class="ant-checkbox"></td>
+                <td>RD202604006</td>
+                <td>人民路</td>
+                <td>樊城区</td>
+                <td>次干道</td>
+                <td>2</td>
+                <td><span class="ant-tag ant-tag-success">开放</span></td>
+                <td>07:00-21:00</td>
+                <td>道路测试</td>
+                <td>2026-04-10 09:20</td>
+                <td class="flex gap-1" style="width:160px;min-width:160px;white-space:nowrap"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal(ROAD_ROWS[5])">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('人民路')">删除</button></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="ant-checkbox"></td>
+                <td>RD202604007</td>
+                <td>解放路</td>
+                <td>襄城区</td>
+                <td>主干道</td>
+                <td>4</td>
+                <td><span class="ant-tag ant-tag-warning">暂停</span></td>
+                <td>08:00-18:00</td>
+                <td>示范应用</td>
+                <td>2026-04-09 16:45</td>
+                <td class="flex gap-1" style="width:160px;min-width:160px;white-space:nowrap"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal(ROAD_ROWS[6])">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('解放路')">删除</button></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="ant-checkbox"></td>
+                <td>RD202604008</td>
+                <td>长征路</td>
+                <td>高新区</td>
+                <td>支路</td>
+                <td>1</td>
+                <td><span class="ant-tag ant-tag-success">开放</span></td>
+                <td>00:00-24:00</td>
+                <td>商业化试点</td>
+                <td>2026-04-08 11:10</td>
+                <td class="flex gap-1" style="width:160px;min-width:160px;white-space:nowrap"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal(ROAD_ROWS[7])">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('长征路')">删除</button></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="ant-checkbox"></td>
+                <td>RD202604009</td>
+                <td>建设路</td>
+                <td>樊城区</td>
+                <td>快速路</td>
+                <td>6</td>
+                <td><span class="ant-tag ant-tag-error">关闭</span></td>
+                <td>-</td>
+                <td>道路测试 / 示范应用</td>
+                <td>2026-04-07 14:30</td>
+                <td class="flex gap-1" style="width:160px;min-width:160px;white-space:nowrap"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal(ROAD_ROWS[8])">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('建设路')">删除</button></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="ant-checkbox"></td>
+                <td>RD202604010</td>
+                <td>胜利街</td>
+                <td>襄城区</td>
+                <td>园区道路</td>
+                <td>2</td>
+                <td><span class="ant-tag ant-tag-success">开放</span></td>
+                <td>08:00-20:00</td>
+                <td>示范应用 / 商业化试点</td>
+                <td>2026-04-06 08:50</td>
+                <td class="flex gap-1" style="width:160px;min-width:160px;white-space:nowrap"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal(ROAD_ROWS[9])">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete('胜利街')">删除</button></td>
+              </tr>
             </tbody>
           </table>
         </div>
-        <div class="flex items-center justify-between px-4 py-3">
-          <span class="text-sm text-[#00000073]">共 28 条</span>
-          <div class="ant-pagination">
-            <span class="page-item">‹</span>
-            <span class="page-item active">1</span>
-            <span class="page-item">2</span>
-            <span class="page-item">3</span>
-            <span class="page-item">...</span>
-            <span class="page-item">13</span>
-            <span class="page-item">›</span>
-          </div>
-        </div>
+        <div id="paginationBar"></div>
       </div>
     </main>
   </div>
@@ -141,7 +195,12 @@ var ROAD_ROWS = [
   { code: 'RD202604002', name: '东风大道', district: '樊城区', level: '快速路', length: '12000', lanes: '6', laneType: '多车道', trafficLevel: '高', rsuCount: '12', sensorType: '毫米波雷达/激光雷达/摄像头', sensorCount: '36', edgeDeploy: '是', edgeCount: '3', scene: '城区道路', status: '开放', openStart: '06:00', openEnd: '22:00', adLevels: 'L3 / L4 / L5', bizTypes: '道路测试 / 商业化试点', controlDesc: '限速80km/h，需安全员在岗' },
   { code: 'RD202604003', name: '高新一路', district: '高新区', level: '次干道', length: '5200', lanes: '2', laneType: '双车道', trafficLevel: '中', rsuCount: '4', sensorType: '摄像头/毫米波雷达', sensorCount: '12', edgeDeploy: '否', edgeCount: '', scene: '园区道路', status: '暂停', openStart: '08:00', openEnd: '18:00', adLevels: 'L2 / L3 / L4', bizTypes: '示范应用 / 商业化试点', controlDesc: '限速40km/h' },
   { code: 'RD202604004', name: '襄阳高新技术产业园路', district: '高新区', level: '园区道路', length: '3100', lanes: '2', laneType: '双车道', trafficLevel: '低', rsuCount: '2', sensorType: '摄像头', sensorCount: '6', edgeDeploy: '否', edgeCount: '', scene: '园区道路', status: '开放', openStart: '00:00', openEnd: '24:00', adLevels: 'L2 / L3', bizTypes: '道路测试', controlDesc: '园区内部道路，限速30km/h' },
-  { code: 'RD202604005', name: '东风大道南延', district: '襄城区', level: '主干道', length: '9800', lanes: '4', laneType: '多车道', trafficLevel: '高', rsuCount: '10', sensorType: '毫米波雷达/激光雷达/摄像头', sensorCount: '30', edgeDeploy: '是', edgeCount: '2', scene: '城区道路', status: '关闭', openStart: '', openEnd: '', adLevels: 'L3 / L4', bizTypes: '示范应用', controlDesc: '道路施工封闭' }
+  { code: 'RD202604005', name: '东风大道南延', district: '襄城区', level: '主干道', length: '9800', lanes: '4', laneType: '多车道', trafficLevel: '高', rsuCount: '10', sensorType: '毫米波雷达/激光雷达/摄像头', sensorCount: '30', edgeDeploy: '是', edgeCount: '2', scene: '城区道路', status: '关闭', openStart: '', openEnd: '', adLevels: 'L3 / L4', bizTypes: '示范应用', controlDesc: '道路施工封闭' },
+  { code: 'RD202604006', name: '人民路', district: '樊城区', level: '次干道', length: '4600', lanes: '2', laneType: '双车道', trafficLevel: '中', rsuCount: '3', sensorType: '摄像头/毫米波雷达', sensorCount: '9', edgeDeploy: '否', edgeCount: '', scene: '城区道路', status: '开放', openStart: '07:00', openEnd: '21:00', adLevels: 'L2 / L3', bizTypes: '道路测试', controlDesc: '限速50km/h' },
+  { code: 'RD202604007', name: '解放路', district: '襄城区', level: '主干道', length: '7200', lanes: '4', laneType: '多车道', trafficLevel: '高', rsuCount: '7', sensorType: '毫米波雷达/激光雷达/摄像头', sensorCount: '21', edgeDeploy: '是', edgeCount: '2', scene: '城区道路', status: '暂停', openStart: '08:00', openEnd: '18:00', adLevels: 'L3 / L4', bizTypes: '示范应用', controlDesc: '限行路段' },
+  { code: 'RD202604008', name: '长征路', district: '高新区', level: '支路', length: '2800', lanes: '1', laneType: '单车道', trafficLevel: '低', rsuCount: '1', sensorType: '摄像头', sensorCount: '3', edgeDeploy: '否', edgeCount: '', scene: '园区道路', status: '开放', openStart: '00:00', openEnd: '24:00', adLevels: 'L2', bizTypes: '商业化试点', controlDesc: '园区支路' },
+  { code: 'RD202604009', name: '建设路', district: '樊城区', level: '快速路', length: '11500', lanes: '6', laneType: '多车道', trafficLevel: '高', rsuCount: '14', sensorType: '毫米波雷达/激光雷达/摄像头', sensorCount: '42', edgeDeploy: '是', edgeCount: '4', scene: '城区道路', status: '关闭', openStart: '', openEnd: '', adLevels: 'L3 / L4 / L5', bizTypes: '道路测试 / 示范应用', controlDesc: '道路封闭施工' },
+  { code: 'RD202604010', name: '胜利街', district: '襄城区', level: '园区道路', length: '3500', lanes: '2', laneType: '双车道', trafficLevel: '低', rsuCount: '2', sensorType: '摄像头', sensorCount: '6', edgeDeploy: '否', edgeCount: '', scene: '园区道路', status: '开放', openStart: '08:00', openEnd: '20:00', adLevels: 'L2 / L3', bizTypes: '示范应用 / 商业化试点', controlDesc: '园区内道路' }
 ];
 function renderSelect(options, value, placeholder, id) {
   if (placeholder && placeholder.indexOf('多选') !== -1) {
@@ -344,7 +403,20 @@ function checkDeleteFlow(roadName) {
     closeModal();
   }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var pager = new Pagination({
+    container: 'paginationBar',
+    pageSize: 10,
+    pageSizeOptions: [10, 20, 50, 100],
+    onPageChange: function(page, size) {
+      console.log('Page changed:', page, size);
+    }
+  });
+  pager.setTotal(28);
+});
 </script>
+<script src="../../components/pagination-component.js"></script>
 <script src="../../common.js"></script>
 </body>
 </html>

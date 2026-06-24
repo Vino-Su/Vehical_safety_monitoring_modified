@@ -602,6 +602,8 @@
     options = options || {};
     var wide = options.wide;
     var customWidth = options.width;
+    var maxHeight = options.maxHeight;
+    var maskClosable = options.maskClosable !== false;
     var footerHTML = options.footer || '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">确定</button>';
     var existingMask = document.getElementById('modal-mask');
     if (existingMask) {
@@ -611,10 +613,11 @@
     var mask = document.createElement('div');
     mask.className = 'ant-modal-mask';
     mask.id = 'modal-mask';
-    mask.onclick = function (e) { if (e.target === mask) closeModal(); };
+    mask.onclick = function (e) { if (maskClosable && e.target === mask) closeModal(); };
     var modal = document.createElement('div');
     modal.className = 'ant-modal' + (wide ? ' wide' : '');
-    if (customWidth) modal.style.width = customWidth + 'px';
+    if (customWidth) modal.style.setProperty('width', customWidth + 'px', 'important');
+    if (maxHeight) modal.style.setProperty('max-height', maxHeight, 'important');
     modal.innerHTML =
       '<div class="ant-modal-header"><h3>' + title + '</h3><span class="ant-modal-close" onclick="closeModal()">✕</span></div>' +
       '<div class="ant-modal-body">' + bodyHTML + '</div>' +
@@ -822,10 +825,11 @@
     '自动驾驶等级': ['全部','L0','L1','L2','L3','L4','L5'],
     '所属区域': ['全部','樊城区','襄城区','襄州区','南漳县','谷城县','老河口市','枣阳市','宜城市','保康县'],
     '所属企业': ['全部','A公司','B公司','C公司','D公司','E公司','F公司','G公司','H公司'],
+    '车辆种类': ['全部','乘用车','商用车','专用作业车','功能型低速无人车','其他'],
     '业务类型': ['全部','道路测试','示范应用','商业化试点'],
     '所属行政区域': ['全部','樊城区','襄城区','襄州区','南漳县','谷城县','老河口市','枣阳市','宜城市','保康县'],
     '变更类型': ['全部','新增开放','暂停开放','恢复开放','关闭开放','等级调整'],
-    '驾照类型': ['全部','A1','A2','A3','B1','B2','C1','C2'],
+    '驾照类型': ['全部','A1','A2','A3','B1','B2','C1','C2','C3','C4','C5','D','E'],
     '处理状态': ['全部','待处理','处理中','已处理','已关闭'],
     '告警类型': ['全部','超速告警','偏离路线','紧急制动','碰撞预警','系统故障','通信异常'],
     '故障类型': ['全部','传感器故障','通信故障','控制器故障','制动系统故障','转向系统故障'],
