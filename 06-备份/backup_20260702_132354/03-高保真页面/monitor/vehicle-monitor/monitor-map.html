@@ -291,6 +291,10 @@
                   </div>
                   <div class="panel-section">
                     <div class="section-title">异常事件筛选</div>
+                    <div class="flex flex-wrap gap-3 mb-2">
+                      <label class="flex items-center gap-1 text-xs"><input type="checkbox" checked class="event-category-filter" data-category="预警" onchange="filterVehicles();applyAlarmFilter();renderWarningPanel()"> 预警</label>
+                      <label class="flex items-center gap-1 text-xs"><input type="checkbox" checked class="event-category-filter" data-category="告警" onchange="filterVehicles();applyAlarmFilter();renderWarningPanel()"> 告警</label>
+                    </div>
                     <div class="flex flex-wrap gap-2">
                       <label class="flex items-center gap-1 text-xs"><input type="checkbox" checked class="alarm-filter" data-type="车辆运行异常预警" onchange="filterVehicles();applyAlarmFilter();renderWarningPanel()"> 车辆运行异常预警</label>
                       <label class="flex items-center gap-1 text-xs"><input type="checkbox" checked class="alarm-filter" data-type="车辆碰撞事件预警" onchange="filterVehicles();applyAlarmFilter();renderWarningPanel()"> 车辆碰撞事件预警</label>
@@ -781,7 +785,8 @@ function loadVehicleLayer(){
 function getAlarmFilterConfig(){
   var types=[];
   document.querySelectorAll('.alarm-filter[data-type]').forEach(function(el){if(el.checked)types.push(el.dataset.type)});
-  var categories=['预警','告警'];
+  var categories=[];
+  document.querySelectorAll('.event-category-filter[data-category]').forEach(function(el){if(el.checked)categories.push(el.dataset.category)});
   if(warningQuickFilter==='warning')categories=['预警'];
   if(warningQuickFilter==='alarm')categories=['告警'];
   return {categories:categories,types:types};
@@ -1376,7 +1381,6 @@ function filterVehicles(){
   var searchPlate=document.getElementById('searchPlate').value.trim().toLowerCase();
   var searchVin=document.getElementById('searchVin').value.trim().toLowerCase();
   var eventCfg=getAlarmFilterConfig();
-  var eventFilterActive=status==='alarm'||isEventFilterActive(eventCfg);
   filteredVehicleData=vehicleData.filter(function(v){
     if(company!=='all'&&v.company!==company)return false;
     if(status==='online'&&v.status!=='online')return false;
@@ -1387,7 +1391,7 @@ function filterVehicles(){
     if(applyType!=='all'&&v.applyType!==applyType)return false;
     if(searchPlate&&v.plate.toLowerCase().indexOf(searchPlate)===-1)return false;
     if(searchVin&&v.vin.toLowerCase().indexOf(searchVin)===-1)return false;
-    if(eventFilterActive&&!vehicleHasMatchingEvent(v,eventCfg))return false;
+    if(v.status==='alarm'&&!vehicleHasMatchingEvent(v,eventCfg))return false;
     return true;
   });
   vehiclePage=1;
@@ -1395,10 +1399,6 @@ function filterVehicles(){
   updateMapVisibility();
   renderSituationBar();
   renderWarningPanel();
-}
-
-function isEventFilterActive(cfg){
-  return warningQuickFilter!=='all'||cfg.categories.length!==2||cfg.types.length!==7;
 }
 
 function updateMapVisibility(){
@@ -1473,6 +1473,7 @@ function resetMonitorFilters(){
   var searchVin=document.getElementById('searchVin');
   if(searchVin)searchVin.value='';
   document.querySelectorAll('.alarm-filter').forEach(function(el){el.checked=true});
+  document.querySelectorAll('.event-category-filter').forEach(function(el){el.checked=true});
   warningQuickFilter='all';
   filteredVehicleData=[].concat(vehicleData);
   renderVehicleTable(1);
@@ -1532,8 +1533,6 @@ function vehicleHasMatchingEvent(v,cfg){
   for(var i=0;i<v.alarmList.length;i++){
     var category=(v.eventCategories&&v.eventCategories[i])||'预警';
     var type=(v.alarmTypes&&v.alarmTypes[i])||'车辆运行异常预警';
-    var eventStatus=i===0?'未处理':'处理中';
-    if(warningQuickFilter==='pending'&&eventStatus!=='未处理')continue;
     if(cfg.categories.indexOf(category)!==-1&&cfg.types.indexOf(type)!==-1)return true;
   }
   return false;

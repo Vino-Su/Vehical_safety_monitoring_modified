@@ -45,6 +45,11 @@
     .close-warning{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#fff7e6;border:1px solid #ffe58f;border-radius:8px;margin-bottom:16px}
     .close-warning svg{flex-shrink:0;color:#faad14;margin-top:1px}
     .close-warning-text{font-size:13px;color:#874d00;line-height:1.6}
+    /* 复选框列 */
+    .ant-table th.col-checkbox, .ant-table td.col-checkbox{text-align:center !important;width:40px}
+    .ant-table th.col-checkbox input[type="checkbox"], .ant-table td.col-checkbox input[type="checkbox"]{cursor:pointer;width:14px;height:14px;accent-color:#1677ff}
+    /* 已选计数提示 */
+    .selected-tip{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#1677ff;background:#e6f4ff;border:1px solid #91caff;border-radius:4px;padding:2px 10px;margin-left:8px}
   </style>
   <script src="../../components/pagination-component.js"></script>
 </head>
@@ -55,7 +60,7 @@
     <header id="topnav"></header>
     <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
       <div class="page-header">
-        <h2>在线反馈管理</h2>
+        <h2>在线反馈管理<span class="selected-tip" id="selectedTip" style="display:none">已选 <span id="selectedCnt">0</span> 条</span></h2>
         <div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="exportCurrentData()">导出</button></div>
       </div>
 
@@ -86,6 +91,7 @@
         <table class="ant-table">
           <thead>
             <tr>
+              <th class="col-checkbox"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
               <th>反馈编号</th>
               <th>问题标题</th>
               <th>提交人</th>
@@ -249,6 +255,7 @@ var STATUS_MAP={
 var currentTab='all';
 var currentFilter={id:'',title:'',submitter:'',company:'',status:'',timeStart:'',timeEnd:''};
 var pager=null;
+var selectedIds=new Set();
 
 /* ========== 工具函数 ========== */
 function getReplyCount(d){return (d.replyList||[]).length;}
@@ -314,7 +321,9 @@ function buildOps(d){
 function buildRow(d){
   var s=STATUS_MAP[d.status];
   var rowCls=d.status==='pending'?'row-pending':'';
+  var checked=selectedIds.has(d.id);
   return '<tr class="'+rowCls+'">'
+    +'<td class="col-checkbox"><input type="checkbox" data-id="'+d.id+'"'+(checked?' checked':'')+' onclick="toggleRowSelection(\''+d.id+'\',this.checked)"></td>'
     +'<td class="col-code">'+d.id+'</td>'
     +'<td>'+d.title+'</td>'
     +'<td>'+d.submitter+'</td>'
@@ -336,9 +345,11 @@ function renderTable(){
   var pd=rows.slice(start,start+ps);
   var h='';
   pd.forEach(function(d){h+=buildRow(d);});
-  if(h==='') h='<tr><td colspan="10" style="text-align:center;color:#00000073;padding:48px 24px">暂无反馈记录<br><span style="font-size:12px;color:#bfbfbf">如需查看历史反馈，请切换至其他 Tab 或调整筛选条件</span></td></tr>';
+  if(h==='') h='<tr><td colspan="11" style="text-align:center;color:#00000073;padding:48px 24px">暂无反馈记录<br><span style="font-size:12px;color:#bfbfbf">如需查看历史反馈，请切换至其他 Tab 或调整筛选条件</span></td></tr>';
   document.getElementById('tbody').innerHTML=h;
   pager.setTotal(rows.length);
+  updateSelectAllState();
+  updateSelectedTip();
 }
 
 function applyFilter(){
@@ -380,7 +391,62 @@ function switchTab(el,tab){
 function exportCurrentData(){
   var rows=getFilteredData();
   if(!rows.length){showToast('当前无数据可导出','warn');return;}
-  showToast('已导出 '+rows.length+' 条反馈记录（'+currentTab+' Tab，当前筛选条件）');
+  var selected=rows.filter(function(d){return selectedIds.has(d.id);});
+  if(selected.length>0){
+    showToast('已导出选中的 '+selected.length+' 条反馈记录');
+  } else {
+    if(confirm('当前未勾选任何记录，是否导出当前 Tab 共 '+rows.length+' 条数据？')){
+      showToast('已导出 '+rows.length+' 条反馈记录');
+    }
+  }
+}
+
+function toggleSelectAll(){
+  var selectAll=document.getElementById('selectAll');
+  if(!selectAll) return;
+  var rows=getFilteredData();
+  var start=((pager?pager.getCurrentPage():1)-1)*(pager?pager.getPageSize():10);
+  var ps=pager?pager.getPageSize():10;
+  var pageRows=rows.slice(start,start+ps);
+  pageRows.forEach(function(d){
+    if(selectAll.checked) selectedIds.add(d.id);
+    else selectedIds.delete(d.id);
+  });
+  // 同步表格中所有可见复选框
+  document.querySelectorAll('#tbody input[type="checkbox"][data-id]').forEach(function(cb){
+    cb.checked=selectedIds.has(cb.getAttribute('data-id'));
+  });
+  updateSelectAllState();
+  updateSelectedTip();
+}
+
+function toggleRowSelection(id,checked){
+  if(checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  updateSelectAllState();
+  updateSelectedTip();
+}
+
+function updateSelectAllState(){
+  var selectAll=document.getElementById('selectAll');
+  if(!selectAll) return;
+  var rows=getFilteredData();
+  var start=((pager?pager.getCurrentPage():1)-1)*(pager?pager.getPageSize():10);
+  var ps=pager?pager.getPageSize():10;
+  var pageIds=rows.slice(start,start+ps).map(function(d){return d.id;});
+  if(pageIds.length===0){selectAll.checked=false;selectAll.indeterminate=false;return;}
+  var selCnt=pageIds.filter(function(id){return selectedIds.has(id);}).length;
+  selectAll.checked=selCnt===pageIds.length;
+  selectAll.indeterminate=selCnt>0 && selCnt<pageIds.length;
+}
+
+function updateSelectedTip(){
+  var tip=document.getElementById('selectedTip');
+  var cnt=document.getElementById('selectedCnt');
+  if(!tip||!cnt) return;
+  var n=selectedIds.size;
+  cnt.textContent=n;
+  tip.style.display=n>0?'inline-flex':'none';
 }
 
 /* ========== 弹窗：详情 ========== */
