@@ -67,7 +67,8 @@
         <div class="filter-bar">
           <div class="filter-row">
             <div class="filter-item"><label>告警类型</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
-            <div class="filter-item"><label>车辆号牌/VIN</label><input class="ant-input" placeholder="请输入号牌或VIN搜索" style="width:150px"></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号搜索" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索" style="width:150px"></div>
             <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
             <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date"></div>
             <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
@@ -76,13 +77,13 @@
         <div class="ant-table-wrapper">
           <div style="overflow-x:auto">
             <table class="ant-table">
-              <thead><tr><th>告警编号</th><th>车辆号牌/VIN</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
+              <thead><tr><th>告警编号</th><th>车牌号</th><th>VIN码</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
               <tbody>
-                <tr class="bg-[#fff2f0]"><td>ALM20260427001</td><td>鄂F·A001</td><td>车速超限01</td><td>当前速度62km/h，限速50km/h</td><td>14:28:30</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
-                <tr class="bg-[#fff2f0]"><td>ALM20260427003</td><td>鄂F·C007</td><td>自动驾驶系统异常</td><td>路径规划模块异常，可能与高精地图数据不一致有关</td><td>13:45:10</td><td><span class="ant-tag ant-tag-processing">处理中</span></td></tr>
-                <tr><td>ALM20260427004</td><td>鄂F·D010</td><td>传感器数据异常</td><td>激光雷达离线，距离前方障碍物约200m</td><td>14:05:18</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
-                <tr><td>ALM20260427005</td><td>鄂F·B003</td><td>电池电量低</td><td>SOC低于20%(当前18.5%)</td><td>13:22:10</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
-                <tr><td>ALM20260427009</td><td>鄂F·E005</td><td>通信中断</td><td>车辆离线超过30分钟</td><td>11:20:30</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
+                <tr class="bg-[#fff2f0]"><td>ALM20260427001</td><td>鄂F·A001</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000001</td><td>车速超限01</td><td>当前速度62km/h，限速50km/h</td><td>2026-05-11 14:28:30</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
+                <tr class="bg-[#fff2f0]"><td>ALM20260427003</td><td>鄂F·C007</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000004</td><td>自动驾驶系统异常</td><td>路径规划模块异常，可能与高精地图数据不一致有关</td><td>2026-05-11 13:45:10</td><td><span class="ant-tag ant-tag-processing">处理中</span></td></tr>
+                <tr><td>ALM20260427004</td><td>鄂F·D010</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000005</td><td>传感器数据异常</td><td>激光雷达离线，距离前方障碍物约200m</td><td>2026-05-11 14:05:18</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
+                <tr><td>ALM20260427005</td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>电池电量低</td><td>SOC低于20%(当前18.5%)</td><td>2026-05-11 13:22:10</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
+                <tr><td>ALM20260427009</td><td>鄂F·E005</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000006</td><td>通信中断</td><td>车辆离线超过30分钟</td><td>2026-05-11 11:20:30</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -95,7 +96,8 @@
       <div id="tab-plate" class="alarm-tab-content" style="display:none">
         <div class="filter-bar">
           <div class="filter-row">
-            <div class="filter-item"><label>车辆号牌/VIN</label><input class="ant-input" placeholder="请输入号牌或VIN搜索" style="width:150px"></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号搜索" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索" style="width:150px"></div>
             <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
             <div class="filter-item"><label>故障类型</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
             <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
@@ -104,10 +106,10 @@
         <div class="ant-table-wrapper">
           <div style="overflow-x:auto">
             <table class="ant-table">
-              <thead><tr><th>告警编号</th><th>车辆号牌/VIN</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
+              <thead><tr><th>告警编号</th><th>车牌号</th><th>VIN码</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
               <tbody>
-                <tr><td>ALM20260427006</td><td>鄂F·C007</td><td>车辆牌照识别系统故障/异常</td><td>摄像头图像模糊，无法识别车牌</td><td>08:00:00</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
-                <tr><td>ALM20260426001</td><td>鄂F·A001</td><td>车辆牌照识别系统故障/异常</td><td>摄像头图像模糊，无法识别车牌</td><td>08:00:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
+                <tr><td>ALM20260427006</td><td>鄂F·C007</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000004</td><td>车辆牌照识别系统故障/异常</td><td>摄像头图像模糊，无法识别车牌</td><td>2026-05-11 08:00:00</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
+                <tr><td>ALM20260426001</td><td>鄂F·A001</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000001</td><td>车辆牌照识别系统故障/异常</td><td>摄像头图像模糊，无法识别车牌</td><td>2026-05-10 08:00:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -121,7 +123,8 @@
         <div class="filter-bar">
           <div class="filter-row">
             <div class="filter-item"><label>越界方向</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
-            <div class="filter-item"><label>车辆号牌/VIN</label><input class="ant-input" placeholder="请输入号牌或VIN搜索" style="width:150px"></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号搜索" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索" style="width:150px"></div>
             <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
             <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
           </div>
@@ -129,10 +132,10 @@
         <div class="ant-table-wrapper">
           <div style="overflow-x:auto">
             <table class="ant-table">
-              <thead><tr><th>告警编号</th><th>车辆号牌/VIN</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
+              <thead><tr><th>告警编号</th><th>车牌号</th><th>VIN码</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
               <tbody>
-                <tr class="bg-[#fff2f0]"><td>ALM20260427002</td><td>鄂F·B003</td><td>电子围栏越界报警信息</td><td>车辆驶出指定测试区域，位置：高新区边界附近</td><td>14:15:22</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
-                <tr><td>ALM20260425001</td><td>鄂F·D010</td><td>电子围栏越界报警信息</td><td>车辆驶入禁止区域，位置：襄城区老城区</td><td>15:30:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
+                <tr class="bg-[#fff2f0]"><td>ALM20260427002</td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>电子围栏越界报警信息</td><td>车辆驶出指定测试区域，位置：高新区边界附近</td><td>2026-05-11 14:15:22</td><td><span class="ant-tag ant-tag-warning">待处理</span></td></tr>
+                <tr><td>ALM20260425001</td><td>鄂F·D010</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000005</td><td>电子围栏越界报警信息</td><td>车辆驶入禁止区域，位置：襄城区老城区</td><td>2026-05-09 15:30:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -145,7 +148,8 @@
       <div id="tab-time" class="alarm-tab-content" style="display:none">
         <div class="filter-bar">
           <div class="filter-row">
-            <div class="filter-item"><label>车辆号牌/VIN</label><input class="ant-input" placeholder="请输入号牌或VIN搜索" style="width:150px"></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号搜索" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索" style="width:150px"></div>
             <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
             <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date"></div>
             <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
@@ -154,10 +158,10 @@
         <div class="ant-table-wrapper">
           <div style="overflow-x:auto">
             <table class="ant-table">
-              <thead><tr><th>告警编号</th><th>车辆号牌/VIN</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
+              <thead><tr><th>告警编号</th><th>车牌号</th><th>VIN码</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
               <tbody>
-                <tr><td>ALM20260427008</td><td>鄂F·B003</td><td>测试时间范围外行驶/作业告警</td><td>车辆在非规定时间段内进行测试作业(06:00前)，需核实原因</td><td>06:15:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
-                <tr><td>ALM20260424001</td><td>鄂F·A002</td><td>测试时间范围外行驶/作业告警</td><td>车辆在非规定时间段内进行测试作业(22:00后)，需核实原因</td><td>22:45:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
+                <tr><td>ALM20260427008</td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>测试时间范围外行驶/作业告警</td><td>车辆在非规定时间段内进行测试作业(06:00前)，需核实原因</td><td>2026-05-11 06:15:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
+                <tr><td>ALM20260424001</td><td>鄂F·A002</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000002</td><td>测试时间范围外行驶/作业告警</td><td>车辆在非规定时间段内进行测试作业(22:00后)，需核实原因</td><td>2026-05-08 22:45:00</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -170,7 +174,8 @@
       <div id="tab-safety" class="alarm-tab-content" style="display:none">
         <div class="filter-bar">
           <div class="filter-row">
-            <div class="filter-item"><label>车辆号牌/VIN</label><input class="ant-input" placeholder="请输入号牌或VIN搜索" style="width:150px"></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号搜索" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索" style="width:150px"></div>
             <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
             <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date"></div>
             <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
@@ -179,10 +184,10 @@
         <div class="ant-table-wrapper">
           <div style="overflow-x:auto">
             <table class="ant-table">
-              <thead><tr><th>告警编号</th><th>车辆号牌/VIN</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
+              <thead><tr><th>告警编号</th><th>车牌号</th><th>VIN码</th><th>告警内容描述</th><th>告警详情</th><th>发生时间</th><th>处理状态</th></tr></thead>
               <tbody>
-                <tr><td>ALM20260427007</td><td>鄂F·B003</td><td>安全员状态监测异常告警(如疲劳驾驶等)</td><td>安全员状态异常检测：驾驶员闭眼持续时间超过3秒，可能存在疲劳驾驶风险</td><td>12:30:45</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
-                <tr><td>ALM20260423001</td><td>鄂F·A001</td><td>安全员状态监测异常告警(如疲劳驾驶等)</td><td>安全员状态异常检测：驾驶员闭眼持续时间超过3秒，可能存在疲劳驾驶风险</td><td>09:15:30</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
+                <tr><td>ALM20260427007</td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>安全员状态监测异常告警(如疲劳驾驶等)</td><td>安全员状态异常检测：驾驶员闭眼持续时间超过3秒，可能存在疲劳驾驶风险</td><td>2026-05-11 12:30:45</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
+                <tr><td>ALM20260423001</td><td>鄂F·A001</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000001</td><td>安全员状态监测异常告警(如疲劳驾驶等)</td><td>安全员状态异常检测：驾驶员闭眼持续时间超过3秒，可能存在疲劳驾驶风险</td><td>2026-05-07 09:15:30</td><td><span class="ant-tag ant-tag-success">已确认</span></td></tr>
               </tbody>
             </table>
           </div>

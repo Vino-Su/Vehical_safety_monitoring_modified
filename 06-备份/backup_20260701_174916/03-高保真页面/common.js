@@ -97,7 +97,7 @@
           children: [
             { key: 'monitor-map', label: '监控一张图', path: 'monitor/vehicle-monitor/monitor-map.html', roles: ['admin', 'enterprise'] },
             { key: 'running', label: '车辆运行监控', path: 'monitor/vehicle-monitor/running.html', roles: ['admin', 'enterprise'] },
-            { key: 'alarm', label: '异常状态预警', path: 'monitor/vehicle-monitor/alarm.html', roles: ['admin', 'enterprise'] },
+            { key: 'alarm', label: '异常状态告警', path: 'monitor/vehicle-monitor/alarm.html', roles: ['admin', 'enterprise'] },
             { key: 'accident', label: '事故数据上报', path: 'monitor/vehicle-monitor/accident.html', roles: ['admin', 'enterprise'] },
             { key: 'accident-review', label: '事故审核', path: 'monitor/vehicle-monitor/accident-review.html', roles: ['admin'] }
           ]

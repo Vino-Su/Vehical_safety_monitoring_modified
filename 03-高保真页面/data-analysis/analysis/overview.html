@@ -26,14 +26,21 @@
             <button class="ant-btn" onclick="setPeriod('30d')">最近30天</button>
             <button class="ant-btn" onclick="setPeriod('month')">本月</button>
           </div>
+          <div class="filter-item"><label>申请类型</label>
+            <select class="ant-input" id="applyType">
+              <option value="all">全部</option>
+              <option value="road">道路测试</option>
+              <option value="demo">示范应用</option>
+              <option value="commercial">商业化试点</option>
+            </select>
+          </div>
           <div class="filter-item"><label>开始时间</label><input class="ant-input" type="date" id="startDate"></div>
           <div class="filter-item"><label>结束时间</label><input class="ant-input" type="date" id="endDate"></div>
           <div class="flex gap-2 items-end">
             <button class="ant-btn ant-btn-primary" onclick="queryData()">查询</button>
-            <button class="ant-btn" onclick="refreshUpperData()"><i class="fas fa-sync-alt"></i> 刷新</button>
+            <button class="ant-btn" onclick="resetUpperData()"><i class="fas fa-redo"></i> 重置</button>
           </div>
         </div>
-        <div style="font-size:12px;color:#00000073;margin-top:8px;">以下累计数据和图表共用时间筛选</div>
       </div>
       <div class="grid grid-cols-4 gap-4 mb-6" id="cumulativeStats"></div>
       <div class="grid grid-cols-2 gap-4 mb-6">
@@ -337,9 +344,10 @@ function queryData() {
   showToast('数据已更新', '#1677ff');
 }
 
-function refreshUpperData() {
-  renderUpperSection(currentPeriod);
-  showToast('累计数据已刷新', '#1677ff');
+function resetUpperData() {
+  document.getElementById('applyType').value = 'all';
+  setPeriod('7d');
+  showToast('查询条件已重置', '#1677ff');
 }
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线反馈管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    /* 列表行 hover 高亮 */
+    .ant-table tbody tr{transition:background-color .18s ease}
+    .ant-table tbody tr.row-pending{box-shadow:inset 3px 0 0 #ff4d4f;background:#fffbfb}
+    .ant-table tbody tr.row-pending:hover{background:#fff1f0}
+    /* 操作列按钮排版 */
+    .row-actions{display:inline-flex;gap:0;flex-wrap:nowrap;justify-content:center;align-items:center}
+    .row-actions .ant-btn-link{padding:0 6px;font-size:13px;white-space:nowrap}
+    .row-actions .ant-btn-link+.ant-btn-link{border-left:1px solid #f0f0f0}
+    /* Tab 计数徽标 */
+    .ant-tab .tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 6px;margin-left:6px;border-radius:9px;background:#f0f0f0;color:#00000073;font-size:12px;line-height:1;font-weight:500}
+    .ant-tab.active .tab-count{background:#e6f4ff;color:#1677ff}
+    .ant-tab .tab-count.tab-count-urgent{background:#fff1f0;color:#ff4d4f}
+    /* 详情弹窗中的回复时间线 */
+    .reply-timeline{position:relative;padding-left:24px}
+    .reply-timeline::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:#e6e6e6}
+    .reply-item{position:relative;padding:10px 12px 12px 16px;margin-bottom:10px;background:#fafbff;border:1px solid #eef1f8;border-radius:8px;transition:all .2s}
+    .reply-item:last-child{margin-bottom:0}
+    .reply-item:hover{border-color:#91caff;background:#f0f6ff}
+    .reply-item::before{content:"";position:absolute;left:-21px;top:16px;width:9px;height:9px;border-radius:50%;background:#1677ff;box-shadow:0 0 0 3px #fff,0 0 0 4px #91caff}
+    .reply-item .reply-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#00000073}
+    .reply-item .reply-head .reply-by{font-weight:500;color:#000000d9}
+    .reply-item .reply-status{display:inline-flex;align-items:center;height:20px;padding:0 6px;font-size:12px;border-radius:3px;border:1px solid;margin-left:6px}
+    .reply-item .reply-status.s-processing{color:#1677ff;background:#e6f4ff;border-color:#91caff}
+    .reply-item .reply-status.s-success{color:#52c41a;background:#f6ffed;border-color:#b7eb8f}
+    .reply-item .reply-body{font-size:14px;color:#000000d9;line-height:1.7;white-space:pre-line}
+    /* 处理状态的小指示灯 */
+    .status-dot{display:inline-flex;align-items:center;gap:6px}
+    .status-dot::before{content:"";width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .status-dot.dot-pending::before{background:#ff4d4f;box-shadow:0 0 0 3px rgba(255,77,79,.15)}
+    .status-dot.dot-processing::before{background:#1677ff;box-shadow:0 0 0 3px rgba(22,119,255,.15)}
+    .status-dot.dot-success::before{background:#52c41a;box-shadow:0 0 0 3px rgba(82,196,26,.15)}
+    .status-dot.dot-default::before{background:#bfbfbf}
+    /* 标题区下方的次级说明 */
+    .page-subtitle{font-size:13px;color:#00000073;margin-top:4px}
+    /* 关闭弹窗强调 */
+    .close-warning{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#fff7e6;border:1px solid #ffe58f;border-radius:8px;margin-bottom:16px}
+    .close-warning svg{flex-shrink:0;color:#faad14;margin-top:1px}
+    .close-warning-text{font-size:13px;color:#874d00;line-height:1.6}
+  </style>
+  <script src="../../components/pagination-component.js"></script>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header">
+        <h2>在线反馈管理</h2>
+        <div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="exportCurrentData()">导出</button></div>
+      </div>
+
+      <!-- 筛选条件 -->
+      <div class="filter-bar mb-4">
+        <div class="filter-row">
+          <div class="filter-item"><label>反馈编号</label><input class="ant-input" id="q-id" placeholder="请输入反馈编号" style="width:160px"></div>
+          <div class="filter-item"><label>问题标题</label><input class="ant-input" id="q-title" placeholder="请输入问题标题关键词" style="width:200px"></div>
+          <div class="filter-item"><label>提交人</label><input class="ant-input" id="q-submitter" placeholder="请输入提交人" style="width:140px"></div>
+          <div class="filter-item"><label>所属企业</label><input class="ant-input" id="q-company" placeholder="请输入所属企业" style="width:160px"></div>
+          <div class="filter-item"><label>提交时间</label><input class="ant-input" id="q-time-start" type="date" style="width:140px"><span>至</span><input class="ant-input" id="q-time-end" type="date" style="width:140px"></div>
+          <button class="ant-btn ant-btn-primary" onclick="applyFilter()">查询</button>
+          <button class="ant-btn" onclick="resetFilter()">重置</button>
+        </div>
+      </div>
+
+      <!-- Tab页签 -->
+      <div class="ant-tabs mb-4" id="tabs">
+        <span class="ant-tab active" data-tab="all" onclick="switchTab(this,'all')">全部<span class="tab-count" id="cnt-all">0</span></span>
+        <span class="ant-tab" data-tab="pending" onclick="switchTab(this,'pending')">待处理<span class="tab-count tab-count-urgent" id="cnt-pending">0</span></span>
+        <span class="ant-tab" data-tab="processing" onclick="switchTab(this,'processing')">处理中<span class="tab-count" id="cnt-processing">0</span></span>
+        <span class="ant-tab" data-tab="done" onclick="switchTab(this,'done')">已处理<span class="tab-count" id="cnt-done">0</span></span>
+        <span class="ant-tab" data-tab="closed" onclick="switchTab(this,'closed')">已关闭<span class="tab-count" id="cnt-closed">0</span></span>
+      </div>
+
+      <!-- 列表区 -->
+      <div class="ant-table-wrapper">
+        <table class="ant-table">
+          <thead>
+            <tr>
+              <th>反馈编号</th>
+              <th>问题标题</th>
+              <th>提交人</th>
+              <th>所属企业</th>
+              <th>提交时间</th>
+              <th>处理状态</th>
+              <th>受理机构</th>
+              <th>回复次数</th>
+              <th>最新回复时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="pageBar" class="mt-4"></div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='feedback-manage';
+
+/* ========== 数据模型 ==========
+ * replyList：[{by, role, time, content, status}]  status='processing' | 'done'
+ * replyCount 与 latestReplyTime 由前端从 replyList 计算（PRD V2.8）
+ */
+var feedbackManageData=[
+  {
+    id:'FB20260427001',title:'测试车辆自动驾驶模式异常制动',submitter:'王工',company:'A公司',
+    time:'2026-04-27 11:30',status:'pending',handler:'—',
+    content:'在道路测试过程中，测试车辆（VIN: LSVAU2180N2012345）在自动驾驶模式下出现异常制动行为，具体表现为：在无障碍物的情况下突然减速停车，可能与前方传感器数据异常有关。该问题已出现3次，均在晴天正常路况下发生。',
+    replyList:[]
+  },
+  {
+    id:'FB20260427002',title:'平台移动端页面布局错位问题',submitter:'赵工',company:'B公司',
+    time:'2026-04-27 09:15',status:'pending',handler:'—',
+    content:'使用手机浏览器访问平台时，车辆监控页面布局出现错位，地图区域与数据面板重叠，影响正常使用。测试环境：iPhone 15 Pro，Safari浏览器，iOS 19.3。',
+    replyList:[]
+  },
+  {
+    id:'FB20260426001',title:'某路段电子围栏边界设置不准确',submitter:'安全管理员',company:'A公司',
+    time:'2026-04-26 16:42',status:'processing',handler:'第三方专业管理机构A',
+    content:'高新区东风大道与科技路交叉口的电子围栏边界设置不准确，实际可行驶区域比围栏范围大，导致测试车辆在该路段频繁触发越界告警。建议重新标定该区域围栏边界。',
+    attachments:[
+      {name:'围栏偏差现场照片_01.jpg',type:'image',size:'1.2 MB'},
+      {name:'围栏偏差现场照片_02.jpg',type:'image',size:'0.9 MB'},
+      {name:'路段矢量数据说明.pdf',type:'file',size:'480 KB'}
+    ],
+    replyList:[
+      {by:'张三',role:'第三方专业管理机构A',time:'2026-04-27 09:00',content:'已收到反馈，正在安排技术人员现场核实围栏边界数据。',status:'processing'},
+      {by:'张三',role:'第三方专业管理机构A',time:'2026-04-28 10:30',content:'现场实测已完成，确认为围栏矢量数据存在偏移，已提交修正方案，预计 4 月 30 日前完成更新。',status:'processing'}
+    ]
+  },
+  {
+    id:'FB20260425001',title:'数据上报接口偶发超时问题',submitter:'陈工',company:'D公司',
+    time:'2026-04-25 14:00',status:'processing',handler:'平台技术支持组',
+    content:'近期数据上报API接口出现偶发性超时（HTTP 504），主要集中在每日8:00-9:00高峰时段，超时率约5%。已确认车载端网络连接正常，怀疑是服务端并发处理能力不足。',
+    replyList:[
+      {by:'李工',role:'平台技术支持组',time:'2026-04-26 10:30',content:'已确认问题，正在优化接口服务架构，预计5月10日前完成升级。',status:'processing'}
+    ]
+  },
+  {
+    id:'FB20260424001',title:'电子围栏导入GeoJSON格式支持问题',submitter:'运维人员',company:'C公司',
+    time:'2026-04-24 11:20',status:'pending',handler:'—',
+    content:'电子围栏管理页面导入围栏时，希望支持 GeoJSON 格式，目前仅支持手动绘制，希望新增批量导入功能。',
+    replyList:[]
+  },
+  {
+    id:'FB20260422001',title:'建议增加车辆历史轨迹回放功能',submitter:'李经理',company:'A公司',
+    time:'2026-04-22 10:00',status:'done',handler:'平台技术支持组',
+    content:'建议在车辆监控模块中增加历史轨迹回放功能，支持选择时间段回放车辆行驶轨迹，便于事后分析和事故回溯。',
+    attachments:[
+      {name:'轨迹回放功能需求说明.pdf',type:'file',size:'320 KB'}
+    ],
+    replyList:[
+      {by:'平台技术支持组',role:'平台技术支持组',time:'2026-04-23 09:30',content:'感谢您的建议！该功能已纳入平台V2.3版本开发计划。',status:'processing'},
+      {by:'平台技术支持组',role:'平台技术支持组',time:'2026-04-25 14:00',content:'V2.3 版本预计 2026 年 6 月上线，新增轨迹回放与导出功能，请关注后续公告。',status:'done'}
+    ]
+  },
+  {
+    id:'FB20260420001',title:'测试路线变更申请审批进度咨询',submitter:'韩梅梅',company:'E公司',
+    time:'2026-04-20 09:30',status:'done',handler:'市工作专班办公室',
+    content:'我司于4月8日提交的道路测试变更申请（编号RT202604003），目前审批进度如何？是否需要补充材料？',
+    replyList:[
+      {by:'市工作专班办公室',role:'市工作专班办公室',time:'2026-04-21 11:00',content:'您的变更申请已进入市工作专班审核环节，预计4月28日前完成审批。目前无需补充材料，如有变更会另行通知。',status:'processing'},
+      {by:'市工作专班办公室',role:'市工作专班办公室',time:'2026-04-22 16:30',content:'补充说明：审批过程中如需进一步澄清，会通过站内消息通知，请关注平台消息中心。',status:'done'}
+    ]
+  },
+  {
+    id:'FB20260418001',title:'临牌延期流程操作疑问',submitter:'刘勇',company:'A公司示范应用服务运营分公司',
+    time:'2026-04-18 16:45',status:'done',handler:'市交管部门',
+    content:'我司有3辆测试车辆的临时号牌将于5月初到期，请问延期申请需要提前多久提交？是否需要重新提交全部材料？',
+    replyList:[
+      {by:'市交管部门',role:'市交管部门',time:'2026-04-19 09:30',content:'临时号牌延期需在到期前15日提交申请。延期时无需重新提交全部材料，仅需提供：1.原临牌复印件；2.延期申请书；3.最新保险凭证。可通过平台线上提交。',status:'done'}
+    ]
+  },
+  {
+    id:'FB20260416001',title:'车辆传感器数据异常报警频繁',submitter:'王小明',company:'C公司机器人有限公司',
+    time:'2026-04-16 11:20',status:'done',handler:'第三方专业管理机构B',
+    content:'测试车辆（VIN: LSVAU2180N2012347）近期传感器数据异常报警频繁，日均报警次数从正常的2-3次增至15-20次，主要集中在毫米波雷达模块。请协助排查是否为硬件故障。',
+    replyList:[
+      {by:'李四',role:'第三方专业管理机构B',time:'2026-04-17 16:00',content:'经现场检测，确认为毫米波雷达固件版本兼容性问题。',status:'processing'},
+      {by:'李四',role:'第三方专业管理机构B',time:'2026-04-18 09:20',content:'已协助升级至最新固件版本 V3.2.1，升级后报警频率恢复正常，请贵司持续观测一周并反馈结果。',status:'done'}
+    ]
+  },
+  {
+    id:'FB20260414001',title:'企业信息登记中联系人字段变更咨询',submitter:'张工',company:'F公司',
+    time:'2026-04-14 15:00',status:'closed',handler:'平台运营管理员',
+    content:'我司联系人发生变更，请问是否需要重新提交营业执照扫描件？',
+    replyList:[
+      {by:'平台运营管理员',role:'平台运营管理员',time:'2026-04-15 10:00',content:'仅修改联系人信息无需重新提交营业执照，登录后在企业信息登记页面直接修改保存即可。',status:'processing'}
+    ],
+    closedNote:'已办结后被用户反馈"已自行解决"，为减少重复沟通，由管理部门主动关闭'
+  },
+  {
+    id:'FB20260412001',title:'关于车辆事故报告提交模板咨询',submitter:'周经理',company:'B公司',
+    time:'2026-04-12 14:30',status:'closed',handler:'第三方专业管理机构A',
+    content:'请问交通事故报告是否有标准模板？是否需要加盖公章？',
+    replyList:[
+      {by:'第三方专业管理机构A',role:'第三方专业管理机构A',time:'2026-04-13 09:00',content:'事故报告需使用平台提供的标准模板，下载后填写完整，加盖公章上传即可。',status:'processing'}
+    ],
+    closedNote:'用户咨询后未在 7 日内补充事故相关信息，自动关闭'
+  },
+  {
+    id:'FB20260410001',title:'申请材料上传大小限制咨询',submitter:'陈晨',company:'G公司',
+    time:'2026-04-10 10:15',status:'processing',handler:'第三方专业管理机构C',
+    content:'申请材料中的"前期总结评估报告"PDF大小约35MB，无法上传，能否放宽限制？',
+    attachments:[
+      {name:'原评估报告分卷1.pdf',type:'file',size:'18.5 MB'},
+      {name:'原评估报告分卷2.pdf',type:'file',size:'15.2 MB'}
+    ],
+    replyList:[
+      {by:'第三方专业管理机构C',role:'第三方专业管理机构C',time:'2026-04-11 14:00',content:'单文件最大 20MB，建议将大文件拆分为多个分卷上传，并在材料目录中注明"见分卷2"。',status:'processing'},
+      {by:'陈晨',role:'G公司',time:'2026-04-15 09:30',content:'已按分卷方式拆分上传，请审核。',status:'processing'}
+    ]
+  },
+  {
+    id:'FB20260408001',title:'平台登录二次验证功能建议',submitter:'李明',company:'A公司',
+    time:'2026-04-08 16:50',status:'done',handler:'平台技术支持组',
+    content:'建议企业账号增加二次验证功能，提升账号安全性。',
+    replyList:[
+      {by:'平台技术支持组',role:'平台技术支持组',time:'2026-04-09 11:00',content:'感谢建议，已纳入安全加固路线图，预计 V2.4 版本支持。',status:'processing'},
+      {by:'平台技术支持组',role:'平台技术支持组',time:'2026-04-20 14:00',content:'V2.4 版本二次验证功能已上线，企业用户可在账号设置中开启。',status:'done'}
+    ]
+  },
+  {
+    id:'FB20260405001',title:'车辆号牌识别夜间准确率下降',submitter:'赵磊',company:'H公司',
+    time:'2026-04-05 20:30',status:'pending',handler:'—',
+    content:'夜间车牌识别准确率从白天的 95% 下降到 70% 左右，主要发生在路灯较暗的路段，疑似摄像头曝光参数未适配低照度环境。',
+    replyList:[]
+  }
+];
+
+var STATUS_MAP={
+  pending:{label:'待处理',cls:'ant-tag-warning',dot:'dot-pending',tab:'pending'},
+  processing:{label:'处理中',cls:'ant-tag-processing',dot:'dot-processing',tab:'processing'},
+  done:{label:'已处理',cls:'ant-tag-success',dot:'dot-success',tab:'done'},
+  closed:{label:'已关闭',cls:'ant-tag-default',dot:'dot-default',tab:'closed'}
+};
+
+var currentTab='all';
+var currentFilter={id:'',title:'',submitter:'',company:'',status:'',timeStart:'',timeEnd:''};
+var pager=null;
+
+/* ========== 工具函数 ========== */
+function getReplyCount(d){return (d.replyList||[]).length;}
+function getLatestReplyTime(d){
+  var list=d.replyList||[];
+  if(!list.length) return '—';
+  return list[list.length-1].time;
+}
+function findById(id){return feedbackManageData.find(function(d){return d.id===id;});}
+
+/* ========== 计数 ========== */
+function refreshCounts(){
+  var cnt={all:0,pending:0,processing:0,done:0,closed:0};
+  feedbackManageData.forEach(function(d){
+    cnt.all++;
+    if(cnt[d.status]!==undefined) cnt[d.status]++;
+  });
+  for(var k in cnt){
+    var el=document.getElementById('cnt-'+k);
+    if(el) el.textContent=cnt[k];
+  }
+}
+
+/* ========== 过滤+排序 ========== */
+function getFilteredData(){
+  var rows=feedbackManageData.slice();
+  if(currentFilter.id) rows=rows.filter(function(d){return d.id.indexOf(currentFilter.id)>-1;});
+  if(currentFilter.title) rows=rows.filter(function(d){return d.title.indexOf(currentFilter.title)>-1;});
+  if(currentFilter.submitter) rows=rows.filter(function(d){return d.submitter.indexOf(currentFilter.submitter)>-1;});
+  if(currentFilter.company) rows=rows.filter(function(d){return d.company.indexOf(currentFilter.company)>-1;});
+  if(currentFilter.status) rows=rows.filter(function(d){return d.status===currentFilter.status;});
+  if(currentFilter.timeStart) rows=rows.filter(function(d){return d.time.substring(0,10)>=currentFilter.timeStart;});
+  if(currentFilter.timeEnd) rows=rows.filter(function(d){return d.time.substring(0,10)<=currentFilter.timeEnd;});
+
+  if(currentTab!=='all'){
+    var tab=currentTab;
+    rows=rows.filter(function(d){return d.status===tab;});
+    rows.sort(function(a,b){return a.time<b.time?1:-1;});
+  } else {
+    rows.sort(function(a,b){
+      if(a.status==='pending' && b.status!=='pending') return -1;
+      if(a.status!=='pending' && b.status==='pending') return 1;
+      return a.time<b.time?1:-1;
+    });
+  }
+  return rows;
+}
+
+function buildOps(d){
+  var html='<div class="row-actions">';
+  html+='<button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">详情</button>';
+  if(d.status==='pending'){
+    html+='<button class="ant-btn-link" style="color:#1677ff" onclick="openReply(\''+d.id+'\',\'accept\')">受理回复</button>';
+    html+='<button class="ant-btn-link danger" onclick="confirmClose(\''+d.id+'\')">关闭</button>';
+  } else if(d.status==='processing'){
+    html+='<button class="ant-btn-link" style="color:#1677ff" onclick="openReply(\''+d.id+'\',\'continue\')">继续回复</button>';
+    html+='<button class="ant-btn-link danger" onclick="confirmClose(\''+d.id+'\')">关闭</button>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function buildRow(d){
+  var s=STATUS_MAP[d.status];
+  var rowCls=d.status==='pending'?'row-pending':'';
+  return '<tr class="'+rowCls+'">'
+    +'<td class="col-code">'+d.id+'</td>'
+    +'<td>'+d.title+'</td>'
+    +'<td>'+d.submitter+'</td>'
+    +'<td>'+d.company+'</td>'
+    +'<td class="col-code">'+d.time+'</td>'
+    +'<td class="col-status"><span class="ant-tag '+s.cls+'">'+s.label+'</span></td>'
+    +'<td>'+d.handler+'</td>'
+    +'<td class="col-num">'+getReplyCount(d)+'</td>'
+    +'<td class="col-code">'+(getReplyCount(d)?getLatestReplyTime(d):'<span class="text-[#bfbfbf]">—</span>')+'</td>'
+    +'<td class="col-action">'+buildOps(d)+'</td>'
+    +'</tr>';
+}
+
+function renderTable(){
+  var rows=getFilteredData();
+  if(!pager) return;
+  var cp=pager.getCurrentPage(), ps=pager.getPageSize();
+  var start=(cp-1)*ps;
+  var pd=rows.slice(start,start+ps);
+  var h='';
+  pd.forEach(function(d){h+=buildRow(d);});
+  if(h==='') h='<tr><td colspan="10" style="text-align:center;color:#00000073;padding:48px 24px">暂无反馈记录<br><span style="font-size:12px;color:#bfbfbf">如需查看历史反馈，请切换至其他 Tab 或调整筛选条件</span></td></tr>';
+  document.getElementById('tbody').innerHTML=h;
+  pager.setTotal(rows.length);
+}
+
+function applyFilter(){
+  currentFilter={
+    id:document.getElementById('q-id').value.trim(),
+    title:document.getElementById('q-title').value.trim(),
+    submitter:document.getElementById('q-submitter').value.trim(),
+    company:document.getElementById('q-company').value.trim(),
+    status:'',
+    timeStart:document.getElementById('q-time-start').value,
+    timeEnd:document.getElementById('q-time-end').value
+  };
+  if(pager) pager.reset();
+  renderTable();
+  showToast('已应用筛选条件');
+}
+
+function resetFilter(){
+  document.getElementById('q-id').value='';
+  document.getElementById('q-title').value='';
+  document.getElementById('q-submitter').value='';
+  document.getElementById('q-company').value='';
+  document.getElementById('q-time-start').value='';
+  document.getElementById('q-time-end').value='';
+  currentFilter={id:'',title:'',submitter:'',company:'',status:'',timeStart:'',timeEnd:''};
+  if(pager) pager.reset();
+  renderTable();
+  showToast('已重置筛选');
+}
+
+function switchTab(el,tab){
+  document.querySelectorAll('#tabs .ant-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  currentTab=tab;
+  if(pager) pager.reset();
+  renderTable();
+}
+
+function exportCurrentData(){
+  var rows=getFilteredData();
+  if(!rows.length){showToast('当前无数据可导出','warn');return;}
+  showToast('已导出 '+rows.length+' 条反馈记录（'+currentTab+' Tab，当前筛选条件）');
+}
+
+/* ========== 弹窗：详情 ========== */
+function openDetail(id){
+  var d=findById(id); if(!d) return;
+  var s=STATUS_MAP[d.status];
+  var html='<div class="ant-descriptions">'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">反馈编号</div><div class="ant-descriptions-value">'+d.id+'</div><div class="ant-descriptions-label">处理状态</div><div class="ant-descriptions-value"><span class="ant-tag '+s.cls+'">'+s.label+'</span></div></div>'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">问题标题</div><div class="ant-descriptions-value" style="flex:3">'+d.title+'</div></div>'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">提交人</div><div class="ant-descriptions-value">'+d.submitter+'</div><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+d.company+'</div></div>'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">提交时间</div><div class="ant-descriptions-value">'+d.time+'</div><div class="ant-descriptions-label">受理机构</div><div class="ant-descriptions-value">'+d.handler+'</div></div>'
+    +'</div>';
+  html+='<h4 class="text-sm font-semibold text-[#000000d9] mt-4 mb-2 pb-2 border-b border-[#f0f0f0]">问题详情</h4>';
+  html+='<div class="p-3 bg-[#fafafa] rounded text-sm text-[#000000d9] whitespace-pre-line leading-relaxed">'+d.content+'</div>';
+
+  html+=renderAttachments(d.attachments);
+
+  if(d.replyList && d.replyList.length){
+    html+='<h4 class="text-sm font-semibold text-[#000000d9] mt-4 mb-3 pb-2 border-b border-[#f0f0f0]">受理回复时间线（共 '+d.replyList.length+' 条）</h4>';
+    html+='<div class="reply-timeline">';
+    d.replyList.forEach(function(r){
+      var sCls=r.status==='done'?'s-success':'s-processing';
+      var sLabel=r.status==='done'?'已处理':'处理中';
+      html+='<div class="reply-item">'
+        +'<div class="reply-head"><span><span class="reply-by">'+r.by+'</span>　<span class="text-[#00000073]">'+r.role+'</span><span class="reply-status '+sCls+'">'+sLabel+'</span></span><span>'+r.time+'</span></div>'
+        +'<div class="reply-body">'+r.content+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  } else {
+    html+='<h4 class="text-sm font-semibold text-[#000000d9] mt-4 mb-2 pb-2 border-b border-[#f0f0f0]">受理回复</h4>';
+    html+='<div class="p-3 bg-[#fafafa] rounded text-sm text-[#00000073]">尚未受理，点击底部"受理回复"按钮开始处理</div>';
+  }
+
+  if(d.closedNote){
+    html+='<h4 class="text-sm font-semibold text-[#000000d9] mt-4 mb-2 pb-2 border-b border-[#f0f0f0]">关闭备注</h4>';
+    html+='<div class="p-3 bg-[#fff7e6] rounded text-sm text-[#874d00] leading-relaxed">'+d.closedNote+'</div>';
+  }
+
+  openModal('反馈详情 - '+d.id, html, {wide:true, footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+
+/* ========== 附件渲染 ========== */
+function renderAttachments(attachments){
+  if(!attachments || !attachments.length) return '';
+  var html='<h4 class="text-sm font-semibold text-[#000000d9] mt-4 mb-2 pb-2 border-b border-[#f0f0f0]">附件（共 '+attachments.length+' 个）</h4>';
+  html+='<div class="space-y-2">';
+  attachments.forEach(function(a){
+    var iconBg=a.type==='image'?'#e6f4ff':'#fff7e6';
+    var iconColor=a.type==='image'?'#1677ff':'#faad14';
+    var iconSvg=a.type==='image'
+      ?'<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
+      :'<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+    html+='<div class="flex items-center gap-2 px-3 py-2 bg-[#fafafa] rounded border border-[#f0f0f0] hover:border-[#91caff] transition-colors">'
+      +'<span class="inline-flex items-center justify-center w-7 h-7 rounded" style="background:'+iconBg+';color:'+iconColor+'">'+iconSvg+'</span>'
+      +'<span class="flex-1 text-sm text-[#000000d9] truncate">'+a.name+'</span>'
+      +'<span class="text-xs text-[#00000073]">'+a.size+'</span>'
+      +'<button class="ant-btn-link" style="font-size:12px">预览</button>'
+      +'<button class="ant-btn-link" style="font-size:12px">下载</button>'
+      +'</div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+/* ========== 弹窗：受理回复/继续回复 ========== */
+function openReply(id,mode){
+  var d=findById(id); if(!d) return;
+  var title=(mode==='accept'?'受理回复':'继续回复')+' - '+d.id;
+  var s=STATUS_MAP[d.status];
+  var html='<div class="ant-descriptions" style="margin-bottom:16px">'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">反馈编号</div><div class="ant-descriptions-value">'+d.id+'</div><div class="ant-descriptions-label">当前状态</div><div class="ant-descriptions-value"><span class="ant-tag '+s.cls+'">'+s.label+'</span></div></div>'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">问题标题</div><div class="ant-descriptions-value" style="flex:3">'+d.title+'</div></div>'
+    +'</div>';
+  html+='<h4 class="text-sm font-semibold text-[#000000d9] mt-2 mb-2 pb-2 border-b border-[#f0f0f0]">问题详情</h4>';
+  html+='<div class="p-3 bg-[#fafafa] rounded text-sm text-[#000000d9] whitespace-pre-line leading-relaxed">'+d.content+'</div>';
+  html+=renderAttachments(d.attachments);
+  html+='<div class="ant-form-item" style="margin-top:20px"><div class="ant-form-label"><span class="required">*</span>回复内容</div><div class="ant-form-control"><textarea class="ant-input" id="replyContent" rows="5" maxlength="2000" style="padding:8px 12px;height:auto;resize:vertical" placeholder="请输入回复内容，最长 2000 字" oninput="document.getElementById(\'replyCount\').textContent=this.value.length+\'/2000字\'"></textarea><div class="text-xs text-[#00000040] mt-1"><span id="replyCount">0/2000字</span></div></div></div>';
+  html+='<div class="ant-form-item"><div class="ant-form-label">处理状态</div><div class="ant-form-control"><div class="ant-select" id="replyStatus" style="width:200px">'+(mode==='accept'?'处理中':'处理中')+' <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>';
+  html+='<div class="grid grid-cols-2 gap-4 text-xs text-[#00000073]">';
+  html+='<div>受理机构：<span class="text-[#000000d9]">监管人员</span></div>';
+  html+='<div>回复人：<span class="text-[#000000d9]">管理员</span></div>';
+  html+='</div>';
+
+  openModal(title, html, {
+    wide:true,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button>'
+      +'<button class="ant-btn ant-btn-primary" onclick="submitReply(\''+d.id+'\',\''+mode+'\')">提交回复</button>'
+  });
+}
+
+function submitReply(id,mode){
+  var content=document.getElementById('replyContent').value.trim();
+  var status=document.getElementById('replyStatus').textContent.trim().split(/\s+/)[0];
+  if(!content){showToast('请填写回复内容','warn');return;}
+  if(status!=='处理中' && status!=='已处理'){showToast('处理状态无效','warn');return;}
+
+  var d=findById(id);
+  var now=new Date();
+  var pad=function(n){return n<10?'0'+n:n;};
+  var timeStr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+
+  d.replyList.push({
+    by:'管理员',
+    role:'监管人员',
+    time:timeStr,
+    content:content,
+    status:status==='已处理'?'done':'processing'
+  });
+  if(mode==='accept' || status==='处理中'){
+    d.status='processing';
+    d.handler=d.handler==='—'?'监管人员':d.handler;
+  }
+  if(status==='已处理'){
+    d.status='done';
+  }
+  closeModal();
+  refreshCounts();
+  renderTable();
+  showToast(mode==='accept'?'已受理该反馈':'回复已提交');
+}
+
+/* ========== 弹窗：关闭确认 ========== */
+function confirmClose(id){
+  var d=findById(id); if(!d) return;
+  var html='<div class="close-warning">'
+    +'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>'
+    +'<div class="close-warning-text">关闭后用户不能再追加问题，管理部门仍可查看历史。该操作不可撤销，请确认。</div>'
+    +'</div>'
+    +'<div class="ant-descriptions">'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">反馈编号</div><div class="ant-descriptions-value">'+d.id+'</div><div class="ant-descriptions-label">当前状态</div><div class="ant-descriptions-value"><span class="ant-tag '+STATUS_MAP[d.status].cls+'">'+STATUS_MAP[d.status].label+'</span></div></div>'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">问题标题</div><div class="ant-descriptions-value" style="flex:3">'+d.title+'</div></div>'
+    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">提交人</div><div class="ant-descriptions-value">'+d.submitter+'</div><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+d.company+'</div></div>'
+    +'</div>';
+  openModal('关闭确认', html, {
+    width:520,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button>'
+      +'<button class="ant-btn ant-btn-danger" onclick="doClose(\''+d.id+'\')">确认关闭</button>'
+  });
+}
+
+function doClose(id){
+  var d=findById(id); if(!d) return;
+  d.status='closed';
+  d.closedNote='由管理部门于 '+new Date().toISOString().substring(0,16).replace('T',' ')+' 关闭';
+  closeModal();
+  refreshCounts();
+  renderTable();
+  showToast('反馈已关闭');
+}
+
+/* ========== Toast ========== */
+function showToast(msg,type){
+  var t=document.createElement('div');
+  var bg=type==='warn'?'#faad14':'#52c41a';
+  t.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:10000;background:'+bg+';color:#fff;padding:10px 24px;border-radius:6px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15)';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(function(){t.remove();},300);},1800);
+}
+
+/* ========== 初始化 ========== */
+document.addEventListener('DOMContentLoaded',function(){
+  pager=new Pagination({container:'pageBar',pageSize:10,pageSizeOptions:[10,20,50,100],onPageChange:function(){renderTable();},onPageSizeChange:function(){pager.reset();renderTable();}});
+  refreshCounts();
+  renderTable();
+});
+
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

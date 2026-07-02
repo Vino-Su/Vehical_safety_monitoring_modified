@@ -180,7 +180,7 @@ pager.reset();                    // 重置到第一页
 | 审批配置 | 审批配置 | `approve-config` |
 | 车辆状态监控 | 监控一张图 | `monitor-map` |
 | | 车辆运行监控 | `running` |
-| | 异常状态预警 | `alarm` |
+| | 异常状态告警 | `alarm` |
 | | 事故数据上报 | `accident` |
 | | 事故审核 | `accident-review` |
 | 测试服务管理 | 信息发布管理 | `notice` |
