@@ -17,21 +17,22 @@
       <div class="page-header"><h2>资格终止管理</h2><div class="flex gap-2"><button class="ant-btn ant-btn-danger" onclick="openTerminateModal()">发起资格终止</button></div></div>
       <div class="filter-bar">
         <div class="filter-row">
-          <div class="filter-item"><label>准入申请编号</label><input class="ant-input" placeholder="请输入申请编号" id="filterAppId" style="width:160px"></div>
+          <div class="filter-item"><label>申请主体</label><input class="ant-input" placeholder="请输入企业名称" id="filterCompany" style="width:160px"></div>
           <div class="filter-item"><label>终止类型</label><div class="ant-select" id="filterType">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
           <div class="filter-item"><label>触发方式</label><div class="ant-select" id="filterTrigger">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
-          <div class="filter-item"><label>申请主体</label><input class="ant-input" placeholder="请输入企业名称" id="filterCompany" style="width:160px"></div>
+          <div class="filter-item"><label>终止状态</label><div class="ant-select" id="filterStatus">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="filter-item"><label>终止日期</label><div style="display:flex;gap:4px;align-items:center;"><input class="ant-input" type="date" id="filterDateFrom" style="width:140px"><span class="mx-1 text-[#00000040]">~</span><input class="ant-input" type="date" id="filterDateTo" style="width:140px"></div></div>
           <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="renderTable()">查询</button><button class="ant-btn" onclick="resetFilter()">重置</button></div>
         </div>
       </div>
       <div class="ant-table-wrapper">
         <div style="overflow-x:auto">
           <table class="ant-table">
-            <thead><tr><th>终止编号</th><th>准入申请编号</th><th>申请类型</th><th>申请主体</th><th>终止类型</th><th>触发方式</th><th>终止日期</th><th>状态</th><th>操作</th></tr></thead>
+            <thead><tr><th>终止编号</th><th>准入申请编号</th><th>申请类型</th><th>申请主体</th><th>终止类型</th><th>触发方式</th><th>终止日期</th><th>操作人</th><th>状态</th><th>操作</th></tr></thead>
             <tbody id="terminateTbody"></tbody>
           </table>
         </div>
-        <div class="flex items-center justify-between px-4 py-3"><div id="paginationBar"></div></div>
+        <div class="flex items-center justify-end px-4 py-3"><div id="paginationBar"></div></div>
       </div>
     </main>
   </div>
@@ -62,16 +63,71 @@ var termData=[
   {id:'TM202605004',appId:'RT202604007',appType:'道路测试准入',company:'G公司',termType:'accident',trigger:'手动触发',time:'2026-05-12',status:'已办结',reason:'G公司测试车辆鄂F·T0020于2026年5月11日在城区开放道路测试时发生追尾事故，造成前车车辆毁损。市工作专班经评估决定终止其道路测试资格。',operator:'市工作专班',manager:'王鹏',managerPhone:'13866667777',testPeriod:'2026-05-01 至 2026-11-01',roads:[{name:'G公司专属测试路线',type:'专用测试道路',status:'已关闭'},{name:'城区开放道路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012353',brand:'大通',model:'MIFA 9',level:'L4',plate:'鄂F·T0020'}],materials:['安全性自我声明','自动驾驶功能说明','测试方案','交通安全性自我声明材料','车辆出厂合格证明材料','第三方检测机构安全性能检测报告','交强险及交通事故责任保险凭证']}
 ];
 
+// 申请主体 → 当前有效的申请流程（用于发起资格终止时联动带出）
+var validAppsByCompany={
+  'A公司':[
+    {appId:'RT202604001',appType:'道路测试准入',period:'2026-04-15 至 2026-10-15'},
+    {appId:'DA202604003',appType:'示范应用新增',period:'2026-04-15 至 2026-10-15'}
+  ],
+  'B公司':[
+    {appId:'DA202604002',appType:'示范应用延期',period:'2026-05-01 至 2026-10-05'},
+    {appId:'DO202604002',appType:'商业化试点准入',period:'2026-05-01 至 2026-10-05'}
+  ],
+  'C公司':[
+    {appId:'DA202604004',appType:'示范应用变更',period:'2026-05-01 至 2026-11-01'}
+  ],
+  'D公司':[
+    {appId:'RT202604005',appType:'道路测试变更',period:'2026-05-01 至 2026-11-01'}
+  ],
+  '上海E公司':[
+    {appId:'RT202604006',appType:'道路测试准入',period:'2026-05-01 至 2026-11-01'}
+  ],
+  'G公司':[
+    {appId:'RT202604007',appType:'道路测试准入',period:'2026-05-01 至 2026-11-01'}
+  ],
+  'J公司':[
+    {appId:'DO202604003',appType:'商业化试点变更',period:'2026-05-01 至 2026-11-01'}
+  ]
+};
+
+// 终止记录附件（按终止编号映射；自动触发且无人工附件的记录为空数组）
+var attachmentMap={
+  'TM202604001':['实车审查记录.pdf','车辆配置对比表.xlsx'],
+  'TM202604002':[],
+  'TM202604003':['系统异常退出记录.pdf','风险评估报告.docx'],
+  'TM202604004':['交通监控抓拍记录.pdf'],
+  'TM202604005':['交通事故认定书.pdf','事故现场照片.png'],
+  'TM202604006':[],
+  'TM202605001':['第三方核查报告.pdf','软件版本对比说明.docx'],
+  'TM202605002':['号牌撤销通知书.pdf'],
+  'TM202605003':['交警现场查处记录.pdf','执法记录仪截图.png'],
+  'TM202605004':['事故责任认定书.pdf','车辆定损单.pdf']
+};
+
 function getTermTypeInfo(typeId){
   return termTypes.find(function(t){return t.id===typeId;})||termTypes[0];
 }
 
+function operatorOf(d){
+  if(d.trigger.indexOf('自动')>-1) return '系统';
+  return d.operator||'市工作专班';
+}
+
 function renderTable(){
   var data=[].concat(termData);
-  var appId=document.getElementById('filterAppId').value.trim().toUpperCase();
   var company=document.getElementById('filterCompany').value.trim();
-  if(appId)data=data.filter(function(d){return d.appId.toUpperCase().indexOf(appId)>-1;});
+  var typeVal=document.getElementById('filterType').value;
+  var triggerVal=document.getElementById('filterTrigger').value;
+  var statusVal=document.getElementById('filterStatus').value;
+  var dateFrom=document.getElementById('filterDateFrom').value;
+  var dateTo=document.getElementById('filterDateTo').value;
   if(company)data=data.filter(function(d){return d.company.indexOf(company)>-1;});
+  if(typeVal&&typeVal!=='全部'){data=data.filter(function(d){return getTermTypeInfo(d.termType).name===typeVal;});}
+  if(triggerVal&&triggerVal!=='全部'){data=data.filter(function(d){return d.trigger.indexOf(triggerVal)>-1;});}
+  if(statusVal&&statusVal!=='全部'){data=data.filter(function(d){return d.status===statusVal;});}
+  if(dateFrom)data=data.filter(function(d){return d.time>=dateFrom;});
+  if(dateTo)data=data.filter(function(d){return d.time<=dateTo;});
+  data.sort(function(a,b){return b.time.localeCompare(a.time);});
   var total=data.length;
   var cp=pager?pager.getCurrentPage():1;var ps=pager?pager.getPageSize():10;
   var start=(cp-1)*ps;
@@ -81,22 +137,24 @@ function renderTable(){
     var ti=getTermTypeInfo(d.termType);
     var statusTag=d.status==='已办结'?'<span class="ant-tag ant-tag-success">已办结</span>':'<span class="ant-tag ant-tag-processing">受理中</span>';
     var triggerTag=d.trigger.indexOf('自动')>-1&&d.trigger.indexOf('手动')>-1?'<span class="ant-tag ant-tag-warning">自动/手动</span>':d.trigger==='自动触发'?'<span class="ant-tag ant-tag-default">自动触发</span>':'<span class="ant-tag ant-tag-processing">手动触发</span>';
-    html+='<tr><td>'+d.id+'</td><td><button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">'+d.appId+'</button></td><td>'+d.appType+'</td><td>'+d.company+'</td><td><span class="ant-tag" style="background:'+ti.color+'15;color:'+ti.color+';border-color:'+ti.color+'40">'+ti.name+'</span></td><td>'+triggerTag+'</td><td>'+d.time+'</td><td>'+statusTag+'</td><td><button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">查看详情</button></td></tr>';
+    html+='<tr><td>'+d.id+'</td><td><button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">'+d.appId+'</button></td><td>'+d.appType+'</td><td>'+d.company+'</td><td><span class="ant-tag" style="background:'+ti.color+'15;color:'+ti.color+';border-color:'+ti.color+'40">'+ti.name+'</span></td><td>'+triggerTag+'</td><td>'+d.time+'</td><td>'+operatorOf(d)+'</td><td>'+statusTag+'</td><td><button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">详情</button></td></tr>';
   });
   document.getElementById('terminateTbody').innerHTML=html;
   if(pager)pager.setTotal(total);
 }
 
 function resetFilter(){
-  document.getElementById('filterAppId').value='';
   document.getElementById('filterCompany').value='';
-  document.getElementById('filterType').innerHTML='全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
-  document.getElementById('filterTrigger').innerHTML='全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+  ['filterType','filterTrigger','filterStatus'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='全部';});
+  document.getElementById('filterDateFrom').value='';
+  document.getElementById('filterDateTo').value='';
   if(pager)pager.reset();
   renderTable();
 }
 
 function openTerminateModal(){
+  var companies=Object.keys(validAppsByCompany);
+  var companyOptions='<option value="">请选择申请主体</option>'+companies.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
   var typeOptions=termTypes.map(function(t){return '<div class="flex items-start gap-2 p-2 rounded hover:bg-[#f5f5f5] cursor-pointer" onclick="selectTermType(this,\''+t.id+'\')"><div class="w-4 h-4 mt-0.5 rounded-full border border-[#d9d9d9] flex-shrink-0" id="radio_'+t.id+'"></div><div><div class="text-sm text-[#000000d9]">'+t.name+'<span class="text-xs text-[#00000040] ml-2">'+t.trigger+'</span></div><div class="text-xs text-[#00000073]">'+t.desc+'</div></div></div>';}).join('');
   openModal('发起资格终止',
     '<div class="bg-[#fff2f0] border border-[#ffccc7] rounded-lg p-4 mb-4">' +
@@ -104,10 +162,65 @@ function openTerminateModal(){
       '<div><p class="text-sm font-medium text-[#000000d9]">资格终止后，对应准入申请将标记为"已终止"，相关测试/示范/运营活动将立即停止</p>' +
       '<p class="text-xs text-[#00000073] mt-1">终止记录将在对应准入申请的流程日志中体现。资格终止后如需恢复，需重新提交准入申请。</p></div></div>' +
     '</div>' +
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>准入申请编号</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择需终止的准入申请编号<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="text-xs text-[#00000073] mt-1">资格终止的对象是已通过审批的准入申请编号</div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>申请主体</div><div class="ant-form-control"><select class="ant-input" id="termCompany" style="cursor:pointer;height:32px" onchange="loadValidApps()">'+companyOptions+'</select><div class="text-xs text-[#00000073] mt-1">选择申请主体后，系统自动带出其当前有效的申请流程</div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>关联申请流程</div><div class="ant-form-control"><div id="validAppsBox" class="border border-[#f0f0f0] rounded-lg p-3 min-h-[80px]"><div class="text-xs text-[#00000040] text-center py-4">请先选择申请主体</div></div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>终止类型</div><div class="ant-form-control"><div class="border border-[#f0f0f0] rounded-lg p-2 max-h-64 overflow-y-auto">'+typeOptions+'</div><input type="hidden" id="selectedTermType" value=""></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>终止原因及说明</div><div class="ant-form-control"><textarea class="ant-input" style="height:80px;padding:8px 12px" placeholder="请详细描述终止原因及相关情况说明"></textarea></div></div>',
-    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="closeModal()">确认提交</button>'});
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>终止原因及说明</div><div class="ant-form-control"><textarea class="ant-input" id="termReason" style="height:80px;padding:8px 12px" placeholder="请详细描述终止原因及相关情况说明"></textarea></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">附件上传</div><div class="ant-form-control"><button class="ant-btn ant-btn-sm" type="button" onclick="addAttachment()"><span>选择附件上传</span></button><div class="text-xs text-[#00000040] mt-1">支持PDF/Word/图片等格式，图片≤5MB、文档≤20MB，非必填</div><div id="attachList" class="mt-2 space-y-1"></div></div></div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="submitTerminate()">确认终止</button>'});
+}
+
+function loadValidApps(){
+  var company=document.getElementById('termCompany').value;
+  var box=document.getElementById('validAppsBox');
+  if(!company){box.innerHTML='<div class="text-xs text-[#00000040] text-center py-4">请先选择申请主体</div>';return;}
+  var apps=validAppsByCompany[company]||[];
+  if(!apps.length){box.innerHTML='<div class="text-xs text-[#00000040] text-center py-4">该申请主体当前无有效申请流程</div>';return;}
+  var rows=apps.map(function(a){
+    return '<label class="flex items-center gap-2 p-2 rounded hover:bg-[#f5f5f5] cursor-pointer"><input type="checkbox" class="term-app-checkbox" checked style="accent-color:#1677ff"><div class="flex-1"><div class="text-sm text-[#000000d9]">'+a.appId+'<span class="text-xs text-[#00000073] ml-2">'+a.appType+'</span></div><div class="text-xs text-[#00000040]">有效期：'+a.period+'</div></div></label>';
+  }).join('');
+  box.innerHTML='<div class="flex items-center justify-between mb-2 pb-2 border-b border-[#f0f0f0]"><span class="text-xs text-[#00000073]">共 '+apps.length+' 条有效申请，默认全部终止</span><button class="ant-btn-link ant-btn-sm" onclick="toggleAllApps()">全选/反选</button></div>'+rows;
+}
+
+function toggleAllApps(){
+  var cbs=document.querySelectorAll('.term-app-checkbox');
+  var allChecked=[].every.call(cbs,function(c){return c.checked;});
+  [].forEach.call(cbs,function(c){c.checked=!allChecked;});
+}
+
+function addAttachment(){
+  var list=document.getElementById('attachList');
+  var idx=list.children.length+1;
+  var names=['终止情况说明.pdf','现场照片01.png','第三方鉴定报告.pdf','整改通知书.docx'];
+  var name=names[idx-1]||('附件'+idx+'.pdf');
+  var div=document.createElement('div');
+  div.className='flex items-center gap-2 p-2 bg-[#fafafa] rounded text-sm';
+  div.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="color:#1677ff;flex-shrink:0"><path d="M16.5 6v11.5a4 4 0 11-8 0V5a2.5 2.5 0 015 0v10.5a1 1 0 11-2 0V6H9v9.5a2.5 2.5 0 005 0V5a4 4 0 10-8 0v12.5a5.5 5.5 0 1011 0V6h-1.5z"/></svg><span class="flex-1 text-[#000000d9]">'+name+'</span><span class="text-xs text-[#00000040]">已上传</span><button class="ant-btn-link ant-btn-sm" onclick="this.parentNode.remove()">删除</button>';
+  list.appendChild(div);
+}
+
+function submitTerminate(){
+  var company=document.getElementById('termCompany').value;
+  var checkedApps=document.querySelectorAll('.term-app-checkbox:checked');
+  var termType=document.getElementById('selectedTermType').value;
+  var reason=document.getElementById('termReason').value.trim();
+  if(!company){showToast('请选择申请主体','error');return;}
+  if(!checkedApps.length){showToast('至少选择一条关联申请流程','error');return;}
+  if(!termType){showToast('请选择终止类型','error');return;}
+  if(!reason){showToast('请填写终止原因及说明','error');return;}
+  var count=checkedApps.length;
+  closeModal();
+  showToast('已发起资格终止，关联的 '+count+' 条申请流程已标记为"已终止"','success');
+}
+
+function showToast(msg,type){
+  var colors={success:'#52c41a',error:'#ff4d4f',warn:'#faad14',info:'#1677ff'};
+  var c=colors[type]||colors.info;
+  var t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid '+c+';color:'+c+';padding:10px 24px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:9999;font-size:14px';
+  document.body.appendChild(t);
+  setTimeout(function(){t.remove();},2500);
 }
 
 function selectTermType(el,typeId){
@@ -136,12 +249,29 @@ function openDetail(id){
   h+='<div class="ant-descriptions">';
   h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">终止编号</div><div class="ant-descriptions-value">'+d.id+'</div><div class="ant-descriptions-label">准入申请编号</div><div class="ant-descriptions-value">'+d.appId+'</div><div class="ant-descriptions-label">终止类型</div><div class="ant-descriptions-value"><span class="ant-tag" style="background:'+ti.color+'15;color:'+ti.color+';border-color:'+ti.color+'40">'+ti.name+'</span></div></div>';
   h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">触发方式</div><div class="ant-descriptions-value">'+d.trigger+'</div><div class="ant-descriptions-label">终止日期</div><div class="ant-descriptions-value">'+d.time+'</div><div class="ant-descriptions-label">办理状态</div><div class="ant-descriptions-value">'+(d.status==='已办结'?'<span class="ant-tag ant-tag-success">已办结</span>':'<span class="ant-tag ant-tag-processing">受理中</span>')+'</div></div>';
-  h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">操作方</div><div class="ant-descriptions-value">'+d.operator+'</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>';
+  h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">操作人</div><div class="ant-descriptions-value">'+operatorOf(d)+'</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>';
   h+='</div>';
   h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-3">终止原因</h4>';
   h+='<div class="text-sm text-[#000000d9] p-3 bg-[#fafafa] rounded leading-relaxed">'+d.reason+'</div>';
 
-  h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b border-[#f0f0f0]">关联准入申请信息</h4>';
+  h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b border-[#f0f0f0]">附件</h4>';
+  var atts=d.attachment||attachmentMap[d.id]||[];
+  if(atts.length){
+    h+='<div class="space-y-2 text-sm">';
+    atts.forEach(function(a){h+='<div class="flex items-center gap-2 p-2 bg-[#fafafa] rounded"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="color:#1677ff;flex-shrink:0"><path d="M16.5 6v11.5a4 4 0 11-8 0V5a2.5 2.5 0 015 0v10.5a1 1 0 11-2 0V6H9v9.5a2.5 2.5 0 005 0V5a4 4 0 10-8 0v12.5a5.5 5.5 0 1011 0V6h-1.5z"/></svg><span class="flex-1 text-[#000000d9]">'+a+'</span><button class="ant-btn-link ant-btn-sm">预览</button><button class="ant-btn-link ant-btn-sm">下载</button></div>';});
+    h+='</div>';
+  }else{
+    h+='<div class="text-xs text-[#00000040]">无</div>';
+  }
+
+  h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b border-[#f0f0f0]">关联申请流程</h4>';
+  var relApps=[{appId:d.appId,appType:d.appType,period:d.testPeriod}];
+  (validAppsByCompany[d.company]||[]).forEach(function(a){if(a.appId!==d.appId)relApps.push(a);});
+  h+='<div style="overflow-x:auto"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th>序号</th><th>申请编号</th><th>申请类型</th><th>有效期</th><th>申请状态</th></tr></thead><tbody>';
+  relApps.forEach(function(a,i){h+='<tr><td>'+(i+1)+'</td><td>'+a.appId+'</td><td>'+a.appType+'</td><td>'+(a.period||'-')+'</td><td><span class="ant-tag ant-tag-error">已终止</span></td></tr>';});
+  h+='</tbody></table></div>';
+
+  h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b border-[#f0f0f0]">主申请详细信息</h4>';
   h+='<div class="ant-descriptions">';
   h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">准入申请编号</div><div class="ant-descriptions-value">'+d.appId+'</div><div class="ant-descriptions-label">申请类型</div><div class="ant-descriptions-value">'+d.appType+'</div><div class="ant-descriptions-label">申请状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-error">已终止</span></div></div>';
   h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">申请主体</div><div class="ant-descriptions-value">'+d.company+'</div><div class="ant-descriptions-label">项目负责人</div><div class="ant-descriptions-value">'+d.manager+'</div><div class="ant-descriptions-label">联系方式</div><div class="ant-descriptions-value">'+d.managerPhone+'</div></div>';
@@ -200,9 +330,9 @@ function buildFlowLogs(d,ti){
   logs.push({title:'市工作专班审核',handler:'王主任（市工作专班）',time:d.time+' - 审批通过',opinion:'审核结论：通过\n审核意见：同意批准'+d.appType.replace('准入','').replace('新增','').replace('延期','').replace('变更','')+'申请',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
   logs.push({title:'临牌回传',handler:'李警官（市交管部门）',time:d.time+' - 已回传',opinion:'临时牌照已发放',status:'已处理',color:'#52c41a',dot:'✓',tagClass:'ant-tag-success'});
   if(d.status==='已办结'){
-    logs.push({title:'资格终止 — '+ti.name,handler:d.operator,time:d.time+' - 已终止',opinion:'终止类型：'+ti.name+'（'+d.trigger+'）\n终止原因：'+d.reason,status:'已终止',color:'#ff4d4f',dot:'✗',tagClass:'ant-tag-error'});
+    logs.push({title:'资格终止 — '+ti.name,handler:operatorOf(d),time:d.time+' - 已终止',opinion:'终止类型：'+ti.name+'（'+d.trigger+'）\n终止原因：'+d.reason,status:'已终止',color:'#ff4d4f',dot:'✗',tagClass:'ant-tag-error'});
   }else{
-    logs.push({title:'资格终止 — '+ti.name,handler:d.operator,time:d.time+' - 受理中',opinion:'终止类型：'+ti.name+'（'+d.trigger+'）\n终止原因：'+d.reason,status:'受理中',color:'#1677ff',dot:'●',tagClass:'ant-tag-processing'});
+    logs.push({title:'资格终止 — '+ti.name,handler:operatorOf(d),time:d.time+' - 受理中',opinion:'终止类型：'+ti.name+'（'+d.trigger+'）\n终止原因：'+d.reason,status:'受理中',color:'#1677ff',dot:'●',tagClass:'ant-tag-processing'});
   }
   return logs;
 }

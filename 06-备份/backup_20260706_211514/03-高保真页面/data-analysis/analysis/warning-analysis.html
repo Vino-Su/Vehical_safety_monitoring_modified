@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>预警事件分析 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff'}}}}}</script>
+  <style>
+    html,body{margin:0;padding:0;overflow-x:hidden;font-family:"Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .stat-cards{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;min-width:0}
+    .stat-card{background:#fff;border-radius:8px;padding:16px 18px;display:flex;align-items:center;gap:12px;border:1px solid #f0f0f0;box-shadow:0 1px 2px rgba(0,0,0,.03);transition:all .2s;min-width:0}
+    .stat-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);transform:translateY(-1px)}
+    .stat-card .icon-box{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:700;color:#fff}
+    .stat-card .info-box{display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden}
+    .stat-card .sv{font-size:22px;font-weight:700;line-height:1.2;color:#000000d9;letter-spacing:-.5px}
+    .stat-card .sl{font-size:12px;color:#00000073;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;min-width:0}
+    .row-2>*{min-width:0}
+    .row-2 .card{overflow:hidden}
+    .table-wrap{overflow-x:auto}
+    .table-wrap table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .table-wrap th{background:#fafafa;font-weight:600;border-bottom:1px solid #f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:12px 12px;height:48px;font-size:13px;color:#00000073}
+    .table-wrap td{padding:12px 12px;text-align:left;font-size:13px;border-bottom:1px solid #f5f5f5;overflow:hidden;text-overflow:ellipsis;height:48px;color:#000000d9}
+    .table-wrap tr:hover{background:#f5f5f5}
+    .map-container{height:340px;border-radius:6px;overflow:hidden}
+    .map-container .leaflet-container{z-index:1}
+    @media(max-width:1400px){.stat-cards{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:900px){.stat-cards{grid-template-columns:repeat(2,1fr)}.row-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#f0f2f5] p-6 min-w-0">
+      <div class="page-header"><h2>预警事件分析</h2></div>
+
+      <!-- 筛选区 -->
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item"><label>开始日期</label><input class="ant-input" type="date" id="startDate" style="width:140px"></div>
+          <div class="filter-item"><label>结束日期</label><input class="ant-input" type="date" id="endDate" style="width:140px"></div>
+          <div class="filter-item"><label>预警类型</label><select class="ant-input" id="filterType" style="width:160px"><option value="all">全部</option><option>车辆运行异常预警</option><option>车辆碰撞事件预警</option><option>车载终端异常预警</option></select></div>
+          <div class="filter-item"><label>所属企业</label><select class="ant-input" id="filterCompany" style="width:130px"><option value="all">全部</option><option>东风智能网联</option><option>达安汽车检测</option><option>智能汽车测试</option><option>车联网运营</option><option>襄阳明启科技</option><option>华中智行</option><option>襄阳出行服务</option><option>博睿达汽车</option></select></div>
+          <div class="filter-item"><label>车牌号</label><input class="ant-input" id="filterPlate" placeholder="请输入" style="width:110px"></div>
+          <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="doQuery()">查询</button><button class="ant-btn" onclick="showToast('导出功能开发中','#1677ff')">导出</button></div>
+        </div>
+      </div>
+
+      <!-- 6 统计卡片 -->
+      <div class="stat-cards" id="statCards">
+        <div class="stat-card"><div class="icon-box" style="background:#ff4d4f;">⚠</div><div class="info-box"><div class="sv" style="color:#ff4d4f" id="sv_total">245</div><div class="sl">当日预警总数</div></div></div>
+        <div class="stat-card"><div class="icon-box" style="background:#1677ff;">🚗</div><div class="info-box"><div class="sv" style="color:#1677ff" id="sv_run">98</div><div class="sl">车辆运行异常预警</div></div></div>
+        <div class="stat-card"><div class="icon-box" style="background:#fa8c16;">💥</div><div class="info-box"><div class="sv" style="color:#fa8c16" id="sv_crash">42</div><div class="sl">车辆碰撞事件预警</div></div></div>
+        <div class="stat-card"><div class="icon-box" style="background:#722ed1;">📡</div><div class="info-box"><div class="sv" style="color:#722ed1" id="sv_terminal">105</div><div class="sl">车载终端异常预警</div></div></div>
+        <div class="stat-card"><div class="icon-box" style="background:#52c41a;">✓</div><div class="info-box"><div class="sv" style="color:#52c41a" id="sv_handled">186</div><div class="sl">已处理预警</div></div></div>
+        <div class="stat-card"><div class="icon-box" style="background:#13c2c2;">🚙</div><div class="info-box"><div class="sv" style="color:#13c2c2" id="sv_vehicles">36</div><div class="sl">影响车辆数</div></div></div>
+      </div>
+
+      <!-- 图表第1行：类型分布 + 趋势 -->
+      <div class="row-2">
+        <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">预警类型分布</div><div id="typePie" style="height:320px"></div></div>
+        <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">预警趋势（近30天）</div><div id="trendArea" style="height:320px"></div></div>
+      </div>
+      <!-- 图表第2行：类型趋势对比 + 热点地图 -->
+      <div class="row-2">
+        <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;color:#000000d9">预警类型趋势对比</div><div id="typeTrend" style="height:320px"></div></div>
+        <div class="card" style="padding:20px;border-radius:8px"><div style="font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;color:#000000d9"><span>预警热点地图</span><span style="font-weight:400;font-size:12px;color:#00000073">点位颜色按类型：<span style="color:#1677ff">●运行异常</span> <span style="color:#fa8c16">●碰撞事件</span> <span style="color:#722ed1">●终端异常</span></span></div><div id="warnMap" class="map-container"></div></div>
+      </div>
+
+      <!-- 预警明细列表 -->
+      <div class="card" style="padding:20px;border-radius:8px">
+        <div style="font-size:15px;font-weight:600;margin-bottom:16px;color:#000000d9">预警明细列表</div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="width:160px" class="col-code">预警编号</th><th style="width:140px" class="col-code">时间</th><th style="width:150px">预警类型</th><th style="width:90px" class="col-code">车牌号</th><th style="width:130px" class="col-code">VIN码</th><th style="width:110px">所属企业</th><th style="width:160px">地点</th><th style="width:90px">处理状态</th><th style="width:70px" class="col-action">操作</th>
+          </tr></thead><tbody id="tableBody"></tbody></table>
+        </div>
+        <div id="paginationBar"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="ant-modal-mask" id="modalMask" style="display:none!important">
+  <div class="ant-modal wide">
+    <div class="ant-modal-header"><h3>预警详情</h3><span class="ant-modal-close" onclick="closeDetail()">✕</span></div>
+    <div class="ant-modal-body" id="modalBody"></div>
+    <div class="ant-modal-footer"><button class="ant-btn" onclick="closeDetail()">关闭</button></div>
+  </div>
+</div>
+
+<script>
+const PAGE_ID = 'warning-analysis';
+
+// ============ 常量（3类预警，对齐F15）============
+const warnTypeList = ['车辆运行异常预警','车辆碰撞事件预警','车载终端异常预警'];
+const warnTypeColors = {'车辆运行异常预警':'#1677ff','车辆碰撞事件预警':'#fa8c16','车载终端异常预警':'#722ed1'};
+const warnTypePrefix = {'车辆运行异常预警':'EW01','车辆碰撞事件预警':'EW02','车载终端异常预警':'EW03'};
+const enterpriseList = ['东风智能网联','达安汽车检测','智能汽车测试','车联网运营','襄阳明启科技','华中智行','襄阳出行服务','博睿达汽车'];
+const statuses = ['待处理','处理中','已处理'];
+const locations = ['长虹路建华路口','檀溪路铁佛寺路口','航空路金富士路口','人民路天元四季城','建设路银城大道口','邓城大道与卧龙大道交叉口','胜利街与环城东路交叉口','襄州大道与机场路交叉口','东津新区南山路','鱼梁洲绿洲大道'];
+
+let mockWarns = [];
+var pager;
+let chartTypePie, chartTrendArea, chartTypeTrend;
+let warnMap = null, mapInitialized = false;
+
+// ============ 模拟数据 ============
+function genWarns() {
+  var arr = [];
+  var now = new Date();
+  for (var i = 0; i < 120; i++) {
+    var d = new Date(now); d.setMinutes(d.getMinutes() - i * 18 + Math.floor(Math.random() * 10));
+    var t = d.toLocaleString('zh-CN', {hour12:false}).replace(/\//g,'-');
+    var type = warnTypeList[Math.floor(Math.random() * warnTypeList.length)];
+    var st = statuses[Math.floor(Math.random() * 3)];
+    var ent = enterpriseList[Math.floor(Math.random() * enterpriseList.length)];
+    var plate = '鄂F·' + String.fromCharCode(65+Math.floor(Math.random()*26)) + String(Math.floor(Math.random()*900)+100).padStart(3,'0');
+    var vin = 'LSVA' + String(Math.floor(Math.random()*89999)+10000).padStart(5,'0') + 'N2' + String(Math.floor(Math.random()*899)+100).padStart(3,'0');
+    var loc = locations[Math.floor(Math.random() * locations.length)];
+    var dateStr = t.replace(/[-\s:]/g,'').slice(0,8);
+    arr.push({id:warnTypePrefix[type]+'-'+dateStr+'-'+String(i+1).padStart(3,'0'),time:t,plate:plate,vin:vin,enterprise:ent,type:type,status:st,location:loc});
+  }
+  arr.sort(function(a,b){return b.time.localeCompare(a.time);});
+  return arr;
+}
+
+// ============ 查询 ============
+function doQuery() {
+  if(pager) pager.reset();
+  refreshAll();
+  showToast('数据已更新','#1677ff');
+}
+
+function getFilteredWarns() {
+  var type = document.getElementById('filterType').value;
+  var company = document.getElementById('filterCompany').value;
+  var plate = document.getElementById('filterPlate').value;
+  return mockWarns.filter(function(a){
+    if(type!=='all'&&a.type!==type)return false;
+    if(company!=='all'&&a.enterprise!==company)return false;
+    if(plate&&a.plate.indexOf(plate)===-1)return false;
+    return true;
+  });
+}
+
+function refreshAll() {
+  var filtered = getFilteredWarns();
+  var total = filtered.length;
+  var runCount = filtered.filter(function(a){return a.type==='车辆运行异常预警'}).length;
+  var crashCount = filtered.filter(function(a){return a.type==='车辆碰撞事件预警'}).length;
+  var termCount = filtered.filter(function(a){return a.type==='车载终端异常预警'}).length;
+  var handled = filtered.filter(function(a){return a.status==='已处理'}).length;
+  var vehicles = new Set(filtered.map(function(a){return a.plate})).size;
+  document.getElementById('sv_total').textContent=total;
+  document.getElementById('sv_run').textContent=runCount;
+  document.getElementById('sv_crash').textContent=crashCount;
+  document.getElementById('sv_terminal').textContent=termCount;
+  document.getElementById('sv_handled').textContent=handled;
+  document.getElementById('sv_vehicles').textContent=vehicles;
+  renderTypePie(filtered);
+  renderTrendArea();
+  renderTypeTrend();
+  renderTable(filtered);
+  if(!mapInitialized) setTimeout(initWarnMap, 200);
+}
+
+// 预警类型分布（环形图）
+function renderTypePie(filtered) {
+  var typeMap={};
+  filtered.forEach(function(a){typeMap[a.type]=(typeMap[a.type]||0)+1;});
+  if(chartTypePie)chartTypePie.dispose();
+  chartTypePie=echarts.init(document.getElementById('typePie'));
+  chartTypePie.setOption({
+    tooltip:{trigger:'item',formatter:function(p){return p.name+': '+p.value+' 起 ('+p.percent+'%)'}},
+    legend:{orient:'vertical',right:8,top:'center',textStyle:{fontSize:11}},
+    series:[{type:'pie',radius:['40%','62%'],center:['36%','50%'],avoidLabelOverlap:false,label:{formatter:'{d}%',fontSize:11},itemStyle:{borderWidth:2,borderColor:'#fff'},
+      data:warnTypeList.map(function(t){return{name:t,value:typeMap[t]||0,itemStyle:{color:warnTypeColors[t]}}}).filter(function(d){return d.value>0})}]
+  });
+}
+
+// 预警趋势（面积折线图）
+function renderTrendArea() {
+  var dates=[];for(var i=29;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}
+  var data=dates.map(function(){return Math.floor(Math.random()*40)+15});
+  if(chartTrendArea)chartTrendArea.dispose();
+  chartTrendArea=echarts.init(document.getElementById('trendArea'));
+  chartTrendArea.setOption({
+    tooltip:{trigger:'axis'},grid:{left:'8%',right:'5%',containLabel:true},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:10,interval:4},boundaryGap:false},
+    yAxis:{type:'value',name:'预警数'},
+    series:[{type:'line',data:data,smooth:true,lineStyle:{color:'#fa8c16',width:2},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(250,140,22,0.25)'},{offset:1,color:'rgba(250,140,22,0.02)'}]}},
+      markLine:{data:[{type:'average',name:'平均值'}],lineStyle:{color:'#ff4d4f',type:'dashed'},label:{formatter:' avg:{c} '}},itemStyle:{color:'#fa8c16'}}]
+  });
+}
+
+// 预警类型趋势对比（多折线图）
+function renderTypeTrend() {
+  var dates=[];for(var i=29;i>=0;i--){var x=new Date();x.setDate(x.getDate()-i);dates.push((x.getMonth()+1)+'/'+x.getDate());}
+  var series=warnTypeList.map(function(t){
+    return{name:t,type:'line',data:dates.map(function(){return Math.floor(Math.random()*18)+3}),smooth:true,lineStyle:{width:2,color:warnTypeColors[t]},itemStyle:{color:warnTypeColors[t]}};
+  });
+  if(chartTypeTrend)chartTypeTrend.dispose();
+  chartTypeTrend=echarts.init(document.getElementById('typeTrend'));
+  chartTypeTrend.setOption({
+    tooltip:{trigger:'axis'},legend:{data:warnTypeList,top:0,textStyle:{fontSize:11}},grid:{left:'8%',right:'5%',top:40,containLabel:true},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:10,interval:4},boundaryGap:false},
+    yAxis:{type:'value',name:'预警数'},
+    series:series
+  });
+}
+
+// 预警热点地图
+function initWarnMap() {
+  if(mapInitialized)return;
+  var container=document.getElementById('warnMap');
+  if(!container||container._leaflet_id)return;
+  try{
+    warnMap=L.map(container).setView([32.02,112.12],12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(warnMap);
+    for(var i=0;i<60;i++){
+      var lat=31.76+Math.random()*0.48,lng=111.70+Math.random()*0.65;
+      var tp=warnTypeList[Math.floor(Math.random()*3)];
+      var loc=locations[Math.floor(Math.random()*locations.length)];
+      L.circleMarker([lat,lng],{radius:5+Math.random()*5,fillColor:warnTypeColors[tp],color:'#fff',weight:1.5,fillOpacity:0.75})
+       .addTo(warnMap).bindPopup('<b>'+tp+'</b><br>地点：'+loc);
+    }
+    mapInitialized=true;
+    setTimeout(function(){if(warnMap)warnMap.invalidateSize();},300);
+  }catch(e){}
+}
+
+// 列表渲染
+function renderTable(filtered) {
+  var cp=pager?pager.getCurrentPage():1,ps=pager?pager.getPageSize():10;
+  var totalPages=Math.ceil(filtered.length/ps);
+  if(cp>totalPages)cp=Math.max(1,totalPages);
+  var start=(cp-1)*ps,end=Math.min(start+ps,filtered.length);
+  var pageData=filtered.slice(start,end);
+  var tbody=document.getElementById('tableBody');
+  tbody.innerHTML=pageData.map(function(a){
+    var sgt=a.status==='待处理'?'<span class="ant-tag ant-tag-warning">待处理</span>':a.status==='处理中'?'<span class="ant-tag ant-tag-processing">处理中</span>':'<span class="ant-tag ant-tag-success">已处理</span>';
+    return '<tr><td class="col-code" style="font-size:11px;color:#00000073">'+a.id+'</td><td class="col-code">'+a.time+'</td><td><span class="ant-tag" style="background:'+(warnTypeColors[a.type])+'1a;color:'+warnTypeColors[a.type]+';border:1px solid '+warnTypeColors[a.type]+'66">'+a.type+'</span></td><td class="col-code">'+a.plate+'</td><td class="col-code" style="font-size:11px">'+a.vin+'</td><td>'+a.enterprise+'</td><td>'+a.location+'</td><td>'+sgt+'</td><td class="col-action"><button class="ant-btn-link" onclick="openDetail(\''+a.id+'\')">详情</button></td></tr>';
+  }).join('');
+  if(pager)pager.setTotal(filtered.length);
+}
+
+// 详情弹窗
+function openDetail(id) {
+  var a = mockWarns.find(function(x){return x.id===id}) || mockWarns[0];
+  var typeColor=warnTypeColors[a.type];
+  var sgt=a.status==='待处理'?'<span class="ant-tag ant-tag-warning">待处理</span>':a.status==='处理中'?'<span class="ant-tag ant-tag-processing">处理中</span>':'<span class="ant-tag ant-tag-success">已处理</span>';
+  document.getElementById('modalBody').innerHTML=
+    '<div class="ant-descriptions">'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">预警编号</div><div class="ant-descriptions-value">'+a.id+'</div><div class="ant-descriptions-label">预警时间</div><div class="ant-descriptions-value">'+a.time+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">预警类型</div><div class="ant-descriptions-value"><span class="ant-tag" style="background:'+typeColor+'1a;color:'+typeColor+';border:1px solid '+typeColor+'66">'+a.type+'</span></div><div class="ant-descriptions-label">处理状态</div><div class="ant-descriptions-value">'+sgt+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆号牌</div><div class="ant-descriptions-value">'+a.plate+'</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value">'+a.vin+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+a.enterprise+'</div><div class="ant-descriptions-label">预警地点</div><div class="ant-descriptions-value">'+a.location+'</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">数据来源</div><div class="ant-descriptions-value">车端CAN总线 + 路侧RSU</div><div class="ant-descriptions-label">关联事故</div><div class="ant-descriptions-value">无</div></div>'+
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">预警详情</div><div class="ant-descriptions-value" style="flex:3">车辆'+a.plate+'在'+a.location+'附近触发「'+a.type+'」预警，请相关企业关注车辆运行状态并及时处置。</div></div>'+
+    '</div>';
+  document.getElementById('modalMask').style.setProperty('display','flex','important');
+}
+
+function closeDetail(){document.getElementById('modalMask').style.setProperty('display','none','important');}
+
+// ============ 工具函数 ============
+function showToast(msg,bgColor) {
+  var t=document.createElement('div');t.innerText=msg;
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:'+(bgColor||'#1677ff')+';color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+  document.body.appendChild(t);setTimeout(function(){t.remove()},1500);
+}
+
+function resizeAllCharts() {
+  [chartTypePie,chartTrendArea,chartTypeTrend].forEach(function(c){if(c)c.resize();});
+  if(warnMap)warnMap.invalidateSize();
+}
+
+// ============ 初始化 ============
+document.addEventListener('DOMContentLoaded',function(){
+  mockWarns=genWarns();
+  pager=new Pagination({container:'paginationBar',pageSize:10,pageSizeOptions:[10,20,50,100],onPageChange:function(){renderTable(getFilteredWarns());}});
+  var now=new Date(),start=new Date(now);start.setDate(start.getDate()-7);
+  document.getElementById('startDate').value=start.toISOString().split('T')[0];
+  document.getElementById('endDate').value=now.toISOString().split('T')[0];
+  // 延迟初始化图表，等 common.js 渲染完 sidebar，避免 canvas 按全宽初始化导致内容被裁剪
+  setTimeout(function(){ refreshAll(); setTimeout(resizeAllCharts,100); },50);
+});
+
+window.addEventListener('load',function(){setTimeout(resizeAllCharts,100);});
+window.addEventListener('resize',resizeAllCharts);
+</script>
+<script src="../../common.js"></script>
+<script src="../../components/pagination-component.js"></script>
+</body>
+</html>

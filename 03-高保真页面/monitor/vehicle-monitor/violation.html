@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>交通违法行为记录 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .page-header h2{font-size:20px;font-weight:600;color:#000000d9}
+    .filter-bar{background:#fff;padding:16px 24px;border-radius:8px;margin-bottom:16px}
+    .filter-row{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center}
+    .filter-item{display:inline-flex;flex-direction:row;align-items:center;gap:8px}
+    .filter-item label{font-size:14px;color:#000000d9;font-weight:normal;white-space:nowrap}
+    .filter-extra{display:none}
+    .filter-extra.expanded{display:flex}
+    .filter-toggle{display:inline-flex;align-items:center;gap:4px;font-size:14px;color:#1677ff;cursor:pointer;border:none;background:none;padding:0}
+    .filter-toggle:hover{color:#4096ff}
+    .filter-toggle svg{transition:transform .2s}
+    .filter-toggle.expanded svg{transform:rotate(180deg)}
+    .ant-table-wrapper{background:#fff;border-radius:8px;overflow:hidden}
+    .ant-table{width:100%;border-collapse:collapse}
+    .ant-table thead th{background:#fafafa;padding:12px 16px;font-weight:600;font-size:14px;color:#000000d9;border-bottom:1px solid #f0f0f0}
+    .ant-table tbody td{padding:12px 16px;font-size:14px;color:#000000d9;border-bottom:1px solid #f0f0f0}
+    .ant-table tbody tr{transition:background .2s}
+    .ant-table tbody tr:hover{background:#fafafa}
+    .ant-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:normal;border:1px solid}
+    .ant-tag-processing{background:#e6f7ff;color:#1890ff;border-color:#91caff}
+    .ant-tag-warning{background:#fffbe6;color:#faad14;border-color:#ffe58f}
+    .ant-tag-purple{background:#f9f0ff;color:#722ed1;border-color:#d3adf7}
+    .ant-btn{display:inline-flex;align-items:center;justify-content:center;padding:4px 15px;border-radius:4px;font-size:14px;border:1px solid #d9d9d9;background:#fff;color:#000000d9;cursor:pointer}
+    .ant-btn-primary{background:#1677ff;border-color:#1677ff;color:#fff}
+    .ant-btn-link{border:none;background:none;color:#1677ff;padding:0;height:auto;font-size:14px}
+    .ant-btn-link:hover{color:#4096ff}
+    .ant-select{padding:4px 11px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px;background:#fff;cursor:pointer}
+    .ant-input{padding:4px 11px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px}
+    /* Descriptions 样式 */
+    .desc-section{margin-bottom:20px}
+    .desc-section:last-child{margin-bottom:0}
+    .desc-section-title{font-size:14px;font-weight:600;color:#000000d9;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0}
+    .desc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+    .desc-item{display:flex;border-bottom:1px solid #f0f0f0;padding:8px 0}
+    .desc-item.full{grid-column:1/-1}
+    .desc-label{width:160px;flex-shrink:0;background:#fafafa;padding:4px 12px;font-size:14px;color:#00000073}
+    .desc-value{flex:1;padding:4px 12px;font-size:14px;color:#000000d9}
+    /* 附件列表 */
+    .attachment-list{display:flex;flex-direction:column;gap:8px}
+    .attachment-item{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:#fafafa;border-radius:4px;border:1px solid #f0f0f0;cursor:pointer}
+    .attachment-item:hover{border-color:#1677ff;background:#e6f7ff}
+    .attachment-icon{font-size:16px}
+    .attachment-name{font-size:14px;color:#1677ff}
+    /* Toast */
+    .toast-msg{position:fixed;top:80px;left:50%;transform:translateX(-50%);padding:8px 24px;border-radius:4px;color:#fff;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s}
+    .toast-msg.show{opacity:1}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <!-- 页面标题 + 导出按钮 -->
+      <div class="page-header">
+        <h2>交通违法行为记录</h2>
+        <div class="flex gap-2">
+          <button class="ant-btn admin-only" onclick="exportTable()">导出</button>
+        </div>
+      </div>
+
+      <!-- 查询筛选区（可收起/展开） -->
+      <div class="filter-bar">
+        <div class="filter-row">
+          <!-- 第一行：始终显示 -->
+          <div class="filter-item"><label>违法记录编号</label><input class="ant-input" id="fCaseNo" placeholder="请输入违法记录编号" style="width:170px"></div>
+          <div class="filter-item"><label>违法时间</label><input class="ant-input" type="date" id="fTimeStart" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" id="fTimeEnd" style="width:130px"></div>
+          <div class="filter-item"><label>临牌号</label><input class="ant-input" id="fPlate" placeholder="请输入临牌号" style="width:130px"></div>
+          <div class="filter-item"><label>运营企业名称</label><input class="ant-input" id="fEnterprise" placeholder="请输入企业名称" style="width:170px"></div>
+          <div class="flex gap-2 items-end">
+            <button class="ant-btn ant-btn-primary" onclick="searchData()">查询</button>
+            <button class="ant-btn" onclick="resetFilter()">重置</button>
+          </div>
+          <button class="filter-toggle" id="filterToggle" onclick="toggleFilter()">
+            <span>展开</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+          </button>
+        </div>
+        <!-- 第二行：默认收起 -->
+        <div class="filter-row filter-extra" id="filterExtra" style="margin-top:16px">
+          <div class="filter-item"><label>车辆种类</label>
+            <div class="ant-select" id="fVehicleType">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
+          </div>
+          <div class="filter-item"><label>违法行为代码</label><input class="ant-input" id="fViolationCode" placeholder="请输入违法行为代码" style="width:140px"></div>
+          <div class="filter-item"><label>文书开具时间</label><input class="ant-input" type="date" id="fIssueStart" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" id="fIssueEnd" style="width:130px"></div>
+        </div>
+      </div>
+
+      <!-- 数据列表区 -->
+      <div class="ant-table-wrapper">
+        <div style="overflow-x:auto">
+          <table class="ant-table">
+            <colgroup>
+              <col style="width:40px">
+              <col style="width:160px">
+              <col style="width:170px">
+              <col style="width:110px">
+              <col style="width:120px">
+              <col style="width:90px">
+              <col style="width:120px">
+              <col style="width:130px">
+              <col style="width:110px">
+              <col style="width:120px">
+              <col style="width:70px">
+            </colgroup>
+            <thead>
+              <tr>
+                <th style="text-align:center"><input type="checkbox" id="checkAll" onchange="toggleCheckAll(this)"></th>
+                <th style="text-align:center">违法记录编号</th>
+                <th style="text-align:center">违法发生时间</th>
+                <th style="text-align:center">临时车牌号</th>
+                <th style="text-align:left">运营企业名称</th>
+                <th style="text-align:center">车辆种类</th>
+                <th style="text-align:center">违法行为代码</th>
+                <th style="text-align:center">违法取证类型</th>
+                <th style="text-align:center">执勤交警警号</th>
+                <th style="text-align:center">文书开具日期</th>
+                <th style="text-align:center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div id="paginationBar"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../../components/pagination-component.js"></script>
+<script>
+var PAGE_ID = 'violation';
+
+/* ========== 全部20条模拟数据 ========== */
+var ALL_DATA = [
+  {caseNo:'VL20260701001',time:'2026-07-01 08:15:30',plate:'鄂F·A001',enterprise:'A公司',vehicleType:'乘用车',violationCode:'13520',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-07-01',creditCode:'91420600MA49A001X',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区邓城大道与追日路交叉口东200米',violationDesc:'驾驶机动车违反道路交通信号灯通行',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'A公司',fine:'200',points:'6',paymentDeadline:'2026-07-16',attachments:[{name:'违法现场照片_1.jpg',type:'image'},{name:'违法现场照片_2.jpg',type:'image'},{name:'交通违法处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260630002',time:'2026-06-30 14:08:30',plate:'鄂F·C007',enterprise:'B公司',vehicleType:'乘用车',violationCode:'16250',evidenceType:'现场交警查处',policeId:'JY00258',issueDate:'2026-06-30',creditCode:'91420600MA48B002Y',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市襄城区长虹路与荆州街交叉口',violationDesc:'驾驶机动车违反道路交通信号灯通行（闯红灯）',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'人工接管模式',issueUnit:'襄阳市公安局交通警察支队襄城大队',policeName:'李明',responsibleEntity:'B公司',fine:'200',points:'6',paymentDeadline:'2026-07-15',attachments:[{name:'现场执法记录.pdf',type:'pdf'},{name:'交通违法处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260628003',time:'2026-06-28 16:42:18',plate:'鄂F·B003',enterprise:'C公司',vehicleType:'商用车',violationCode:'13440',evidenceType:'视频举报',policeId:'—',issueDate:'2026-06-29',creditCode:'91420600MA49C003Z',autoLevel:'L3',hasSafetyOfficer:'是',address:'襄阳市樊城区人民广场西路',violationDesc:'机动车违反禁令标志指示',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队樊城大队',policeName:'—',responsibleEntity:'C公司',fine:'100',points:'3',paymentDeadline:'2026-07-14',attachments:[{name:'举报视频截图_1.jpg',type:'image'},{name:'举报视频截图_2.jpg',type:'image'}]},
+  {caseNo:'VL20260625004',time:'2026-06-25 10:15:50',plate:'鄂F·D010',enterprise:'D公司',vehicleType:'乘用车',violationCode:'13030',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-25',creditCode:'91420600MA47D004A',autoLevel:'L4',hasSafetyOfficer:'否',address:'襄阳市东津新区东津世纪城路段',violationDesc:'机动车行驶超过规定时速20%以上未达50%',legalBasis:'《中华人民共和国道路交通安全法》第四十二条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队东津大队',policeName:'—',responsibleEntity:'D公司',fine:'100',points:'3',paymentDeadline:'2026-07-10',attachments:[{name:'测速抓拍照片.jpg',type:'image'},{name:'交通违法处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260622005',time:'2026-06-22 11:30:22',plate:'鄂F·E005',enterprise:'E公司',vehicleType:'乘用车',violationCode:'13520',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-22',creditCode:'91420600MA46E005B',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区深圳大道与苏州路交叉口',violationDesc:'驾驶机动车违反道路交通信号灯通行',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'E公司',fine:'200',points:'6',paymentDeadline:'2026-07-07',attachments:[{name:'违法现场照片.jpg',type:'image'}]},
+  {caseNo:'VL20260620006',time:'2026-06-20 09:45:10',plate:'鄂F·F012',enterprise:'A公司',vehicleType:'乘用车',violationCode:'12080',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-20',creditCode:'91420600MA49A001X',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区东风汽车大道南段',violationDesc:'驾驶机动车不按导向车道行驶',legalBasis:'《中华人民共和国道路交通安全法》第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'A公司',fine:'100',points:'2',paymentDeadline:'2026-07-05',attachments:[{name:'违法现场照片.jpg',type:'image'},{name:'处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260618007',time:'2026-06-18 15:22:05',plate:'鄂F·G008',enterprise:'F公司',vehicleType:'乘用车',violationCode:'13520',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-18',creditCode:'91420600MA45F006C',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市襄城区檀溪路与长虹南路交叉口',violationDesc:'驾驶机动车违反道路交通信号灯通行',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队襄城大队',policeName:'—',responsibleEntity:'F公司',fine:'200',points:'6',paymentDeadline:'2026-07-03',attachments:[{name:'违法现场照片_1.jpg',type:'image'},{name:'违法现场照片_2.jpg',type:'image'}]},
+  {caseNo:'VL20260615008',time:'2026-06-15 13:50:40',plate:'鄂F·H015',enterprise:'C公司',vehicleType:'商用车',violationCode:'13440',evidenceType:'现场交警查处',policeId:'JY01032',issueDate:'2026-06-15',creditCode:'91420600MA49C003Z',autoLevel:'L3',hasSafetyOfficer:'是',address:'襄阳市樊城区解放路与长征路交叉口',violationDesc:'机动车违反禁令标志指示',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'人工接管模式',issueUnit:'襄阳市公安局交通警察支队樊城大队',policeName:'王强',responsibleEntity:'C公司',fine:'100',points:'3',paymentDeadline:'2026-06-30',attachments:[{name:'现场执法记录.pdf',type:'pdf'}]},
+  {caseNo:'VL20260612009',time:'2026-06-12 07:35:15',plate:'鄂F·A001',enterprise:'A公司',vehicleType:'乘用车',violationCode:'11170',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-12',creditCode:'91420600MA49A001X',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区邓城大道西段',violationDesc:'驾驶机动车违反禁止标线指示',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'A公司',fine:'100',points:'1',paymentDeadline:'2026-06-27',attachments:[{name:'违法现场照片.jpg',type:'image'},{name:'处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260610010',time:'2026-06-10 17:08:55',plate:'鄂F·J020',enterprise:'D公司',vehicleType:'乘用车',violationCode:'13520',evidenceType:'视频举报',policeId:'—',issueDate:'2026-06-11',creditCode:'91420600MA47D004A',autoLevel:'L4',hasSafetyOfficer:'否',address:'襄阳市东津新区金源路与六两河路交叉口',violationDesc:'驾驶机动车违反道路交通信号灯通行',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队东津大队',policeName:'—',responsibleEntity:'D公司',fine:'200',points:'6',paymentDeadline:'2026-06-26',attachments:[{name:'举报视频截图.jpg',type:'image'}]},
+  {caseNo:'VL20260608011',time:'2026-06-08 10:25:30',plate:'鄂F·K016',enterprise:'E公司',vehicleType:'乘用车',violationCode:'13030',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-08',creditCode:'91420600MA46E005B',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区襄阳大道与机场路交叉口',violationDesc:'机动车行驶超过规定时速20%以上未达50%',legalBasis:'《中华人民共和国道路交通安全法》第四十二条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'E公司',fine:'100',points:'3',paymentDeadline:'2026-06-23',attachments:[{name:'测速抓拍照片.jpg',type:'image'}]},
+  {caseNo:'VL20260605012',time:'2026-06-05 14:55:42',plate:'鄂F·L022',enterprise:'G公司',vehicleType:'乘用车',violationCode:'13520',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-05',creditCode:'91420600MA44G007D',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市襄城区环城南路与胜利街交叉口',violationDesc:'驾驶机动车违反道路交通信号灯通行',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队襄城大队',policeName:'—',responsibleEntity:'G公司',fine:'200',points:'6',paymentDeadline:'2026-06-20',attachments:[{name:'违法现场照片_1.jpg',type:'image'},{name:'违法现场照片_2.jpg',type:'image'},{name:'处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260603013',time:'2026-06-03 11:40:18',plate:'鄂F·M025',enterprise:'H公司',vehicleType:'乘用车',violationCode:'12080',evidenceType:'现场交警查处',policeId:'JY00815',issueDate:'2026-06-03',creditCode:'91420600MA43H008E',autoLevel:'L3',hasSafetyOfficer:'是',address:'襄阳市樊城区长虹路与建华路交叉口',violationDesc:'驾驶机动车不按导向车道行驶',legalBasis:'《中华人民共和国道路交通安全法》第九十条',vehicleStatus:'人工接管模式',issueUnit:'襄阳市公安局交通警察支队樊城大队',policeName:'张伟',responsibleEntity:'H公司',fine:'100',points:'2',paymentDeadline:'2026-06-18',attachments:[{name:'现场执法记录.pdf',type:'pdf'}]},
+  {caseNo:'VL20260601014',time:'2026-06-01 16:12:08',plate:'鄂F·N030',enterprise:'I公司',vehicleType:'乘用车',violationCode:'13520',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-06-01',creditCode:'91420600MA42J009F',autoLevel:'L4',hasSafetyOfficer:'否',address:'襄阳市高新区追日路与汉江北路交叉口',violationDesc:'驾驶机动车违反道路交通信号灯通行',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'I公司',fine:'200',points:'6',paymentDeadline:'2026-06-16',attachments:[{name:'违法现场照片.jpg',type:'image'},{name:'处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260530015',time:'2026-05-30 08:50:33',plate:'鄂F·P033',enterprise:'F公司',vehicleType:'乘用车',violationCode:'13440',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-05-30',creditCode:'91420600MA45F006C',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市襄城区檀溪路轴承厂路口',violationDesc:'机动车违反禁令标志指示',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队襄城大队',policeName:'—',responsibleEntity:'F公司',fine:'100',points:'3',paymentDeadline:'2026-06-14',attachments:[{name:'违法现场照片.jpg',type:'image'}]},
+  {caseNo:'VL20260528016',time:'2026-05-28 13:20:45',plate:'鄂F·Q035',enterprise:'G公司',vehicleType:'商用车',violationCode:'11170',evidenceType:'视频举报',policeId:'—',issueDate:'2026-05-29',creditCode:'91420600MA44G007D',autoLevel:'L3',hasSafetyOfficer:'是',address:'襄阳市樊城区人民路与朝阳路交叉口',violationDesc:'驾驶机动车违反禁止标线指示',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队樊城大队',policeName:'—',responsibleEntity:'G公司',fine:'100',points:'1',paymentDeadline:'2026-06-12',attachments:[{name:'举报视频截图_1.jpg',type:'image'},{name:'举报视频截图_2.jpg',type:'image'}]},
+  {caseNo:'VL20260525017',time:'2026-05-25 15:05:22',plate:'鄂F·R038',enterprise:'H公司',vehicleType:'乘用车',violationCode:'13520',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-05-25',creditCode:'91420600MA43H008E',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市东津新区东津大桥桥北匝道',violationDesc:'驾驶机动车违反道路交通信号灯通行',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队东津大队',policeName:'—',responsibleEntity:'H公司',fine:'200',points:'6',paymentDeadline:'2026-06-09',attachments:[{name:'违法现场照片.jpg',type:'image'},{name:'处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260522018',time:'2026-05-22 09:58:10',plate:'鄂F·S040',enterprise:'I公司',vehicleType:'乘用车',violationCode:'13030',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-05-22',creditCode:'91420600MA42J009F',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区富康大道与奔驰大道路口',violationDesc:'机动车行驶超过规定时速20%以上未达50%',legalBasis:'《中华人民共和国道路交通安全法》第四十二条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'I公司',fine:'100',points:'3',paymentDeadline:'2026-06-06',attachments:[{name:'测速抓拍照片.jpg',type:'image'}]},
+  {caseNo:'VL20260520019',time:'2026-05-20 12:30:55',plate:'鄂F·T042',enterprise:'D公司',vehicleType:'乘用车',violationCode:'16250',evidenceType:'现场交警查处',policeId:'JY00667',issueDate:'2026-05-20',creditCode:'91420600MA47D004A',autoLevel:'L4',hasSafetyOfficer:'否',address:'襄阳市襄城区荆州街与运动路交叉口',violationDesc:'驾驶机动车违反道路交通信号灯通行（闯红灯）',legalBasis:'《中华人民共和国道路交通安全法》第三十八条、第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队襄城大队',policeName:'赵刚',responsibleEntity:'D公司',fine:'200',points:'6',paymentDeadline:'2026-06-04',attachments:[{name:'现场执法记录.pdf',type:'pdf'},{name:'交通违法处罚决定书.pdf',type:'pdf'}]},
+  {caseNo:'VL20260518020',time:'2026-05-18 10:45:28',plate:'鄂F·U045',enterprise:'E公司',vehicleType:'乘用车',violationCode:'12080',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-05-18',creditCode:'91420600MA46E005B',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区中原路与春园路交叉口',violationDesc:'驾驶机动车不按导向车道行驶',legalBasis:'《中华人民共和国道路交通安全法》第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'E公司',fine:'100',points:'2',paymentDeadline:'2026-06-02',attachments:[{name:'违法现场照片.jpg',type:'image'},{name:'处罚决定书.pdf',type:'pdf'}]}
+];
+
+var selectedIds = new Set();
+var currentFilteredData = [];
+var pager = null;
+
+/* ========== 筛选区收起/展开 ========== */
+function toggleFilter() {
+  var extra = document.getElementById('filterExtra');
+  var btn = document.getElementById('filterToggle');
+  var isExpanded = extra.classList.contains('expanded');
+  if (isExpanded) {
+    extra.classList.remove('expanded');
+    btn.classList.remove('expanded');
+    btn.querySelector('span').textContent = '展开';
+  } else {
+    extra.classList.add('expanded');
+    btn.classList.add('expanded');
+    btn.querySelector('span').textContent = '收起';
+  }
+}
+
+/* ========== 筛选逻辑 ========== */
+function getFilterConditions() {
+  return {
+    caseNo: document.getElementById('fCaseNo').value.trim(),
+    timeStart: document.getElementById('fTimeStart').value,
+    timeEnd: document.getElementById('fTimeEnd').value,
+    plate: document.getElementById('fPlate').value.trim(),
+    enterprise: document.getElementById('fEnterprise').value.trim(),
+    violationCode: document.getElementById('fViolationCode').value.trim(),
+    issueStart: document.getElementById('fIssueStart').value,
+    issueEnd: document.getElementById('fIssueEnd').value
+  };
+}
+
+function filterData() {
+  var f = getFilterConditions();
+  return ALL_DATA.filter(function (d) {
+    if (f.caseNo && d.caseNo.indexOf(f.caseNo) === -1) return false;
+    if (f.timeStart && d.time.substring(0, 10) < f.timeStart) return false;
+    if (f.timeEnd && d.time.substring(0, 10) > f.timeEnd) return false;
+    if (f.plate && d.plate.indexOf(f.plate) === -1) return false;
+    if (f.enterprise && d.enterprise.indexOf(f.enterprise) === -1) return false;
+    if (f.violationCode && d.violationCode.indexOf(f.violationCode) === -1) return false;
+    if (f.issueStart && d.issueDate < f.issueStart) return false;
+    if (f.issueEnd && d.issueDate > f.issueEnd) return false;
+    return true;
+  });
+}
+
+function searchData() {
+  selectedIds.clear();
+  document.getElementById('checkAll').checked = false;
+  pager.reset();
+  currentFilteredData = filterData();
+  pager.setTotal(currentFilteredData.length);
+  renderTable();
+}
+
+function resetFilter() {
+  document.getElementById('fCaseNo').value = '';
+  document.getElementById('fTimeStart').value = '';
+  document.getElementById('fTimeEnd').value = '';
+  document.getElementById('fPlate').value = '';
+  document.getElementById('fEnterprise').value = '';
+  document.getElementById('fViolationCode').value = '';
+  document.getElementById('fIssueStart').value = '';
+  document.getElementById('fIssueEnd').value = '';
+  selectedIds.clear();
+  document.getElementById('checkAll').checked = false;
+  currentFilteredData = ALL_DATA.slice();
+  pager.reset();
+  pager.setTotal(currentFilteredData.length);
+  renderTable();
+}
+
+/* ========== 全选/取消全选 ========== */
+function toggleCheckAll(el) {
+  var page = pager.getCurrentPage();
+  var size = pager.getPageSize();
+  var start = (page - 1) * size;
+  var pageData = currentFilteredData.slice(start, start + size);
+  pageData.forEach(function (d) {
+    if (el.checked) selectedIds.add(d.caseNo);
+    else selectedIds.delete(d.caseNo);
+  });
+  renderTable();
+}
+
+function toggleCheck(caseNo, el) {
+  if (el.checked) selectedIds.add(caseNo);
+  else selectedIds.delete(caseNo);
+  /* 更新全选框状态 */
+  var page = pager.getCurrentPage();
+  var size = pager.getPageSize();
+  var start = (page - 1) * size;
+  var pageData = currentFilteredData.slice(start, start + size);
+  var allChecked = pageData.every(function (d) { return selectedIds.has(d.caseNo); });
+  document.getElementById('checkAll').checked = allChecked && pageData.length > 0;
+}
+
+/* ========== 渲染表格 ========== */
+function renderTable() {
+  var page = pager.getCurrentPage();
+  var size = pager.getPageSize();
+  var start = (page - 1) * size;
+  var pageData = currentFilteredData.slice(start, start + size);
+  var tbody = document.getElementById('tableBody');
+  var html = '';
+  pageData.forEach(function (d) {
+    var evClass = 'ant-tag-processing';
+    if (d.evidenceType === '现场交警查处') evClass = 'ant-tag-warning';
+    else if (d.evidenceType === '视频举报') evClass = 'ant-tag-purple';
+    var checked = selectedIds.has(d.caseNo) ? 'checked' : '';
+    html += '<tr>' +
+      '<td style="text-align:center"><input type="checkbox" ' + checked + ' onchange="toggleCheck(\'' + d.caseNo + '\',this)"></td>' +
+      '<td style="text-align:center;font-family:monospace">' + d.caseNo + '</td>' +
+      '<td style="text-align:center">' + d.time + '</td>' +
+      '<td style="text-align:center">' + d.plate + '</td>' +
+      '<td style="text-align:left">' + d.enterprise + '</td>' +
+      '<td style="text-align:center">' + d.vehicleType + '</td>' +
+      '<td style="text-align:center;font-family:monospace">' + d.violationCode + '</td>' +
+      '<td style="text-align:center"><span class="ant-tag ' + evClass + '">' + d.evidenceType + '</span></td>' +
+      '<td style="text-align:center">' + d.policeId + '</td>' +
+      '<td style="text-align:center">' + d.issueDate + '</td>' +
+      '<td style="text-align:center"><button class="ant-btn-link" onclick="showDetail(\'' + d.caseNo + '\')">详情</button></td>' +
+      '</tr>';
+  });
+  if (pageData.length === 0) {
+    html = '<tr><td colspan="11" style="text-align:center;padding:40px 0;color:#00000073">暂无数据</td></tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+/* ========== 导出功能 ========== */
+function showToast(msg, color) {
+  var el = document.createElement('div');
+  el.className = 'toast-msg';
+  el.style.background = color || '#1677ff';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function () { el.classList.add('show'); }, 10);
+  setTimeout(function () { el.classList.remove('show'); setTimeout(function () { el.remove(); }, 300); }, 2500);
+}
+
+function exportTable() {
+  var selectedData = ALL_DATA.filter(function (item) { return selectedIds.has(item.caseNo); });
+  if (selectedData.length > 0) {
+    showToast('已导出选中的 ' + selectedData.length + ' 条记录', '#1677ff');
+  } else {
+    if (confirm('是否导出所有数据？')) {
+      showToast('已导出当前筛选条件下共 ' + currentFilteredData.length + ' 条记录', '#1677ff');
+    }
+  }
+}
+
+/* ========== 详情弹窗 ========== */
+function showDetail(id) {
+  var d = ALL_DATA.find(function (item) { return item.caseNo === id; });
+  if (!d) return;
+
+  var evClass = 'ant-tag-processing';
+  if (d.evidenceType === '现场交警查处') evClass = 'ant-tag-warning';
+  else if (d.evidenceType === '视频举报') evClass = 'ant-tag-purple';
+
+  var attachHTML = '';
+  if (d.attachments && d.attachments.length > 0) {
+    d.attachments.forEach(function (a) {
+      var icon = a.type === 'pdf' ? '📄' : '🖼️';
+      attachHTML += '<div class="attachment-item"><span class="attachment-icon">' + icon + '</span><span class="attachment-name">' + a.name + '</span></div>';
+    });
+  } else {
+    attachHTML = '<span style="color:#00000073">暂无附件</span>';
+  }
+
+  var body =
+    '<div class="desc-section">' +
+      '<div class="desc-section-title">案件基本信息</div>' +
+      '<div class="desc-grid">' +
+        '<div class="desc-item"><div class="desc-label">违法案件编号</div><div class="desc-value" style="font-family:monospace">' + d.caseNo + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">违法发生时间</div><div class="desc-value">' + d.time + '</div></div>' +
+        '<div class="desc-item full"><div class="desc-label">违法发生地址</div><div class="desc-value">' + d.address + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">违法行为代码</div><div class="desc-value" style="font-family:monospace">' + d.violationCode + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">违法取证类型</div><div class="desc-value"><span class="ant-tag ' + evClass + '">' + d.evidenceType + '</span></div></div>' +
+        '<div class="desc-item full"><div class="desc-label">违法行为文字描述</div><div class="desc-value">' + d.violationDesc + '</div></div>' +
+        '<div class="desc-item full"><div class="desc-label">违法适用法律依据</div><div class="desc-value">' + d.legalBasis + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">违法时车辆状态</div><div class="desc-value">' + d.vehicleStatus + '</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="desc-section">' +
+      '<div class="desc-section-title">车辆与企业信息</div>' +
+      '<div class="desc-grid">' +
+        '<div class="desc-item"><div class="desc-label">运营企业名称</div><div class="desc-value">' + d.enterprise + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">统一社会信用代码</div><div class="desc-value" style="font-family:monospace;font-size:12px">' + d.creditCode + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">车辆类型</div><div class="desc-value">' + d.vehicleType + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">车辆自动驾驶等级</div><div class="desc-value">' + d.autoLevel + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">临牌号</div><div class="desc-value">' + d.plate + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">是否配备随车安全员</div><div class="desc-value">' + d.hasSafetyOfficer + '</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="desc-section">' +
+      '<div class="desc-section-title">执法与处罚信息</div>' +
+      '<div class="desc-grid">' +
+        '<div class="desc-item"><div class="desc-label">文书开具单位</div><div class="desc-value">' + d.issueUnit + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">执勤交警警号</div><div class="desc-value">' + d.policeId + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">交警姓名</div><div class="desc-value">' + d.policeName + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">文书开具日期</div><div class="desc-value">' + d.issueDate + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">处罚责任主体</div><div class="desc-value">' + d.responsibleEntity + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">罚款金额（元）</div><div class="desc-value" style="color:#ff4d4f;font-weight:600">¥ ' + d.fine + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">驾驶证记分分值</div><div class="desc-value" style="color:#faad14;font-weight:600">' + d.points + ' 分</div></div>' +
+        '<div class="desc-item"><div class="desc-label">缴款期限</div><div class="desc-value">' + d.paymentDeadline + '</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="desc-section">' +
+      '<div class="desc-section-title">文书附件</div>' +
+      '<div class="attachment-list">' + attachHTML + '</div>' +
+    '</div>';
+
+  openModal('违法记录详情 — ' + d.caseNo, body, {
+    width: '800px',
+    footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>'
+  });
+}
+
+/* ========== 初始化 ========== */
+document.addEventListener('DOMContentLoaded', function () {
+  currentFilteredData = ALL_DATA.slice();
+  pager = new Pagination({
+    container: 'paginationBar',
+    pageSize: 10,
+    pageSizeOptions: [10, 20, 50],
+    onPageChange: function () { renderTable(); },
+    onPageSizeChange: function () { renderTable(); }
+  });
+  pager.setTotal(currentFilteredData.length);
+  renderTable();
+});
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

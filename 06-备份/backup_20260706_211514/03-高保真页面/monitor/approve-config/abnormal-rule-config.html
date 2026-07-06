@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>异常事件规则配置 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .page-title-block{display:flex;flex-direction:column;gap:4px}
+    .filter-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .advanced-filter{display:none;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0}
+    .advanced-filter.show{display:block}
+    .rule-code{white-space:nowrap}
+    .rule-sub{font-size:12px;color:#00000073;line-height:18px;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rule-muted td{color:#00000073!important;background:#fafafa}
+    .rule-table-container{overflow-x:auto}
+    .rule-table-container table{min-width:100%;table-layout:fixed}
+    .rule-table-container .ant-table thead th,
+    .rule-table-container .ant-table tbody td{padding-left:8px!important;padding-right:8px!important}
+    .risk-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+    .risk-dot.high{background:#ff4d4f}
+    .risk-dot.normal{background:#1677ff}
+    .rule-modal-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:#00000073;margin-bottom:16px}
+    .config-section{border:1px solid #f0f0f0;border-radius:8px;margin-bottom:16px;background:#fff}
+    .config-section-header{padding:12px 16px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between}
+    .config-section-title{font-size:14px;font-weight:600;color:#000000d9}
+    .config-section-body{padding:16px}
+    .readonly-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+    .readonly-item.full{grid-column:1/-1}
+    .readonly-label{font-size:12px;color:#00000073;line-height:18px;margin-bottom:4px}
+    .readonly-value{font-size:14px;color:#000000d9;line-height:22px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-grid .full{grid-column:1/-1}
+    .field-label{font-size:14px;color:#000000d9;margin-bottom:6px}
+    .field-help{font-size:12px;color:#00000073;line-height:18px;margin-top:4px}
+    .field-error{font-size:12px;color:#ff4d4f;line-height:18px;margin-top:4px;display:none}
+    .multi-search-bar{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;margin-bottom:8px;transition:border-color .2s}
+    .multi-search-bar:focus-within{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.1)}
+    .multi-search-input{flex:1;border:none;outline:none;font-size:13px;color:#000000d9;background:transparent;height:30px;min-width:0}
+    .multi-search-input::placeholder{color:#00000040}
+    .search-select{position:relative}
+    .search-select-trigger{min-height:32px;padding:3px 6px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;cursor:text;display:flex;flex-wrap:wrap;gap:4px;align-items:center;transition:all .2s}
+    .search-select-trigger:hover{border-color:#4096ff}
+    .search-select-trigger.focused{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.1)}
+    .search-select-tag{display:inline-flex;align-items:center;height:22px;padding:0 4px 0 8px;background:#e6f4ff;border:1px solid #91caff;border-radius:4px;color:#1677ff;font-size:12px;gap:4px;line-height:20px;max-width:100%}
+    .search-select-tag .tag-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .search-select-tag .tag-close{cursor:pointer;font-size:14px;line-height:1;color:#1677ff;opacity:.7;padding:0 2px}
+    .search-select-tag .tag-close:hover{opacity:1}
+    .search-select-input{flex:1;min-width:80px;border:none;outline:none;height:24px;font-size:13px;color:#000000d9;background:transparent;padding:0 4px}
+    .search-select-input::placeholder{color:#00000040}
+    .search-select-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #f0f0f0;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12);max-height:280px;overflow-y:auto;z-index:100;display:none}
+    .search-select-dropdown.show{display:block}
+    .search-select-option{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:#000000d9;transition:background .15s}
+    .search-select-option:hover{background:#f5f5f5}
+    .search-select-option.selected{background:#e6f4ff;color:#1677ff;font-weight:500}
+    .search-select-option .opt-check{color:#1677ff;font-size:14px;visibility:hidden}
+    .search-select-option.selected .opt-check{visibility:visible}
+    .search-select-group{padding:6px 12px;font-size:12px;color:#00000073;background:#fafafa;font-weight:600;border-top:1px solid #f0f0f0}
+    .search-select-group:first-child{border-top:none}
+    .search-select-empty{padding:24px 12px;font-size:13px;color:#00000040;text-align:center}
+    .search-select-info{padding:8px 12px;font-size:12px;color:#ad6800;background:#fffbe6;border-bottom:1px solid #ffe58f}
+    .multi-enum-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .multi-enum-option{display:flex;align-items:flex-start;gap:8px;min-height:34px;padding:7px 10px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;font-size:13px;color:#000000d9;line-height:18px;cursor:pointer;transition:all .2s}
+    .multi-enum-option:hover{border-color:#4096ff;background:#f0f7ff}
+    .multi-enum-option.selected{border-color:#91caff;background:#e6f4ff;color:#1677ff}
+    .multi-enum-option input{width:14px;height:14px;margin-top:2px;flex-shrink:0}
+    .multi-enum-option span{min-width:0;word-break:break-all}
+    .multi-view-list{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:32px;padding:3px 0}
+    .multi-view-tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;border:1px solid #91caff;border-radius:4px;background:#e6f4ff;color:#1677ff;font-size:12px;line-height:22px;white-space:nowrap}
+    .multi-view-empty{font-size:13px;color:#00000040;line-height:24px}
+    .param-list{display:flex;flex-direction:column;gap:10px}
+    .param-row{display:grid;grid-template-columns:1fr 210px;gap:12px;align-items:center;padding:10px 12px;border:1px solid #f0f0f0;border-radius:6px;background:#fafafa}
+    .param-name{font-size:14px;color:#000000d9;line-height:22px}
+    .param-range{font-size:12px;color:#00000073;line-height:18px}
+    .param-input{display:flex;align-items:center;gap:8px}
+    .param-input .ant-input{background:#fff!important}
+    .param-unit{font-size:13px;color:#00000073;min-width:34px}
+    .checkbox-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+    .checkbox-pill{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #f0f0f0;border-radius:6px;background:#fafafa;font-size:13px;color:#000000d9}
+    .checkbox-pill input{width:14px;height:14px}
+    .rule-switch{width:42px;height:22px;border:none;border-radius:11px;background:#d9d9d9;position:relative;cursor:pointer;transition:background .2s;padding:0}
+    .rule-switch span{position:absolute;width:18px;height:18px;top:2px;left:2px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s}
+    .rule-switch.checked{background:#1677ff}
+    .rule-switch.checked span{left:22px}
+    .rule-switch.disabled{cursor:not-allowed;opacity:.6}
+    .inline-alert{display:flex;gap:8px;padding:10px 12px;border-radius:6px;font-size:13px;line-height:20px}
+    .inline-alert.info{background:#e6f4ff;color:#0958d9;border:1px solid #91caff}
+    .inline-alert.warn{background:#fffbe6;color:#ad6800;border:1px solid #ffe58f}
+    .version-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start}
+    .version-list-wrap{border:1px solid #f0f0f0;border-radius:8px;background:#fff;padding:12px;min-width:0}
+    .version-list-wrap table{margin:0}
+    .version-detail{border:1px solid #f0f0f0;border-radius:8px;padding:16px;background:#fafafa;min-height:220px;max-height:60vh;overflow-y:auto;min-width:0}
+    .snapshot-header{display:flex;align-items:center;gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #f0f0f0}
+    .snapshot-version{font-size:18px;font-weight:600;color:#000000d9;font-family:DIN,"PingFang SC","Microsoft YaHei",sans-serif}
+    .snapshot-action{margin-left:auto;font-size:12px;color:#00000073}
+    .snapshot-section{margin-bottom:14px}
+    .snapshot-section:last-child{margin-bottom:0}
+    .snapshot-section-title{font-size:12px;color:#00000073;margin-bottom:8px;font-weight:500}
+    .change-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:1px solid #f0f0f0;border-radius:6px;margin-bottom:6px;font-size:13px}
+    .change-row.init{background:#fafafa}
+    .change-field{flex:0 0 80px;color:#000000d9;font-weight:500;font-size:12px;flex-shrink:0}
+    .change-diff{flex:1;display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:nowrap;overflow:hidden}
+    .change-before{flex:1;min-width:0;padding:2px 6px;background:#fff2f0;color:#ff4d4f;border:1px solid #ffccc7;border-radius:4px;text-decoration:line-through;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+    .change-arrow{color:#00000073;flex-shrink:0;font-size:12px}
+    .change-after{flex:1;min-width:0;padding:2px 6px;background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+    .change-note{flex:0 0 100%;font-size:12px;color:#fa8c16;background:#fff7e6;border:1px solid #ffd591;border-radius:4px;padding:2px 6px;margin-top:4px}
+    .change-empty{padding:12px;background:#fff;color:#00000040;font-size:13px;text-align:center;border-radius:6px}
+    .snapshot-reason{padding:10px 12px;background:#fff;border:1px solid #f0f0f0;border-radius:6px;font-size:13px;color:#000000d9;line-height:20px}
+    .version-table th,.version-table td{padding:10px 12px!important}
+    .version-table .time-cell{font-size:12px;color:#00000073;white-space:nowrap}
+    .version-table .reason-cell{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .version-table .version-actions{white-space:nowrap}
+    .toast-msg{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;border:1px solid #f0f0f0;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);padding:10px 22px;font-size:14px;color:#000000d9;white-space:nowrap}
+    @media(max-width:1200px){
+      .form-grid,.readonly-grid,.checkbox-grid,.multi-enum-grid{grid-template-columns:1fr}
+      .param-row{grid-template-columns:1fr}
+      .version-layout{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header">
+        <h2>异常事件规则配置</h2>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item"><label>关键词</label><input id="filterKeyword" class="ant-input" placeholder="规则编号/事件类型/子类型" style="width:210px"></div>
+          <div class="filter-item"><label>事件分类</label><select id="filterCategory" class="ant-input" style="width:120px"><option>全部</option><option>预警</option><option>告警</option></select></div>
+          <div class="filter-item"><label>事件类型</label><select id="filterType" class="ant-input" style="width:190px"><option>全部</option><option>车辆运行异常预警</option><option>车辆碰撞事件预警</option><option>车载终端异常预警</option><option>临牌有效期告警</option><option>电子围栏越界告警</option><option>测试时段合规性告警</option><option>安全员到岗状态告警</option></select></div>
+          <div class="filter-item"><label>规则状态</label><select id="filterStatus" class="ant-input" style="width:120px"><option>全部</option><option>启用</option><option>停用</option></select></div>
+          <div class="filter-actions">
+            <button class="ant-btn ant-btn-primary" onclick="queryRules()">查询</button>
+            <button class="ant-btn" onclick="resetFilters()">重置</button>
+            <button class="ant-btn" id="expandFilterBtn" onclick="toggleAdvancedFilter()">展开</button>
+          </div>
+        </div>
+        <div class="advanced-filter" id="advancedFilter">
+          <div class="filter-row">
+            <div class="filter-item"><label>适用车辆类型</label><select id="filterVehicleType" class="ant-input" style="width:180px"><option>全部</option><option>乘用车</option><option>商用车</option><option>专用作业车</option><option>功能型低速无人车</option><option>其他</option></select></div>
+            <div class="filter-item"><label>适用范围</label><select id="filterScope" class="ant-input" style="width:140px"><option>全部</option><option>道路</option><option>电子围栏</option><option>企业</option><option>车辆</option><option>全局</option></select></div>
+            <div class="filter-item"><label>是否关键规则</label><select id="filterCritical" class="ant-input" style="width:140px"><option>全部</option><option>是</option><option>否</option></select></div>
+            <div class="filter-item"><label>当前版本</label><input id="filterVersion" class="ant-input" placeholder="如 V1.3" style="width:120px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="rule-table-container">
+          <table class="ant-table">
+            <colgroup>
+              <col style="width:12%">
+              <col style="width:7%">
+              <col style="width:12%">
+              <col style="width:12%">
+              <col style="width:10%">
+              <col style="width:13%">
+              <col style="width:6%">
+              <col style="width:6%">
+              <col style="width:10%">
+              <col style="width:12%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>规则编号</th>
+                <th>事件分类</th>
+                <th>事件类型</th>
+                <th>规则子类型</th>
+                <th>适用对象</th>
+                <th>适用范围</th>
+                <th>状态</th>
+                <th>当前版本</th>
+                <th>更新时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="ruleTbody"></tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-end pt-4" id="paginationBar"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+var PAGE_ID='abnormal-rule-config';
+var currentPage=1;
+var pageSize=10;
+var currentVersionCode='';
+var pager=null;
+
+function initPager(){
+  if(typeof Pagination==='undefined')return;
+  pager=new Pagination({
+    container:'paginationBar',
+    pageSize:pageSize,
+    pageSizeOptions:[10,20,50,100],
+    size:'medium',
+    onPageChange:function(page,size){
+      currentPage=page;
+      pageSize=size;
+      renderRules();
+    },
+    onPageSizeChange:function(size){
+      pageSize=size;
+    }
+  });
+}
+
+var rules=[
+  {code:'ARC-EW01-001',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速剧烈突变',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'全局',scopeText:'全局生效',status:'启用',version:'V1.2',updateTime:'2026-07-01 09:30:20',critical:false,today:6,seven:42,optimize:false,core:'车辆自动驾驶运行过程中，在统计窗口内速度变化超过阈值，且达到持续或重复次数后触发预警。'},
+  {code:'ARC-EW01-002',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'加速度剧烈突变',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'全局',scopeText:'全局生效',status:'启用',version:'V1.1',updateTime:'2026-06-28 15:12:06',critical:false,today:4,seven:31,optimize:false,core:'纵向或横向加速度在持续时间内超过配置阈值时触发预警，用于识别急加速、急减速和急转向风险。'},
+  {code:'ARC-EW01-003',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'超时停靠',object:'功能型低速无人车、商用车',vehicleTypes:['功能型低速无人车','商用车'],scope:'道路',scopeText:'开放道路、园区道路、重点点位',status:'启用',version:'V1.4',updateTime:'2026-07-06 10:26:48',critical:false,today:18,seven:126,optimize:true,core:'车辆处于低速或静止状态，位移低于阈值并超过不同场景停靠时长后触发预警；计划停靠、充电站、装卸点等可豁免。'},
+  {code:'ARC-EW01-004',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速超限',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'道路',scopeText:'道路限速、围栏限速',status:'启用',version:'V1.3',updateTime:'2026-07-03 16:05:32',critical:true,today:12,seven:98,optimize:true,core:'车辆实时速度超过道路或围栏限速，并超出配置容差且持续达到阈值时触发预警。'},
+  {code:'ARC-EW01-005',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'倒车预警',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'车辆',scopeText:'园区配送、环卫作业车辆',status:'停用',version:'V1.0',updateTime:'2026-06-20 11:42:15',critical:false,today:0,seven:0,optimize:false,core:'车辆处于倒挡或倒车运动状态且持续达到阈值时触发预警，作业区内可按配置豁免。'},
+  {code:'ARC-EW02-001',name:'车辆碰撞事件预警规则',category:'预警',type:'车辆碰撞事件预警',subtype:'碰撞预警',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'全局',scopeText:'全局生效',status:'启用',version:'V1.2',updateTime:'2026-07-04 12:18:08',critical:true,today:1,seven:8,optimize:false,core:'碰撞检测模型输出置信度高于阈值时触发预警，并按严重程度映射方案标记事件风险。'},
+  {code:'ARC-EW03-001',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'数据中断',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'车辆',scopeText:'全部接入车辆',status:'启用',version:'V1.5',updateTime:'2026-07-05 09:18:42',critical:true,today:9,seven:78,optimize:true,core:'车辆终端连续未上报或连续丢包次数达到阈值时触发预警，恢复上报后进入恢复判定。'},
+  {code:'ARC-EW03-002',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'传感器故障',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'车辆',scopeText:'全部关键设备',status:'启用',version:'V1.3',updateTime:'2026-07-02 17:11:29',critical:true,today:7,seven:54,optimize:false,core:'关键传感器状态异常持续达到阈值或连续异常采样次数达到阈值时触发预警。'},
+  {code:'ARC-EW03-003',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'其他',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'车辆',scopeText:'扩展终端异常',status:'停用',version:'V1.0',updateTime:'2026-06-18 14:22:35',critical:false,today:0,seven:3,optimize:false,core:'车载终端上报其他未归类异常码时按平台模板生成预警，需结合设备字典维护。'},
+  {code:'ARC-ALT04-001',name:'临牌有效期告警规则',category:'告警',type:'临牌有效期告警',subtype:'临牌过期上路',object:'临牌车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'车辆',scopeText:'临牌有效期校验车辆',status:'启用',version:'V1.1',updateTime:'2026-07-01 18:02:11',critical:true,today:2,seven:14,optimize:false,core:'车辆临牌状态为已过期且仍处于上路运行状态时触发告警，宽限时间可配置。'},
+  {code:'ARC-ALT05-001',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'允许通行区域越界',object:'全部授权车辆',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'电子围栏',scopeText:'允许通行区域围栏',status:'启用',version:'V1.3',updateTime:'2026-07-06 09:42:33',critical:true,today:10,seven:70,optimize:true,core:'车辆驶出已授权允许通行区域，超过越界缓冲距离并持续达到阈值后触发告警。'},
+  {code:'ARC-ALT05-002',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'禁行区域闯入',object:'全部授权车辆',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'电子围栏',scopeText:'禁行区域围栏',status:'启用',version:'V1.2',updateTime:'2026-07-06 09:43:05',critical:true,today:5,seven:26,optimize:false,core:'车辆进入禁行区域，超过闯入缓冲距离并持续达到阈值后触发告警；同车同刻优先级最高。'},
+  {code:'ARC-ALT05-003',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'区域外激活自动驾驶',object:'自动驾驶启用车辆',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'电子围栏',scopeText:'授权道路、允许围栏、转场路段',status:'启用',version:'V1.1',updateTime:'2026-07-06 09:45:58',critical:true,today:3,seven:20,optimize:false,core:'车辆不在任何授权区域内且自动驾驶处于激活状态，持续达到阈值后触发告警。'},
+  {code:'ARC-ALT06-001',name:'测试时段合规性告警规则',category:'告警',type:'测试时段合规性告警',subtype:'非规定时段测试',object:'道路测试、示范应用车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'道路',scopeText:'准入申请授权时段',status:'启用',version:'V1.2',updateTime:'2026-07-02 10:15:41',critical:true,today:4,seven:28,optimize:false,core:'车辆在准入申请、道路或区域配置允许时段之外运行时触发告警，可配置宽限时间。'},
+  {code:'ARC-ALT06-002',name:'测试时段合规性告警规则',category:'告警',type:'测试时段合规性告警',subtype:'高峰时段运行',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'道路',scopeText:'早晚高峰管控路段',status:'启用',version:'V1.1',updateTime:'2026-07-02 10:16:25',critical:true,today:6,seven:36,optimize:false,core:'车辆在配置的高峰时段和管控范围内运行时触发告警，可按车辆类型和宽限时间配置。'},
+  {code:'ARC-ALT07-001',name:'安全员到岗状态告警规则',category:'告警',type:'安全员到岗状态告警',subtype:'安全员未到岗',object:'需安全员车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'企业',scopeText:'安全员排班覆盖企业',status:'启用',version:'V1.4',updateTime:'2026-07-04 08:35:16',critical:true,today:5,seven:32,optimize:false,core:'车辆开始测试或运营任务后，安全员未按排班到岗或心跳超时达到阈值时触发告警。'},
+  {code:'ARC-ALT07-002',name:'安全员到岗状态告警规则',category:'告警',type:'安全员到岗状态告警',subtype:'安全员异常离岗',object:'需安全员车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'企业',scopeText:'安全员在线状态',status:'启用',version:'V1.2',updateTime:'2026-07-04 08:37:24',critical:true,today:4,seven:29,optimize:false,core:'任务执行期间安全员离岗持续达到阈值时触发告警，安全员重新在线并持续达到恢复判定时长后恢复。'}
+];
+
+var roadResourceData=[
+  {code:'RD-001',name:'高新区测试1号路',limitSpeed:'60km/h',status:'开放'},
+  {code:'RD-002',name:'高新区测试2号路',limitSpeed:'50km/h',status:'开放'},
+  {code:'RD-003',name:'襄城区示范路',limitSpeed:'40km/h',status:'开放'},
+  {code:'RD-004',name:'樊城区物流通道',limitSpeed:'60km/h',status:'暂停'},
+  {code:'RD-005',name:'襄州区转场路段',limitSpeed:'80km/h',status:'开放'},
+  {code:'RD-006',name:'智能网联封闭测试场',limitSpeed:'30km/h',status:'开放'},
+  {code:'RD-007',name:'园区配送环线',limitSpeed:'25km/h',status:'开放'},
+  {code:'RD-008',name:'东风大道快速路',limitSpeed:'70km/h',status:'开放'}
+];
+
+var fenceResourceData=[
+  {code:'FN-001',name:'高新区1号允许通行区',type:'允许通行区域',status:'有效'},
+  {code:'FN-002',name:'襄城区2号允许通行区',type:'允许通行区域',status:'有效'},
+  {code:'FN-003',name:'校园周边禁行区',type:'禁行区域',status:'有效'},
+  {code:'FN-004',name:'政府核心区禁行区',type:'禁行区域',status:'有效'},
+  {code:'FN-005',name:'东风厂区转场通道',type:'允许通行区域',status:'有效'},
+  {code:'FN-006',name:'商业步行街禁行区',type:'禁行区域',status:'暂停'},
+  {code:'FN-007',name:'测试场封闭区',type:'允许通行区域',status:'有效'},
+  {code:'FN-008',name:'夜间管控区',type:'允许通行区域',status:'有效'}
+];
+
+var companyOptions=['全部企业','襄阳智行科技有限公司','湖北示范运营有限公司','东风悦享科技有限公司','襄阳公交集团'];
+
+var vehiclesByCompany={
+  '全部企业':[
+    {code:'全部车辆',name:'全部车辆',company:'__all__'},
+    {code:'鄂F·A001',name:'鄂F·A001 测试轿车',company:'襄阳智行科技有限公司'},
+    {code:'鄂F·A002',name:'鄂F·A002 测试轿车',company:'襄阳智行科技有限公司'},
+    {code:'鄂F·B003',name:'鄂F·B003 物流配送车',company:'襄阳智行科技有限公司'},
+    {code:'鄂F·B004',name:'鄂F·B004 物流配送车',company:'襄阳智行科技有限公司'},
+    {code:'鄂F·C005',name:'鄂F·C005 示范应用车',company:'湖北示范运营有限公司'},
+    {code:'鄂F·C006',name:'鄂F·C006 示范应用车',company:'湖北示范运营有限公司'},
+    {code:'鄂F·C007',name:'鄂F·C007 示范应用车',company:'湖北示范运营有限公司'},
+    {code:'鄂F·D008',name:'鄂F·D008 环卫作业车',company:'东风悦享科技有限公司'},
+    {code:'鄂F·D009',name:'鄂F·D009 园区接驳车',company:'东风悦享科技有限公司'},
+    {code:'鄂F·D010',name:'鄂F·D010 园区接驳车',company:'东风悦享科技有限公司'},
+    {code:'鄂F·E005',name:'鄂F·E005 公交示范车',company:'襄阳公交集团'},
+    {code:'鄂F·E011',name:'鄂F·E011 公交示范车',company:'襄阳公交集团'}
+  ],
+  '襄阳智行科技有限公司':[
+    {code:'鄂F·A001',name:'鄂F·A001 测试轿车',company:'襄阳智行科技有限公司'},
+    {code:'鄂F·A002',name:'鄂F·A002 测试轿车',company:'襄阳智行科技有限公司'},
+    {code:'鄂F·B003',name:'鄂F·B003 物流配送车',company:'襄阳智行科技有限公司'},
+    {code:'鄂F·B004',name:'鄂F·B004 物流配送车',company:'襄阳智行科技有限公司'}
+  ],
+  '湖北示范运营有限公司':[
+    {code:'鄂F·C005',name:'鄂F·C005 示范应用车',company:'湖北示范运营有限公司'},
+    {code:'鄂F·C006',name:'鄂F·C006 示范应用车',company:'湖北示范运营有限公司'},
+    {code:'鄂F·C007',name:'鄂F·C007 示范应用车',company:'湖北示范运营有限公司'}
+  ],
+  '东风悦享科技有限公司':[
+    {code:'鄂F·D008',name:'鄂F·D008 环卫作业车',company:'东风悦享科技有限公司'},
+    {code:'鄂F·D009',name:'鄂F·D009 园区接驳车',company:'东风悦享科技有限公司'},
+    {code:'鄂F·D010',name:'鄂F·D010 园区接驳车',company:'东风悦享科技有限公司'}
+  ],
+  '襄阳公交集团':[
+    {code:'鄂F·E005',name:'鄂F·E005 公交示范车',company:'襄阳公交集团'},
+    {code:'鄂F·E011',name:'鄂F·E011 公交示范车',company:'襄阳公交集团'}
+  ]
+};
+
+var recoverOptionsMap={
+  'default':['回到围栏内','离开禁行区','车速恢复','终端恢复上报','安全员重新在线'],
+  '车速剧烈突变':['车速恢复','终端恢复上报'],
+  '加速度剧烈突变':['加速度恢复','终端恢复上报'],
+  '超时停靠':['车辆移动','终端恢复上报'],
+  '车速超限':['车速恢复','进入合规道路'],
+  '倒车预警':['车辆停止倒车','档位恢复'],
+  '碰撞预警':['人工确认','车辆静止'],
+  '数据中断':['终端恢复上报','网络恢复'],
+  '传感器故障':['传感器恢复','人工确认'],
+  '其他':['终端恢复上报','人工确认'],
+  '临牌过期上路':['临牌续期','车辆停运'],
+  '允许通行区域越界':['回到围栏内','终端恢复上报'],
+  '禁行区域闯入':['离开禁行区','人工确认'],
+  '区域外激活自动驾驶':['进入授权区域','自动驾驶退出'],
+  '非规定时段测试':['进入允许时段','人工确认'],
+  '高峰时段运行':['离开高峰时段','人工确认'],
+  '安全员未到岗':['安全员到岗','终端恢复上报'],
+  '安全员异常离岗':['安全员重新在线','人工确认']
+};
+
+var isRoadRelatedType=function(type){
+  return type==='车辆运行异常预警'||type==='车辆碰撞事件预警'||type==='测试时段合规性告警';
+};
+
+var isFenceRelatedType=function(type){
+  return type==='电子围栏越界告警';
+};
+
+var parameterTemplates={
+  '车速剧烈突变':[
+    {label:'速度变化阈值',value:'15',unit:'km/h',range:'1~80km/h'},
+    {label:'统计窗口',value:'3',unit:'s',range:'1~10s'},
+    {label:'减速度阈值',value:'-3',unit:'m/s²',range:'-10~0m/s²'},
+    {label:'持续/重复次数',value:'2',unit:'次',range:'1~10次'}
+  ],
+  '加速度剧烈突变':[
+    {label:'纵向加速度阈值',value:'3',unit:'m/s²',range:'0.5~10m/s²'},
+    {label:'横向加速度阈值',value:'2.5',unit:'m/s²',range:'0.5~10m/s²'},
+    {label:'持续时间',value:'2',unit:'s',range:'1~30s'}
+  ],
+  '超时停靠':[
+    {label:'普通道路阈值',value:'3',unit:'min',range:'10s~60min'},
+    {label:'园区/低速道路阈值',value:'5',unit:'min',range:'10s~60min'},
+    {label:'重点位置阈值',value:'60',unit:'s',range:'10s~60min'},
+    {label:'位移阈值',value:'10',unit:'m',range:'1~100m'},
+    {label:'静止车速阈值',value:'1',unit:'km/h',range:'0~5km/h'}
+  ],
+  '车速超限':[
+    {label:'速度容差',value:'3',unit:'km/h',range:'0~20km/h'},
+    {label:'速度容差百分比',value:'5',unit:'%',range:'0~20%'},
+    {label:'持续时间',value:'5',unit:'s',range:'1~60s'}
+  ],
+  '倒车预警':[
+    {label:'持续时间',value:'3',unit:'s',range:'1~60s'}
+  ],
+  '碰撞预警':[
+    {label:'模型置信度阈值',value:'0.8',unit:'',range:'0.5~1.0'}
+  ],
+  '数据中断':[
+    {label:'普通车辆离线阈值',value:'60',unit:'s',range:'5s~10min'},
+    {label:'低速无人车离线阈值',value:'30',unit:'s',range:'5s~10min'},
+    {label:'连续丢包次数',value:'3',unit:'次',range:'1~20次'}
+  ],
+  '传感器故障':[
+    {label:'故障持续时长',value:'10',unit:'s',range:'1~10min'},
+    {label:'连续异常采样次数',value:'3',unit:'次',range:'1~20次'},
+    {label:'关键设备范围',type:'multi',value:['摄像头','激光雷达','毫米波雷达','组合惯导','GNSS'],options:['摄像头','激光雷达','毫米波雷达','超声波雷达','组合惯导','GNSS','IMU','车控TBOX','线控单元'],range:'多选'}
+  ],
+  '其他':[
+    {label:'异常码持续时长',value:'60',unit:'s',range:'10s~10min'},
+    {label:'连续上报次数',value:'3',unit:'次',range:'1~20次'}
+  ],
+  '临牌过期上路':[
+    {label:'宽限时间',value:'0',unit:'h',range:'0~24h'}
+  ],
+  '允许通行区域越界':[
+    {label:'越界缓冲距离',value:'10',unit:'m',range:'0~100m'},
+    {label:'持续时间',value:'10',unit:'s',range:'1~120s'},
+    {label:'连续采样次数',value:'3',unit:'次',range:'1~10次'}
+  ],
+  '禁行区域闯入':[
+    {label:'闯入缓冲距离',value:'10',unit:'m',range:'0~100m'},
+    {label:'持续时间',value:'10',unit:'s',range:'1~120s'},
+    {label:'连续采样次数',value:'3',unit:'次',range:'1~10次'}
+  ],
+  '区域外激活自动驾驶':[
+    {label:'授权区域缓冲距离',value:'10',unit:'m',range:'0~100m'},
+    {label:'持续时间',value:'10',unit:'s',range:'1~120s'},
+    {label:'连续采样次数',value:'3',unit:'次',range:'1~10次'}
+  ],
+  '非规定时段测试':[
+    {label:'允许时段来源',type:'multi',value:['准入申请','道路配置','区域配置'],options:['准入申请','道路配置','区域配置','电子围栏配置'],range:'多选'},
+    {label:'宽限时间',value:'0',unit:'min',range:'0~60min'}
+  ],
+  '高峰时段运行':[
+    {label:'早高峰开始',value:'07:30',unit:'',range:'HH:mm'},
+    {label:'早高峰结束',value:'09:00',unit:'',range:'HH:mm'},
+    {label:'晚高峰开始',value:'17:30',unit:'',range:'HH:mm'},
+    {label:'晚高峰结束',value:'19:00',unit:'',range:'HH:mm'},
+    {label:'宽限时间',value:'0',unit:'min',range:'0~30min'}
+  ],
+  '安全员未到岗':[
+    {label:'排班来源',type:'multi',value:['安全员排班'],options:['安全员排班','车辆调度排班','企业任务排班'],range:'多选'},
+    {label:'心跳超时时长',value:'60',unit:'s',range:'5s~10min'},
+    {label:'适用安全员类型',type:'multi',value:['车内安全员','远程安全员'],options:['车内安全员','远程安全员','平台值守安全员'],range:'多选'}
+  ],
+  '安全员异常离岗':[
+    {label:'排班来源',type:'multi',value:['安全员排班'],options:['安全员排班','车辆调度排班','企业任务排班'],range:'多选'},
+    {label:'离岗持续时间',value:'60',unit:'s',range:'5s~10min'},
+    {label:'恢复判定时长',value:'30',unit:'s',range:'5s~10min'},
+    {label:'适用安全员类型',type:'multi',value:['车内安全员','远程安全员'],options:['车内安全员','远程安全员','平台值守安全员'],range:'多选'}
+  ]
+};
+
+var versionData=[
+  {
+    version:'V1.4',action:'参数调整',operator:'监管管理员',time:'2026-07-06 10:26:48',reason:'降低短时等待误报',
+    changes:[
+      {field:'普通道路阈值',before:'5 min',after:'3 min'},
+      {field:'重点位置阈值',before:'90 s',after:'60 s'},
+      {field:'去重周期',before:'60 min',after:'30 min'}
+    ]
+  },
+  {
+    version:'V1.3',action:'恢复默认',operator:'平台运维',time:'2026-07-02 16:12:11',reason:'规则参数复核',
+    changes:[
+      {field:'普通道路阈值',before:'3 min',after:'5 min',note:'恢复系统默认'},
+      {field:'重点位置阈值',before:'60 s',after:'90 s',note:'恢复系统默认'},
+      {field:'去重周期',before:'30 min',after:'60 min',note:'恢复系统默认'},
+      {field:'企业端推送',before:'关闭',after:'开启',note:'保留'}
+    ]
+  },
+  {
+    version:'V1.2',action:'启用',operator:'监管管理员',time:'2026-06-28 09:43:05',reason:'纳入本期监管范围',
+    changes:[
+      {field:'状态',before:'停用',after:'启用'},
+      {field:'地图高亮',before:'关闭',after:'开启'}
+    ]
+  },
+  {
+    version:'V1.1',action:'参数调整',operator:'第三方机构',time:'2026-06-20 14:08:36',reason:'授权范围内优化',
+    changes:[
+      {field:'越界缓冲距离',before:'5 m',after:'10 m'},
+      {field:'持续时间',before:'5 s',after:'10 s'},
+      {field:'连续采样次数',before:'2 次',after:'3 次'}
+    ]
+  },
+  {
+    version:'V1.0',action:'系统默认',operator:'系统',time:'2026-06-01 00:00:00',reason:'初始版本',
+    changes:[
+      {field:'初始化',before:'-',after:'系统预置规则默认配置'}
+    ]
+  }
+];
+
+function categoryTag(category){
+  return category==='告警'
+    ? '<span class="ant-tag ant-tag-error">告警</span>'
+    : '<span class="ant-tag ant-tag-processing">预警</span>';
+}
+
+function statusTag(status){
+  return status==='启用'
+    ? '<span class="ant-tag ant-tag-success">启用</span>'
+    : '<span class="ant-tag ant-tag-default">停用</span>';
+}
+
+function findRule(code){
+  return rules.find(function(item){return item.code===code;});
+}
+
+function getFilteredRules(){
+  var keyword=document.getElementById('filterKeyword').value.trim();
+  var category=document.getElementById('filterCategory').value;
+  var type=document.getElementById('filterType').value;
+  var status=document.getElementById('filterStatus').value;
+  var vehicleType=document.getElementById('filterVehicleType').value;
+  var scope=document.getElementById('filterScope').value;
+  var critical=document.getElementById('filterCritical').value;
+  var version=document.getElementById('filterVersion').value.trim();
+  return rules.filter(function(rule){
+    if(keyword && rule.code.indexOf(keyword)===-1 && rule.type.indexOf(keyword)===-1 && rule.subtype.indexOf(keyword)===-1) return false;
+    if(category!=='全部' && rule.category!==category) return false;
+    if(type!=='全部' && rule.type!==type) return false;
+    if(status!=='全部' && rule.status!==status) return false;
+    if(vehicleType!=='全部' && rule.vehicleTypes.indexOf(vehicleType)===-1) return false;
+    if(scope!=='全部' && rule.scope!==scope) return false;
+    if(critical!=='全部' && (rule.critical?'是':'否')!==critical) return false;
+    if(version && rule.version!==version) return false;
+    return true;
+  });
+}
+
+function renderRules(){
+  var data=getFilteredRules();
+  var total=data.length;
+  var pageTotal=Math.max(1,Math.ceil(total/pageSize));
+  if(currentPage>pageTotal) currentPage=pageTotal;
+  var start=(currentPage-1)*pageSize;
+  var pageRows=data.slice(start,start+pageSize);
+  var tbody=document.getElementById('ruleTbody');
+  tbody.innerHTML=pageRows.map(function(rule){
+    var muted=rule.status==='停用'?' class="rule-muted"':'';
+    return '<tr'+muted+'>'+
+      '<td class="rule-code">'+rule.code+'</td>'+
+      '<td>'+categoryTag(rule.category)+'</td>'+
+      '<td>'+rule.type+'</td>'+
+      '<td><span class="risk-dot '+(rule.critical?'high':'normal')+'"></span>'+rule.subtype+'</td>'+
+      '<td><div class="rule-sub" title="'+rule.object+'">'+rule.object+'</div></td>'+
+      '<td><div class="rule-sub" title="'+rule.scopeText+'">'+rule.scope+' / '+rule.scopeText+'</div></td>'+
+      '<td>'+statusTag(rule.status)+'</td>'+
+      '<td>'+rule.version+'</td>'+
+      '<td>'+rule.updateTime+'</td>'+
+      '<td>'+
+        '<button class="ant-btn-link" onclick="openRuleConfigModal(\''+rule.code+'\',\'view\')">查看</button>'+
+        '<button class="ant-btn-link" onclick="openRuleConfigModal(\''+rule.code+'\',\'edit\')">配置</button>'+
+        '<button class="ant-btn-link" onclick="toggleRuleStatus(\''+rule.code+'\')">'+(rule.status==='启用'?'停用':'启用')+'</button>'+
+        '<button class="ant-btn-link" onclick="openVersionHistory(\''+rule.code+'\')">版本历史</button>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+  if(pager){
+    pager.setTotal(total);
+  }
+}
+
+function queryRules(){
+  currentPage=1;
+  renderRules();
+  showToast('查询完成');
+}
+
+function resetFilters(){
+  ['filterKeyword','filterVersion'].forEach(function(id){document.getElementById(id).value='';});
+  ['filterCategory','filterType','filterStatus','filterVehicleType','filterScope','filterCritical'].forEach(function(id){document.getElementById(id).value='全部';});
+  currentPage=1;
+  var advanced=document.getElementById('advancedFilter');
+  var btn=document.getElementById('expandFilterBtn');
+  if(advanced) advanced.classList.remove('show');
+  if(btn) btn.textContent='展开';
+  renderRules();
+  showToast('已重置筛选条件');
+}
+
+function toggleAdvancedFilter(){
+  var advanced=document.getElementById('advancedFilter');
+  var btn=document.getElementById('expandFilterBtn');
+  if(!advanced) return;
+  advanced.classList.toggle('show');
+  if(btn) btn.textContent=advanced.classList.contains('show')?'收起':'展开';
+}
+
+function toggleRuleStatus(code){
+  var rule=findRule(code);
+  if(!rule) return;
+  var target=rule.status==='启用'?'停用':'启用';
+  var isCriticalStop=rule.critical&&target==='停用';
+  var modalWidth=isCriticalStop?560:480;
+  var extraAlert=isCriticalStop
+    ? '<div class="inline-alert warn mb-3"><strong>关键规则停用提醒：</strong>该规则为关键规则，停用后将直接影响监管口径，请谨慎操作并填写停用原因。</div>'
+    : '';
+  var body=extraAlert+
+    '<div class="inline-alert '+(target==='停用'?'warn':'info')+'">确认'+target+'规则“'+rule.subtype+'”？'+(target==='停用'?'停用后不再生成新事件，历史事件保留。':'启用后命中规则将生成异常事件。')+'</div>'+
+    '<div class="ant-form-item mt-4"><div class="ant-form-label">'+(isCriticalStop?'<span style="color:#ff4d4f;margin-right:4px">*</span>':'')+target+'原因</div><div class="ant-form-control"><textarea id="singleReason" class="ant-input" rows="3" maxlength="200" style="height:78px!important" placeholder="可填写'+target+'原因，'+(isCriticalStop?'关键规则停用需填写':'非必填')+'" oninput="updateCharCount(this,\'reasonCount\')"></textarea><div id="reasonCount" class="field-help" style="text-align:right;margin-top:2px">0 / 200</div></div></div>';
+  openModal('确认'+target+'规则',body,{
+    width:modalWidth,
+    maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn '+(target==='停用'?'ant-btn-danger':'ant-btn-primary')+'" onclick="applySingleStatus(\''+code+'\',\''+target+'\')">确认'+target+'</button>'
+  });
+}
+
+function updateCharCount(textarea,counterId){
+  var counter=document.getElementById(counterId);
+  if(counter) counter.textContent=textarea.value.length+' / 200';
+}
+
+function applySingleStatus(code,target){
+  var rule=findRule(code);
+  if(!rule) return;
+  rule.status=target;
+  rule.version=nextVersion(rule.version);
+  rule.updateTime=nowText();
+  closeModal();
+  renderRules();
+  showToast('规则已'+target);
+}
+
+function openRuleConfigModal(code,mode){
+  var rule=findRule(code);
+  if(!rule) return;
+  var readonly=mode==='view';
+  var meta='<div class="rule-modal-meta"><span>'+rule.code+'</span><span>|</span><span>'+rule.version+'</span><span>|</span><span>'+rule.status+'</span></div>';
+  openModal((readonly?'规则详情':'规则配置')+' - '+rule.subtype,meta+buildConfigBody(rule,readonly),{
+    width:980,
+    maxHeight:'86vh',
+    fullscreen:true,
+    maskClosable:false,
+    footer:buildConfigFooter(rule,readonly)
+  });
+}
+
+function buildConfigBody(rule,readonly){
+  var disabled=readonly?' disabled':'';
+  var fenceNotice=rule.type==='电子围栏越界告警'
+    ? '<div class="inline-alert info mb-4">电子围栏判定优先级：禁行区域闯入优先，其次区域外激活自动驾驶，最后允许通行区域越界。</div>'
+    : '';
+  return fenceNotice+
+    '<div class="config-section">'+
+      '<div class="config-section-header"><div class="config-section-title">规则只读信息</div><span class="ant-tag ant-tag-default">系统预置</span></div>'+
+      '<div class="config-section-body"><div class="readonly-grid">'+
+        readonlyItem('规则编号',rule.code)+readonlyItem('事件分类',rule.category)+readonlyItem('事件类型',rule.type)+readonlyItem('规则子类型',rule.subtype)+readonlyItem('是否关键规则',rule.critical?'是':'否')+
+        '<div class="readonly-item full"><div class="readonly-label">核心触发说明</div><div class="readonly-value">'+rule.core+'</div></div>'+
+      '</div></div>'+
+    '</div>'+
+    '<div class="config-section">'+
+      '<div class="config-section-header"><div class="config-section-title">启停设置</div></div>'+
+      '<div class="config-section-body">'+
+        '<div class="form-grid">'+
+          '<div><div class="field-label">是否启用</div>'+switchHTML('enableSwitch',rule.status==='启用',readonly,'onEnableSwitchChange()')+'<div class="field-help">停用后不再生成新事件，历史事件保留。</div></div>'+
+          '<div id="disableReasonWrap" style="display:'+(rule.status==='启用'?'none':'block')+'"><div class="field-label">停用原因</div><textarea id="disableReason" class="ant-input" rows="3" maxlength="200" style="height:76px!important"'+disabled+' placeholder="可填写停用原因，非必填" oninput="updateCharCount(this,\'disableReasonCount\')">临时观察规则触发效果</textarea><div id="disableReasonCount" class="field-help" style="text-align:right;margin-top:2px">'+(readonly?'0':'8')+' / 200</div></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="config-section">'+
+      '<div class="config-section-header"><div class="config-section-title">适用范围</div></div>'+
+      '<div class="config-section-body">'+
+        '<div class="form-grid">'+
+          fieldSearchSelect('适用企业','scopeCompany',companyOptions,['全部企业'],readonly,{
+            placeholder:'搜索企业名称',
+            helperText:'支持搜索关键字快速定位，可多选'
+          })+
+          fieldSearchSelect('适用车辆类型','scopeVehicleType',['乘用车','商用车','专用作业车','功能型低速无人车','其他'],rule.vehicleTypes,readonly,{
+            placeholder:'搜索车辆类型',
+            helperText:'支持搜索关键字快速定位，可多选'
+          })+
+          fieldSearchSelect('适用车辆','scopeVehicle',vehiclesByCompany['全部企业'],['全部车辆'],readonly,{
+            placeholder:'搜索车牌号或车辆名称',
+            helperText:'车辆按所选企业自动筛选，请先选择适用企业',
+            dependentCompanyId:'scopeCompany'
+          })+
+          fieldSearchSelect('适用业务类型','scopeBusiness',['道路测试','示范应用','商业化试点'],['道路测试','示范应用','商业化试点'],readonly,{
+            placeholder:'搜索业务类型',
+            helperText:'支持搜索关键字快速定位，可多选'
+          })+
+          (isRoadRelatedType(rule.type)?fieldRoadSearchSelect('适用道路','scopeRoad',readonly):'')+
+          (isFenceRelatedType(rule.type)?fieldFenceSearchSelect('适用电子围栏','scopeFence',readonly):'')+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="config-section">'+
+      '<div class="config-section-header"><div class="config-section-title">参数配置</div><span class="ant-tag ant-tag-processing">'+rule.subtype+'</span></div>'+
+      '<div class="config-section-body">'+renderTypeLinkageAlert(rule)+renderParamRows(rule,readonly)+'</div>'+
+    '</div>'+
+    '<div class="config-section">'+
+      '<div class="config-section-header"><div class="config-section-title">生效时段</div></div>'+
+      '<div class="config-section-body"><div class="form-grid">'+
+        '<div><div class="field-label"><span style="color:#ff4d4f;margin-right:4px">*</span>生效方式</div>'+
+          '<select id="effectiveMode" class="ant-input"'+(readonly?' disabled':'')+' onchange="toggleEffectiveMode()">'+
+            ['全天','每日固定时段','工作日','节假日','自定义日期范围'].map(function(opt){
+              var sel=opt==='全天'?' selected':'';
+              return '<option'+sel+'>'+opt+'</option>';
+            }).join('')+
+          '</select>'+
+        '</div>'+
+        '<div id="effectiveTimeWrap" style="display:none"><div class="field-label">生效时间段 <span style="color:#ff4d4f">*</span></div><input id="effectiveTimeStart" class="ant-input" value="00:00" placeholder="开始时间"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><span style="display:inline-block;width:4%;text-align:center;color:#00000073">-</span><input id="effectiveTimeEnd" class="ant-input" value="23:59" placeholder="结束时间"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><div class="field-help">开始时间需早于结束时间</div></div>'+
+        '<div id="effectiveDateWrap" style="display:none"><div class="field-label">生效日期范围 <span style="color:#ff4d4f">*</span></div><input id="effectiveDateStart" type="date" class="ant-input" value="2026-07-01"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><span style="display:inline-block;width:4%;text-align:center;color:#00000073">-</span><input id="effectiveDateEnd" type="date" class="ant-input" value="2026-12-31"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><div class="field-help">开始日期不晚于结束日期</div></div>'+
+      '</div></div>'+
+    '</div>'+
+    '<div class="config-section">'+
+      '<div class="config-section-header"><div class="config-section-title">豁免与去重恢复</div></div>'+
+      '<div class="config-section-body">'+
+        '<div class="field-label">豁免条件</div>'+checkboxGrid(['人工接管','任务结束','计划停靠','停车场','充电站','装卸点','维修区','调度等待区','测试任务白名单','临时管控豁免'],readonly)+
+        '<div class="form-grid mt-4">'+
+          fieldInput('去重周期','dedupe','30 分钟',readonly,'同车同规则同未恢复事件在周期内不重复生成')+
+          fieldRecoverConditions('恢复条件','recover',rule.subtype,readonly)+
+          '<div><div class="field-label">自动关闭事件</div>'+switchHTML('autoCloseSwitch',false,readonly,'')+'<div class="field-help">满足恢复条件后标记为已恢复，是否自动处理待业务确认。</div></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="config-section">'+
+      '<div class="config-section-header"><div class="config-section-title">通知策略</div></div>'+
+      '<div class="config-section-body"><div class="checkbox-grid">'+
+        notifySwitch('生成异常事件',true,true)+notifySwitch('地图高亮',true,readonly)+notifySwitch('卡片弹窗',false,readonly)+notifySwitch('站内通知',true,readonly)+notifySwitch('企业端推送',false,readonly)+
+      '</div></div>'+
+    '</div>';
+}
+
+function buildConfigFooter(rule,readonly){
+  if(readonly){
+    return '<button class="ant-btn" onclick="closeModal()">关闭</button><button class="ant-btn ant-btn-primary" onclick="switchToRuleEdit(\''+rule.code+'\')">进入配置</button>';
+  }
+  return '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn" onclick="confirmRestoreDefault(\''+rule.code+'\')">恢复默认参数</button><button class="ant-btn ant-btn-primary" onclick="saveRuleConfig(\''+rule.code+'\')">保存配置</button>';
+}
+
+function toggleEffectiveMode(){
+  var mode=document.getElementById('effectiveMode');
+  if(!mode) return;
+  var value=mode.value;
+  var timeWrap=document.getElementById('effectiveTimeWrap');
+  var dateWrap=document.getElementById('effectiveDateWrap');
+  if(timeWrap) timeWrap.style.display=value==='每日固定时段'?'block':'none';
+  if(dateWrap) dateWrap.style.display=value==='自定义日期范围'?'block':'none';
+}
+
+function switchToRuleEdit(code){
+  closeModal();
+  setTimeout(function(){openRuleConfigModal(code,'edit');},0);
+}
+
+function readonlyItem(label,value){
+  return '<div class="readonly-item"><div class="readonly-label">'+label+'</div><div class="readonly-value">'+value+'</div></div>';
+}
+
+function fieldInput(label,id,value,readonly,help){
+  return '<div><div class="field-label">'+label+'</div><input id="'+id+'" class="ant-input" value="'+value+'"'+(readonly?' disabled':'')+'><div class="field-help">'+(help||'')+'</div></div>';
+}
+
+function fieldSelect(label,id,options,readonly,multiple){
+  var value=options.join('、');
+  if(multiple){
+    return fieldInput(label,id,value,readonly,'支持多选配置');
+  }
+  return '<div><div class="field-label">'+label+'</div><select id="'+id+'" class="ant-input"'+(readonly?' disabled':'')+'>'+options.map(function(opt){return '<option>'+opt+'</option>';}).join('')+'</select></div>';
+}
+
+function fieldMultiSelect(label,id,options,selected,readonly){
+  selected=selected||[];
+  if(readonly){
+    var viewTags=selected.length
+      ? selected.map(function(opt){return '<span class="multi-view-tag">'+opt+'</span>';}).join('')
+      : '<span class="multi-view-empty">未选择</span>';
+    return '<div><div class="field-label">'+label+'</div><div id="'+id+'View" class="multi-view-list">'+viewTags+'</div></div>';
+  }
+  return '<div><div class="field-label">'+label+'</div><div id="'+id+'" class="multi-enum-grid">'+
+    options.map(function(opt){
+      var checked=selected.indexOf(opt)>-1;
+      return '<label class="multi-enum-option '+(checked?'selected':'')+'"><input type="checkbox" value="'+opt+'" '+(checked?'checked':'')+' onchange="syncMultiEnumOption(this)"><span>'+opt+'</span></label>';
+    }).join('')+
+    '</div><div class="field-help">支持多选枚举，可直接勾选多个选项</div></div>';
+}
+
+function fieldRoadMultiSelect(label,id,readonly){
+  var options=roadResourceData.map(function(r){return r.code+' · '+r.name+'（'+r.limitSpeed+'）';});
+  if(readonly){
+    var tags='<span class="multi-view-tag">全部授权道路</span>';
+    return '<div><div class="field-label">'+label+'</div><div class="multi-view-list">'+tags+'</div><div class="field-help">数据来源为道路资源管理</div></div>';
+  }
+  return '<div><div class="field-label">'+label+'</div>'+
+    '<div class="multi-search-bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="color:#00000040;flex-shrink:0"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>'+
+    '<input class="multi-search-input" placeholder="搜索道路编号或名称" oninput="filterMultiSelectOptions(this,\''+id+'\')"></div>'+
+    '<div id="'+id+'" class="multi-enum-grid">'+
+    options.map(function(opt){
+      var checked=opt.indexOf('全部')===0;
+      return '<label class="multi-enum-option '+(checked?'selected':'')+'" data-keyword="'+opt+'"><input type="checkbox" value="'+opt+'" '+(checked?'checked':'')+' onchange="syncMultiEnumOption(this)"><span>'+opt+'</span></label>';
+    }).join('')+
+    '</div><div class="field-help">多选下拉，数据来源为道路资源管理</div></div>';
+}
+
+function fieldFenceMultiSelect(label,id,readonly){
+  var options=fenceResourceData.map(function(f){return f.code+' · '+f.name+'（'+f.type+'）';});
+  if(readonly){
+    var tags='<span class="multi-view-tag">全部有效围栏</span>';
+    return '<div><div class="field-label">'+label+'</div><div class="multi-view-list">'+tags+'</div><div class="field-help">数据来源为电子围栏管理</div></div>';
+  }
+  return '<div><div class="field-label">'+label+'</div>'+
+    '<div class="multi-search-bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="color:#00000040;flex-shrink:0"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>'+
+    '<input class="multi-search-input" placeholder="搜索围栏编号或名称" oninput="filterMultiSelectOptions(this,\''+id+'\')"></div>'+
+    '<div id="'+id+'" class="multi-enum-grid">'+
+    options.map(function(opt){
+      var checked=opt.indexOf('全部')===0;
+      return '<label class="multi-enum-option '+(checked?'selected':'')+'" data-keyword="'+opt+'"><input type="checkbox" value="'+opt+'" '+(checked?'checked':'')+' onchange="syncMultiEnumOption(this)"><span>'+opt+'</span></label>';
+    }).join('')+
+    '</div><div class="field-help">多选下拉，数据来源为电子围栏管理</div></div>';
+}
+
+function filterMultiSelectOptions(input,groupId){
+  var keyword=input.value.trim().toLowerCase();
+  var group=document.getElementById(groupId);
+  if(!group) return;
+  var options=group.querySelectorAll('.multi-enum-option');
+  options.forEach(function(opt){
+    var text=(opt.getAttribute('data-keyword')||'').toLowerCase();
+    opt.style.display=text.indexOf(keyword)>-1?'':'none';
+  });
+}
+
+function getRoadGroup(limitSpeed){
+  var speed=parseInt(limitSpeed,10);
+  if(speed>=60) return '主干道/快速路';
+  if(speed>=40) return '次干道';
+  return '园区/低速道路';
+}
+
+function buildRoadItems(){
+  return roadResourceData.map(function(r){
+    return {
+      value:r.code,
+      name:r.code+' · '+r.name+'（'+r.limitSpeed+'）',
+      group:getRoadGroup(r.limitSpeed)
+    };
+  });
+}
+
+function buildFenceItems(){
+  return fenceResourceData.map(function(f){
+    return {
+      value:f.code,
+      name:f.code+' · '+f.name+'（'+f.type+'）',
+      group:f.type
+    };
+  });
+}
+
+function fieldRoadSearchSelect(label,id,readonly){
+  return fieldSearchSelect(label,id,buildRoadItems(),['全部授权道路'],readonly,{
+    placeholder:'搜索道路编号或名称',
+    helperText:'支持搜索道路编号、名称或限速，数据来源为道路资源管理',
+    allowAll:true
+  });
+}
+
+function fieldFenceSearchSelect(label,id,readonly){
+  return fieldSearchSelect(label,id,buildFenceItems(),['全部有效围栏'],readonly,{
+    placeholder:'搜索围栏编号或名称',
+    helperText:'支持搜索围栏编号、名称或类型，数据来源为电子围栏管理',
+    allowAll:true
+  });
+}
+
+function fieldSearchSelect(label,id,items,selected,readonly,config){
+  config=config||{};
+  var placeholder=config.placeholder||'搜索关键字';
+  var helperText=config.helperText||'支持搜索关键字快速定位';
+  var dependentCompanyId=config.dependentCompanyId;
+  var allowAll=config.allowAll!==false;
+
+  if(readonly){
+    var tags=selected.length
+      ? selected.map(function(s){return '<span class="search-select-tag" style="cursor:default"><span class="tag-text">'+s+'</span></span>';}).join('')
+      : '<span style="color:#00000040;font-size:13px">未选择</span>';
+    return '<div><div class="field-label">'+label+'</div><div class="search-select-trigger" style="cursor:default;min-height:32px;padding:6px 10px">'+tags+'</div><div class="search-select-helper">'+helperText+'</div></div>';
+  }
+
+  var stateId='__ssState_'+id;
+  window[stateId]={selected:selected.slice(),items:items.slice()};
+
+  var tagsHTML=selected.map(function(s){
+    var closeBtn=s.indexOf('全部')===0?'':'<span class="tag-close" onclick="removeSearchSelectTag(\''+id+'\',\''+s.replace(/'/g,"\\'")+'\')">×</span>';
+    return '<span class="search-select-tag" data-value="'+s+'"><span class="tag-text">'+s+'</span>'+closeBtn+'</span>';
+  }).join('');
+
+  var dependentNotice=dependentCompanyId?'<div class="search-select-info">车辆已根据所选企业自动筛选，请先选择适用企业</div>':'';
+
+  return '<div><div class="field-label">'+label+'</div>'+
+    '<div class="search-select" id="'+id+'_wrap" data-dependent="'+dependentCompanyId+'">'+
+      '<div class="search-select-trigger" id="'+id+'_trigger" onclick="focusSearchSelect(\''+id+'\')">'+
+        tagsHTML+
+        '<input class="search-select-input" id="'+id+'_input" placeholder="'+placeholder+'" oninput="filterSearchSelect(\''+id+'\')" onfocus="openSearchSelect(\''+id+'\')" onkeydown="onSearchSelectKey(event,\''+id+'\')">'+
+      '</div>'+
+      '<div class="search-select-dropdown" id="'+id+'_dropdown">'+
+        dependentNotice+
+        '<div id="'+id+'_list">'+buildSearchSelectListHTML(id,'',items,dependentCompanyId)+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="search-select-helper">'+helperText+'</div></div>';
+}
+
+function buildSearchSelectListHTML(id,keyword,items,dependentCompanyId){
+  var isVehicleSelect=id.indexOf('scopeVehicle')===0;
+  var companyState=dependentCompanyId?window['__ssState_'+dependentCompanyId]:null;
+  var companySelected=companyState?companyState.selected:[];
+  var stateId='__ssState_'+id;
+  var state=window[stateId];
+  var selected=state?state.selected:[];
+
+  var groups={};
+  var allOptions=[];
+  items.forEach(function(item){
+    if(typeof item==='string'){
+      if(item.indexOf('全部')===0){allOptions.push({value:item,name:item});return;}
+      groups['__nogroup__']=groups['__nogroup__']||[];
+      groups['__nogroup__'].push(item);
+    }else{
+      var itemName=item.name||item.code||'';
+      if(itemName.indexOf('全部')===0){
+        allOptions.push({value:item.value||item.code,name:itemName});
+        return;
+      }
+      var grp=item.group||item.company||'__nogroup__';
+      if(grp==='__all__')return;
+      groups[grp]=groups[grp]||[];
+      groups[grp].push(item);
+    }
+  });
+
+  var html='';
+  allOptions.forEach(function(opt){
+    var checked=selected.indexOf(opt.value)>-1;
+    if(!keyword || opt.name.indexOf(keyword)>-1){
+      html+='<div class="search-select-option '+(checked?'selected':'')+'" data-value="'+opt.value+'" onclick="toggleSearchSelectOption(\''+id+'\',\''+opt.value.replace(/'/g,"\\'")+'\',this)"><span>'+opt.name+'</span><span class="opt-check">✓</span></div>';
+    }
+  });
+
+  var grpKeys=Object.keys(groups);
+  grpKeys.forEach(function(grp){
+    if(grp==='__nogroup__')return;
+    var grpItems=groups[grp];
+    var grpHasMatch=grpItems.some(function(v){
+      var label=typeof v==='string'?v:v.name;
+      return !keyword||label.indexOf(keyword)>-1;
+    });
+    if(!grpHasMatch)return;
+    html+='<div class="search-select-group">'+grp+'</div>';
+    grpItems.forEach(function(item){
+      var value=typeof item==='string'?item:item.value||item.code;
+      var label=typeof item==='string'?item:item.name||item.code;
+      if(dependentCompanyId&&isVehicleSelect){
+        if(companySelected.indexOf('全部企业')===-1&&companySelected.length>0){
+          var itemCompany=item.company||'';
+          if(companySelected.indexOf(itemCompany)===-1)return;
+        }
+      }
+      if(keyword&&label.indexOf(keyword)===-1)return;
+      var checked=selected.indexOf(value)>-1;
+      html+='<div class="search-select-option '+(checked?'selected':'')+'" data-value="'+value+'" onclick="toggleSearchSelectOption(\''+id+'\',\''+value.replace(/'/g,"\\'")+'\',this)"><span>'+label+'</span><span class="opt-check">✓</span></div>';
+    });
+  });
+
+  if(groups['__nogroup__']){
+    groups['__nogroup__'].forEach(function(item){
+      if(keyword&&item.indexOf(keyword)===-1)return;
+      var checked=selected.indexOf(item)>-1;
+      html+='<div class="search-select-option '+(checked?'selected':'')+'" data-value="'+item+'" onclick="toggleSearchSelectOption(\''+id+'\',\''+item.replace(/'/g,"\\'")+'\',this)"><span>'+item+'</span><span class="opt-check">✓</span></div>';
+    });
+  }
+
+  if(!html){
+    if(isVehicleSelect&&dependentCompanyId&&companySelected.indexOf('全部企业')===-1&&companySelected.length>0){
+      return '<div class="search-select-empty">所选企业下暂无车辆可选</div>';
+    }
+    return '<div class="search-select-empty">未找到匹配项</div>';
+  }
+  return html;
+}
+
+function focusSearchSelect(id){
+  var input=document.getElementById(id+'_input');
+  if(input) input.focus();
+  openSearchSelect(id);
+}
+
+function openSearchSelect(id){
+  var dropdown=document.getElementById(id+'_dropdown');
+  if(!dropdown) return;
+  dropdown.classList.add('show');
+  renderSearchSelectOptions(id,'');
+  var trigger=document.getElementById(id+'_trigger');
+  if(trigger) trigger.classList.add('focused');
+}
+
+function closeSearchSelect(id){
+  var dropdown=document.getElementById(id+'_dropdown');
+  if(dropdown) dropdown.classList.remove('show');
+  var trigger=document.getElementById(id+'_trigger');
+  if(trigger) trigger.classList.remove('focused');
+  var input=document.getElementById(id+'_input');
+  if(input) input.value='';
+  var list=document.getElementById(id+'_list');
+  if(list) list.innerHTML='';
+}
+
+function filterSearchSelect(id){
+  var input=document.getElementById(id+'_input');
+  var keyword=input?input.value.trim():'';
+  renderSearchSelectOptions(id,keyword);
+}
+
+function renderSearchSelectOptions(id,keyword){
+  var stateId='__ssState_'+id;
+  var state=window[stateId];
+  if(!state) return;
+  var wrap=document.getElementById(id+'_wrap');
+  var dependentId=wrap?wrap.getAttribute('data-dependent'):'';
+  var items=state.items;
+  var html=buildSearchSelectListHTML(id,keyword,items,dependentId);
+  var list=document.getElementById(id+'_list');
+  if(list)list.innerHTML=html;
+}
+
+function toggleSearchSelectOption(id,value,el){
+  var stateId='__ssState_'+id;
+  var state=window[stateId];
+  if(!state)return;
+  var idx=state.selected.indexOf(value);
+  var wrap=document.getElementById(id+'_wrap');
+  var dependentId=wrap?wrap.getAttribute('data-dependent'):'';
+  var isVehicleSelect=id.indexOf('scopeVehicle')===0;
+
+  if(value.indexOf('全部')===0){
+    if(idx===-1){state.selected=[value];}
+    else{state.selected=state.selected.filter(function(s){return s===value;});}
+  }else{
+    if(idx>-1){
+      state.selected.splice(idx,1);
+    }else{
+      state.selected.push(value);
+      var allIdx=state.selected.findIndex(function(s){return s.indexOf('全部')===0;});
+      if(allIdx>-1)state.selected.splice(allIdx,1);
+    }
+  }
+
+  rebuildSearchSelectTrigger(id);
+  var keyword=document.getElementById(id+'_input').value.trim();
+  renderSearchSelectOptions(id,keyword);
+
+  if(dependentId&&isVehicleSelect){
+    var vehicleState=window['__ssState_'+dependentId];
+    if(vehicleState){
+      var validValues=state.selected.filter(function(s){
+        var item=state.items.find(function(it){
+          return (typeof it==='string'?it:it.value)===s;
+        });
+        if(!item)return true;
+        var itemCompany=item.company;
+        var companyState2=window['__ssState_'+dependentId];
+        var companySelected2=companyState2?companyState2.selected:[];
+        if(companySelected2.indexOf('全部企业')>-1||companySelected2.length===0)return true;
+        return companySelected2.indexOf(itemCompany)>-1;
+      });
+      if(validValues.length!==state.selected.length){
+        state.selected=validValues;
+        rebuildSearchSelectTrigger(id);
+      }
+    }
+  }
+
+  if(dependentId&&id.indexOf('scopeCompany')===0){
+    var vehicleId=dependentId;
+    var vehicleState=window['__ssState_'+vehicleId];
+    if(vehicleState){
+      vehicleState.selected=vehicleState.selected.filter(function(v){
+        var item=vehicleState.items.find(function(it){
+          return (typeof it==='string'?it:it.value)===v;
+        });
+        if(!item)return true;
+        var itemCompany=item.company;
+        if(state.selected.indexOf('全部企业')>-1||state.selected.length===0)return true;
+        return state.selected.indexOf(itemCompany)>-1;
+      });
+      rebuildSearchSelectTrigger(vehicleId);
+      var vehicleKeyword=document.getElementById(vehicleId+'_input');
+      var vKeyword=vehicleKeyword?vehicleKeyword.value.trim():'';
+      renderSearchSelectOptions(vehicleId,vKeyword);
+    }
+  }
+}
+
+function rebuildSearchSelectTrigger(id){
+  var stateId='__ssState_'+id;
+  var state=window[stateId];
+  if(!state)return;
+  var trigger=document.getElementById(id+'_trigger');
+  if(!trigger)return;
+  var input=document.getElementById(id+'_input');
+  var inputHTML=input?input.outerHTML:'';
+  var tagsHTML=state.selected.map(function(s){
+    var closeBtn=s.indexOf('全部')===0?'':'<span class="tag-close" onclick="removeSearchSelectTag(\''+id+'\',\''+s.replace(/'/g,"\\'")+'\')">×</span>';
+    return '<span class="search-select-tag" data-value="'+s+'"><span class="tag-text">'+s+'</span>'+closeBtn+'</span>';
+  }).join('');
+  trigger.innerHTML=tagsHTML+inputHTML;
+  var newInput=document.getElementById(id+'_input');
+  if(newInput)newInput.focus();
+}
+
+function removeSearchSelectTag(id,value){
+  var stateId='__ssState_'+id;
+  var state=window[stateId];
+  if(!state)return;
+  if(value.indexOf('全部')===0){
+    return;
+  }
+  if(state.selected.length<=1){
+    return;
+  }
+  state.selected=state.selected.filter(function(s){return s!==value;});
+  rebuildSearchSelectTrigger(id);
+  var input=document.getElementById(id+'_input');
+  var keyword=input?input.value.trim():'';
+  renderSearchSelectOptions(id,keyword);
+}
+
+function onSearchSelectKey(event,id){
+  if(event.key==='Backspace'){
+    var input=document.getElementById(id+'_input');
+    if(input&&input.value===''){
+      var stateId='__ssState_'+id;
+      var state=window[stateId];
+      if(state&&state.selected.length>0){
+        state.selected.pop();
+        rebuildSearchSelectTrigger(id);
+        var keyword='';
+        renderSearchSelectOptions(id,keyword);
+      }
+    }
+  }else if(event.key==='Escape'){
+    closeSearchSelect(id);
+  }
+}
+
+document.addEventListener('click',function(e){
+  var insideSearchSelect=false;
+  var el=e.target;
+  while(el&&el!==document.body){
+    if(el.classList&&(el.classList.contains('search-select')||el.classList.contains('search-select-trigger')||el.classList.contains('search-select-dropdown'))){
+      insideSearchSelect=true;break;
+    }
+    el=el.parentElement;
+  }
+  if(!insideSearchSelect){
+    document.querySelectorAll('.search-select-dropdown.show').forEach(function(dd){
+      dd.classList.remove('show');
+    });
+    document.querySelectorAll('.search-select-trigger.focused').forEach(function(t){
+      t.classList.remove('focused');
+    });
+  }
+});
+
+function fieldRecoverConditions(label,id,subtype,readonly){
+  var options=recoverOptionsMap[subtype]||recoverOptionsMap['default'];
+  if(readonly){
+    var defaultSelected=options.slice(0,2);
+    var tags=defaultSelected.map(function(opt){return '<span class="multi-view-tag">'+opt+'</span>';}).join('');
+    return '<div><div class="field-label">'+label+'</div><div class="multi-view-list">'+tags+'</div><div class="field-help">至少选择 1 项，当前为只读状态</div></div>';
+  }
+  var html='<div class="checkbox-grid">';
+  options.forEach(function(opt,idx){
+    var checked=idx<2?' checked':'';
+    html+='<label class="checkbox-pill"><input type="checkbox"'+checked+'>'+opt+'</label>';
+  });
+  html+='</div>';
+  return '<div><div class="field-label"><span style="color:#ff4d4f;margin-right:4px">*</span>'+label+'</div>'+html+'<div class="field-help">至少选择 1 项，根据规则子类型动态显示</div></div>';
+}
+
+function syncMultiEnumOption(input){
+  var option=input.closest('.multi-enum-option');
+  if(option) option.classList.toggle('selected',input.checked);
+  var group=input.closest('.multi-enum-grid');
+  if(!group) return;
+  var inputs=Array.prototype.slice.call(group.querySelectorAll('input[type="checkbox"]'));
+  var isAll=input.value.indexOf('全部')===0;
+  if(isAll && input.checked){
+    inputs.forEach(function(item){
+      if(item===input) return;
+      item.checked=false;
+      var itemOption=item.closest('.multi-enum-option');
+      if(itemOption) itemOption.classList.remove('selected');
+    });
+  }
+  if(!isAll && input.checked){
+    inputs.forEach(function(item){
+      if(item.value.indexOf('全部')!==0) return;
+      item.checked=false;
+      var itemOption=item.closest('.multi-enum-option');
+      if(itemOption) itemOption.classList.remove('selected');
+    });
+  }
+}
+
+function renderTypeLinkageAlert(rule){
+  if(rule.type==='测试时段合规性告警'){
+    return '<div class="inline-alert info mb-3">字段联动：该事件类型下规则子类型已开启时段来源、高峰时段、宽限时间的差异化配置，请结合实际道路管控要求设置。</div>';
+  }
+  if(rule.type==='安全员到岗状态告警'){
+    return '<div class="inline-alert info mb-3">字段联动：该事件类型下规则子类型已开启排班来源、心跳超时时长、适用安全员类型配置，请结合实际排班情况设置。</div>';
+  }
+  return '';
+}
+
+function renderParamRows(rule,readonly){
+  var params=parameterTemplates[rule.subtype]||[];
+  var disabled=readonly?' disabled':'';
+  var extra='';
+  if(rule.subtype==='车速超限'){
+    extra='<div class="inline-alert info mb-3">限速来源默认采用道路限速 + 围栏限速，命中时取更严格值。</div>';
+  }
+  if(rule.subtype==='区域外激活自动驾驶'){
+    extra='<div class="inline-alert info mb-3">授权区域来源：授权道路 + 允许通行围栏 + 转场路段。</div>';
+  }
+  if(rule.subtype==='传感器故障'){
+    extra='<div class="inline-alert info mb-3">关键设备范围用于限定触发传感器故障的关键设备类型，未勾选设备不参与故障判定。</div>';
+  }
+  return extra+'<div class="param-list">'+params.map(function(param){
+    if(param.type==='multi'){
+      var selected=param.value||[];
+      var valueHTML;
+      if(readonly){
+        valueHTML=selected.map(function(s){return '<span class="multi-view-tag">'+s+'</span>';}).join('');
+      }else{
+        valueHTML='<div class="multi-enum-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">'+
+          param.options.map(function(opt){
+            var checked=selected.indexOf(opt)>-1;
+            return '<label class="multi-enum-option '+(checked?'selected':'')+'"><input type="checkbox" value="'+opt+'" '+(checked?'checked':'')+' onchange="syncMultiEnumOption(this)"><span>'+opt+'</span></label>';
+          }).join('')+'</div>';
+      }
+      return '<div class="param-row" style="grid-template-columns:1fr"><div><div class="param-name">'+param.label+'</div><div class="param-range">校验范围：'+param.range+'</div></div><div class="mt-2">'+valueHTML+'</div></div>';
+    }
+    var valueStr=Array.isArray(param.value)?param.value.join('、'):param.value;
+    return '<div class="param-row"><div><div class="param-name">'+param.label+'</div><div class="param-range">校验范围：'+param.range+'</div></div><div class="param-input"><input class="ant-input" value="'+valueStr+'"'+disabled+'><span class="param-unit">'+param.unit+'</span></div></div>';
+  }).join('')+'</div>';
+}
+
+function checkboxGrid(items,readonly){
+  return '<div class="checkbox-grid">'+items.map(function(item,idx){
+    var checked=idx<4?' checked':'';
+    return '<label class="checkbox-pill"><input type="checkbox"'+checked+(readonly?' disabled':'')+'>'+item+'</label>';
+  }).join('')+'</div>';
+}
+
+function notifySwitch(label,checked,disabled){
+  return '<div class="checkbox-pill" style="justify-content:space-between"><span>'+label+'</span>'+switchHTML('',checked,disabled,'')+'</div>';
+}
+
+function switchHTML(id,checked,disabled,handler){
+  return '<button type="button" '+(id?'id="'+id+'" ':'')+'class="rule-switch '+(checked?'checked ':'')+(disabled?'disabled':'')+'" '+(disabled?'':'onclick="'+(handler||'toggleRuleSwitch(this)')+'"')+'><span></span></button>';
+}
+
+function toggleRuleSwitch(el){
+  el.classList.toggle('checked');
+}
+
+function onEnableSwitchChange(){
+  var el=document.getElementById('enableSwitch');
+  el.classList.toggle('checked');
+  var wrap=document.getElementById('disableReasonWrap');
+  if(wrap) wrap.style.display=el.classList.contains('checked')?'none':'block';
+}
+
+function saveRuleConfig(code){
+  var rule=findRule(code);
+  if(!rule) return;
+  var enabled=document.getElementById('enableSwitch').classList.contains('checked');
+  var reason=document.getElementById('disableReason');
+  if(reason && reason.value.length>200){
+    showToast('停用原因最多 200 字符');
+    return;
+  }
+  rule.status=enabled?'启用':'停用';
+  rule.version=nextVersion(rule.version);
+  rule.updateTime=nowText();
+  closeModal();
+  renderRules();
+  showToast('规则配置已保存');
+}
+
+function confirmRestoreDefault(code){
+  var rule=findRule(code);
+  if(!rule) return;
+  openModal('确认恢复默认参数','<div class="inline-alert warn">确认将“'+rule.subtype+'”恢复为系统默认参数？恢复后需点击保存配置才会生效。</div>',{width:480,maskClosable:false,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="applyDefaultValues()">确认恢复</button>'});
+}
+
+function applyDefaultValues(){
+  closeModal();
+  showToast('已恢复为默认参数，保存后生效');
+}
+
+function openVersionHistory(code){
+  var rule=findRule(code);
+  if(!rule) return;
+  currentVersionCode=code;
+  var rows=versionData.map(function(item,idx){
+    var changeCount=(item.changes||[]).length;
+    return '<tr>'+
+      '<td><b>'+item.version+'</b></td>'+
+      '<td>'+item.action+'</td>'+
+      '<td><span class="ant-tag ant-tag-default">'+changeCount+' 项</span></td>'+
+      '<td>'+item.operator+'</td>'+
+      '<td><span class="time-cell">'+item.time+'</span></td>'+
+      '<td class="version-actions"><button class="ant-btn-link" onclick="selectVersionSnapshot('+idx+')">查看变更</button><button class="ant-btn-link" onclick="confirmRestoreVersion('+idx+')">恢复此版本</button></td>'+
+    '</tr>';
+  }).join('');
+  var body='<div class="version-layout">'+
+    '<div class="version-list-wrap"><div class="inline-alert info mb-3">当前配置：<b>'+rule.version+'</b>，状态 <b>'+rule.status+'</b>。点击"查看变更"查看字段差异。</div><div style="overflow-x:auto"><table class="ant-table version-table"><thead><tr><th>版本</th><th>类型</th><th>变更</th><th>操作人</th><th>操作时间</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+    '<div class="version-detail" id="versionDetail"></div>'+
+  '</div>';
+  openModal('版本历史 - '+rule.subtype,body,{width:1100,maxHeight:'85vh',maskClosable:false,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+  setTimeout(function(){selectVersionSnapshot(0);},50);
+}
+
+function selectVersionSnapshot(index){
+  var rule=findRule(currentVersionCode);
+  var item=versionData[index]||versionData[0];
+  var detail=document.getElementById('versionDetail');
+  if(!detail || !rule || !item) return;
+  var actionTag=item.action==='参数调整'?'ant-tag-processing'
+    :item.action==='恢复默认'?'ant-tag-warning'
+    :item.action==='系统默认'?'ant-tag-default'
+    :item.action==='启用'?'ant-tag-success'
+    :'ant-tag-error';
+  var changesHtml=(item.changes||[]).map(function(c){
+    var note=c.note?'<span class="change-note">'+c.note+'</span>':'';
+    if(c.field==='初始化'){
+      return '<div class="change-row init"><span class="change-field">'+c.field+'</span><span class="change-value">'+c.after+'</span></div>';
+    }
+    return '<div class="change-row">'+
+      '<span class="change-field">'+c.field+'</span>'+
+      '<span class="change-diff">'+
+        '<span class="change-before">'+c.before+'</span>'+
+        '<span class="change-arrow">→</span>'+
+        '<span class="change-after">'+c.after+'</span>'+
+      '</span>'+
+      note+
+    '</div>';
+  }).join('');
+  detail.innerHTML=
+    '<div class="snapshot-header">'+
+      '<div class="snapshot-version">'+item.version+'</div>'+
+      '<span class="ant-tag '+actionTag+'">'+item.action+'</span>'+
+      '<span class="snapshot-action">'+item.operator+' · '+item.time+'</span>'+
+    '</div>'+
+    '<div class="snapshot-section">'+
+      '<div class="snapshot-section-title">本次变更字段（'+(item.changes?item.changes.length:0)+'）</div>'+
+      (changesHtml||'<div class="change-empty">无字段变更</div>')+
+    '</div>'+
+    (item.reason?'<div class="snapshot-section">'+
+      '<div class="snapshot-section-title">操作原因</div>'+
+      '<div class="snapshot-reason">'+item.reason+'</div>'+
+    '</div>':'');
+}
+
+function confirmRestoreVersion(index){
+  var rule=findRule(currentVersionCode);
+  var item=versionData[index];
+  if(!rule || !item) return;
+  if(item.version===rule.version){
+    showToast('当前已是该版本配置，无需恢复');
+    return;
+  }
+  openModal('确认恢复历史版本','<div class="inline-alert warn">确认将“'+rule.subtype+'”恢复为 '+item.version+' 的配置？恢复后会生成新的当前版本。</div>',{width:480,maskClosable:false,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="applyRestoreVersion()">确认恢复</button>'});
+}
+
+function applyRestoreVersion(){
+  var rule=findRule(currentVersionCode);
+  if(rule){
+    rule.version=nextVersion(rule.version);
+    rule.updateTime=nowText();
+  }
+  closeModal();
+  renderRules();
+  showToast('已恢复历史版本');
+}
+
+function paramSummary(rule){
+  var params=parameterTemplates[rule.subtype]||[];
+  return params.slice(0,3).map(function(p){return p.label+' '+p.value+(p.unit||'');}).join('，');
+}
+
+function nextVersion(version){
+  var parts=version.replace('V','').split('.');
+  var major=parts[0]||'1';
+  var minor=parseInt(parts[1]||'0',10)+1;
+  return 'V'+major+'.'+minor;
+}
+
+function nowText(){
+  var d=new Date();
+  var pad=function(n){return n<10?'0'+n:''+n;};
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+}
+
+function showToast(msg){
+  var existing=document.querySelector('.toast-msg');
+  if(existing) existing.remove();
+  var toast=document.createElement('div');
+  toast.className='toast-msg';
+  toast.textContent=msg;
+  document.body.appendChild(toast);
+  setTimeout(function(){
+    toast.style.transition='opacity .3s';
+    toast.style.opacity='0';
+    setTimeout(function(){if(toast.parentNode) toast.remove();},300);
+  },2200);
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  initPager();
+  renderRules();
+});
+</script>
+<script src="../../common.js"></script>
+<script src="../../components/pagination-component.js"></script>
+</body>
+</html>

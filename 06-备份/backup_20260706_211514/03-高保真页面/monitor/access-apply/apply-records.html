@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务申请记录 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <script src="../../components/pagination-component.js"></script>
+  <style>
+    .biz-tag{font-size:12px;padding:2px 8px;border-radius:4px;border:1px solid;display:inline-block}
+    .biz-tag-road{color:#1677ff;background:#e6f4ff;border-color:#91caff}
+    .biz-tag-demo{color:#722ed1;background:#f9f0ff;border-color:#d3adf7}
+    .biz-tag-oper{color:#fa8c16;background:#fff7e6;border-color:#ffd591}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <h2>业务申请记录</h2>
+        <div class="flex gap-2">
+          <button class="ant-btn" onclick="exportSelected()">导出</button>
+        </div>
+      </div>
+
+      <!-- 筛选区 -->
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item">
+            <label>时间范围</label>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input class="ant-input" type="date" id="fDateFrom" style="width:140px">
+              <span class="mx-1 text-[#00000040]">~</span>
+              <input class="ant-input" type="date" id="fDateTo" style="width:140px">
+            </div>
+          </div>
+          <div class="filter-item">
+            <label>申请编号</label>
+            <input class="ant-input" placeholder="请输入编号" id="fAppId" style="width:160px">
+          </div>
+          <div class="filter-item">
+            <label>申请类型</label>
+            <div class="ant-select" id="fApplyType" onclick="toggleDropdown('applyTypeDropdown')">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
+            <div class="dropdown-panel" id="applyTypeDropdown" style="display:none;position:absolute;z-index:1000;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:4px 0;min-width:140px">
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectApplyType('all','全部')">全部</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectApplyType('initial','初次申请')">初次申请</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectApplyType('renewal','延期申请')">延期申请</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectApplyType('change','变更申请')">变更申请</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectApplyType('add_vehicle','新增相同配置车辆')">新增相同配置车辆</div>
+            </div>
+          </div>
+          <div class="filter-item">
+            <label>申请状态</label>
+            <div class="ant-select" id="fStatus" onclick="toggleDropdown('statusDropdown')">全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
+            <div class="dropdown-panel" id="statusDropdown" style="display:none;position:absolute;z-index:1000;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:4px 0;min-width:140px;max-height:280px;overflow-y:auto">
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('all','全部')">全部</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('draft','草稿')">草稿</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_review','待初审')">待初审</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_committee','待专班审核')">待专班审核</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_expert','待专家评审')">待专家评审</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_meeting','待专题会审议')">待专题会审议</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_plate','待上传牌照')">待上传牌照</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('active','已生效')">已生效</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('expired','已过期')">已过期</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('rejected','已退回')">已退回</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('withdrawn','已撤回')">已撤回</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('terminated','已终止')">已终止</div>
+            </div>
+          </div>
+          <div class="flex gap-2 items-end">
+            <button class="ant-btn ant-btn-primary" onclick="renderTable()">查询</button>
+            <button class="ant-btn" onclick="resetFilter()">重置</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 列表区 -->
+      <div class="ant-table-wrapper">
+        <div style="overflow-x:auto">
+          <table class="ant-table">
+            <thead>
+              <tr>
+                <th style="width:40px"><input type="checkbox" class="ant-checkbox" id="checkAll"></th>
+                <th>业务类型</th>
+                <th class="col-code">申请编号</th>
+                <th>申请类型</th>
+                <th class="col-code">原申请编号</th>
+                <th class="col-num">车辆数</th>
+                <th class="col-num">路段或区域数</th>
+                <th>申请状态</th>
+                <th class="col-code">申请时间</th>
+                <th class="col-action" style="min-width:120px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="mainTbody"></tbody>
+          </table>
+        </div>
+        <div id="paginationBar"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 详情跳转：点击后跳转至对应业务类型的申请页面，并通过 URL 参数 ?id=XXX 自动打开详情弹窗 -->
+
+<script>
+const PAGE_ID='apply-records';
+var pager;
+
+// 状态映射（与 road-test.html 保持一致）
+var statusMap={
+  draft:{label:'草稿',cls:'ant-tag-default'},
+  pending_review:{label:'待初审',cls:'ant-tag-processing'},
+  pending_committee:{label:'待专班审核',cls:'ant-tag-processing'},
+  pending_expert:{label:'待专家评审',cls:'ant-tag-processing'},
+  pending_meeting:{label:'待专题会审议',cls:'ant-tag-processing'},
+  pending_committee_confirm:{label:'待专班审核确认',cls:'ant-tag-processing'},
+  pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},
+  active:{label:'已生效',cls:'ant-tag-success'},
+  expired:{label:'已过期',cls:'ant-tag-default'},
+  rejected:{label:'已退回',cls:'ant-tag-error'},
+  withdrawn:{label:'已撤回',cls:'ant-tag-default'},
+  terminated:{label:'已终止',cls:'ant-tag-error'}
+};
+
+// 申请类型映射
+var typeMap={
+  initial:{label:'初次申请'},
+  renewal:{label:'延期申请'},
+  change:{label:'变更申请'},
+  add_vehicle:{label:'新增相同配置车辆'}
+};
+
+// 业务类型映射
+var bizMap={
+  road_test:{label:'道路测试',cls:'biz-tag-road'},
+  demo_apply:{label:'示范应用',cls:'biz-tag-demo'},
+  demo_operate:{label:'商业化试点',cls:'biz-tag-oper'}
+};
+
+// 全部申请数据（跨业务聚合）
+var appData=[
+  // ====== 道路测试 ======
+  {id:'RT202604001',biz:'road_test',type:'initial',origId:'-',vehicleCount:2,roadCount:3,status:'pending_review',time:'2026-04-10 09:12:33'},
+  {id:'RT202604002',biz:'road_test',type:'renewal',origId:'RT202603001',vehicleCount:1,roadCount:2,status:'active',time:'2026-04-05 10:25:18'},
+  {id:'RT202604003',biz:'road_test',type:'change',origId:'RT202603002',vehicleCount:1,roadCount:1,status:'rejected',time:'2026-04-08 14:08:42'},
+  {id:'RT202604005',biz:'road_test',type:'initial',origId:'-',vehicleCount:1,roadCount:1,status:'pending_review',time:'2026-04-24 16:42:11'},
+  {id:'RT202604006',biz:'road_test',type:'initial',origId:'-',vehicleCount:1,roadCount:2,status:'pending_plate',time:'2026-04-25 09:55:24'},
+  {id:'RT202604008',biz:'road_test',type:'initial',origId:'-',vehicleCount:1,roadCount:1,status:'terminated',time:'2026-04-19 12:48:15'},
+  {id:'RT202605003',biz:'road_test',type:'renewal',origId:'RT202604006',vehicleCount:1,roadCount:2,status:'pending_committee_confirm',time:'2026-05-05 09:08:54'},
+  {id:'RT202605004',biz:'road_test',type:'initial',origId:'-',vehicleCount:1,roadCount:1,status:'draft',time:'2026-05-08 11:14:27'},
+  // ====== 示范应用 ======
+  {id:'DA202604001',biz:'demo_apply',type:'initial',origId:'-',vehicleCount:3,roadCount:2,status:'active',time:'2026-04-15 10:30:22'},
+  {id:'DA202604002',biz:'demo_apply',type:'change',origId:'DA202603001',vehicleCount:2,roadCount:1,status:'pending_committee',time:'2026-04-15 14:08:42'},
+  {id:'DA202604003',biz:'demo_apply',type:'initial',origId:'-',vehicleCount:2,roadCount:2,status:'pending_expert',time:'2026-04-22 11:18:36'},
+  {id:'DA202605001',biz:'demo_apply',type:'initial',origId:'-',vehicleCount:2,roadCount:1,status:'pending_expert',time:'2026-05-02 11:18:36'},
+  {id:'DA202605002',biz:'demo_apply',type:'add_vehicle',origId:'DA202604001',vehicleCount:1,roadCount:0,status:'pending_review',time:'2026-05-05 09:42:11'},
+  {id:'DA202605003',biz:'demo_apply',type:'initial',origId:'-',vehicleCount:1,roadCount:1,status:'expired',time:'2026-05-08 11:14:27'},
+  {id:'DA202605004',biz:'demo_apply',type:'renewal',origId:'DA202604001',vehicleCount:3,roadCount:2,status:'pending_meeting',time:'2026-05-09 16:32:08'},
+  // ====== 商业化试点 ======
+  {id:'DO202604001',biz:'demo_operate',type:'initial',origId:'-',vehicleCount:2,roadCount:1,status:'pending_meeting',time:'2026-04-20 09:30:15'},
+  {id:'DO202604002',biz:'demo_operate',type:'initial',origId:'-',vehicleCount:1,roadCount:1,status:'pending_review',time:'2026-04-20 13:42:18'},
+  {id:'DO202604003',biz:'demo_operate',type:'change',origId:'DO202603001',vehicleCount:1,roadCount:1,status:'pending_committee',time:'2026-05-01 10:42:36'},
+  {id:'DO202605001',biz:'demo_operate',type:'initial',origId:'-',vehicleCount:1,roadCount:1,status:'withdrawn',time:'2026-05-03 14:33:09'},
+  {id:'DO202605002',biz:'demo_operate',type:'add_vehicle',origId:'DO202604001',vehicleCount:1,roadCount:0,status:'pending_review',time:'2026-05-10 10:08:24'}
+];
+
+// 筛选状态
+var currentApplyTypeFilter='all';
+var currentStatusFilter='all';
+
+// 下拉菜单切换
+function toggleDropdown(id){
+  var el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+function selectApplyType(val,label){
+  currentApplyTypeFilter=val;
+  var sel=document.getElementById('fApplyType');
+  sel.innerHTML=label+'<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+  document.getElementById('applyTypeDropdown').style.display='none';
+}
+function selectStatus(val,label){
+  currentStatusFilter=val;
+  var sel=document.getElementById('fStatus');
+  sel.innerHTML=label+'<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+  document.getElementById('statusDropdown').style.display='none';
+}
+// 点击外部关闭下拉
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#fApplyType')&&!e.target.closest('#applyTypeDropdown')){
+    var d1=document.getElementById('applyTypeDropdown');if(d1)d1.style.display='none';
+  }
+  if(!e.target.closest('#fStatus')&&!e.target.closest('#statusDropdown')){
+    var d2=document.getElementById('statusDropdown');if(d2)d2.style.display='none';
+  }
+});
+
+// 详情跳转：根据业务类型映射
+function getDetailLink(biz){
+  if(biz==='road_test')return 'road-test.html';
+  if(biz==='demo_apply')return 'demo-apply.html';
+  if(biz==='demo_operate')return 'demo-operate.html';
+  return '#';
+}
+
+// 渲染表格
+function renderTable(){
+  var data=[].concat(appData);
+  var keyword=(document.getElementById('fAppId').value||'').trim().toLowerCase();
+  var dateFrom=document.getElementById('fDateFrom').value;
+  var dateTo=document.getElementById('fDateTo').value;
+  if(keyword)data=data.filter(function(d){return d.id.toLowerCase().indexOf(keyword)>-1;});
+  if(dateFrom)data=data.filter(function(d){return d.time.substring(0,10)>=dateFrom;});
+  if(dateTo)data=data.filter(function(d){return d.time.substring(0,10)<=dateTo;});
+  if(currentApplyTypeFilter!=='all')data=data.filter(function(d){return d.type===currentApplyTypeFilter;});
+  if(currentStatusFilter!=='all')data=data.filter(function(d){return d.status===currentStatusFilter;});
+  // 默认按申请时间倒序
+  data.sort(function(a,b){return b.time.localeCompare(a.time);});
+
+  var total=data.length;
+  var cp=pager?pager.getCurrentPage():1;
+  var ps=pager?pager.getPageSize():10;
+  var start=(cp-1)*ps;
+  var pd=data.slice(start,start+ps);
+  var h='';
+  if(pd.length===0){
+    h='<tr><td colspan="10"><div class="empty-state"><svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" opacity=".3"/></svg>暂无符合条件的申请记录</div></td></tr>';
+  }else{
+    pd.forEach(function(d){
+      var st=statusMap[d.status]||statusMap.draft;
+      var ty=typeMap[d.type]||typeMap.initial;
+      var bz=bizMap[d.biz]||bizMap.road_test;
+      var origCell=d.origId!=='-'?'<button class="ant-btn-link" onclick="goOrig(\''+d.biz+'\',\''+d.origId+'\')">'+d.origId+'</button>':'-';
+      var detailLink=getDetailLink(d.biz);
+      h+='<tr>'+
+        '<td><input type="checkbox" class="ant-checkbox row-check" data-id="'+d.id+'"></td>'+
+        '<td><span class="biz-tag '+bz.cls+'">'+bz.label+'</span></td>'+
+        '<td class="col-code"><a href="'+detailLink+'" class="text-[#1677ff] no-underline hover:text-[#4096ff]">'+d.id+'</a></td>'+
+        '<td><span class="ant-tag ant-tag-default">'+ty.label+'</span></td>'+
+        '<td class="col-code">'+origCell+'</td>'+
+        '<td class="col-num">'+d.vehicleCount+'</td>'+
+        '<td class="col-num">'+d.roadCount+'</td>'+
+        '<td><span class="ant-tag '+st.cls+'">'+st.label+'</span></td>'+
+        '<td class="col-code text-xs">'+d.time+'</td>'+
+        '<td class="col-action"><button class="ant-btn-link" onclick="openDetail(\''+d.id+'\',\''+d.biz+'\')">详情</button></td>'+
+        '</tr>';
+    });
+  }
+  document.getElementById('mainTbody').innerHTML=h;
+  if(pager)pager.setTotal(total);
+  // 重置全选
+  var checkAll=document.getElementById('checkAll');
+  if(checkAll){checkAll.checked=false;}
+}
+
+// 重置筛选
+function resetFilter(){
+  document.getElementById('fDateFrom').value='';
+  document.getElementById('fDateTo').value='';
+  document.getElementById('fAppId').value='';
+  currentApplyTypeFilter='all';
+  currentStatusFilter='all';
+  document.getElementById('fApplyType').innerHTML='全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+  document.getElementById('fStatus').innerHTML='全部<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+  if(pager)pager.reset();
+  renderTable();
+}
+
+// 原申请编号跳转
+function goOrig(biz,id){
+  var link=getDetailLink(biz);
+  window.location.href=link;
+}
+
+// 详情跳转：跳转到对应业务页面并通过 URL 参数自动打开详情弹窗
+function openDetail(id,biz){
+  var url=getDetailLink(biz);
+  if(url && url!=='#'){
+    window.location.href=url+'?id='+encodeURIComponent(id);
+  }else{
+    showToast('未找到对应业务的详情页','error');
+  }
+}
+
+// 导出（按 A.3 规范）
+function exportSelected(){
+  var checks=document.querySelectorAll('.row-check:checked');
+  if(checks.length===0){
+    if(!confirm('是否导出所有数据？'))return;
+    showToast('已发起全部数据导出，请稍候...','success');
+  }else{
+    showToast('已导出 '+checks.length+' 条所选数据','success');
+  }
+}
+
+// Toast 提示
+function showToast(msg,type){
+  var colors={success:'#52c41a',error:'#ff4d4f',warn:'#faad14',info:'#1677ff'};
+  var c=colors[type]||colors.info;
+  var t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid '+c+';color:'+c+';padding:10px 24px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:9999;font-size:14px';
+  document.body.appendChild(t);
+  setTimeout(function(){t.remove();},2500);
+}
+
+// 全选
+document.addEventListener('change',function(e){
+  if(e.target.id==='checkAll'){
+    var checked=e.target.checked;
+    document.querySelectorAll('.row-check').forEach(function(c){c.checked=checked;});
+  }
+});
+
+// 初始化分页
+document.addEventListener('DOMContentLoaded',function(){
+  pager=new Pagination({
+    container:'paginationBar',
+    pageSize:10,
+    onPageChange:function(page,size){renderTable();}
+  });
+  renderTable();
+});
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

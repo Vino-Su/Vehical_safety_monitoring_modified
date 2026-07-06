@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>异常状态事件 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .page-header h2{font-size:20px;font-weight:600;color:#000000d9}
+    .stat-card{background:#fff;border-radius:8px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 2px rgba(0,0,0,0.03),0 1px 6px -1px rgba(0,0,0,0.02);transition:transform .2s,box-shadow .2s}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:0 3px 6px rgba(0,0,0,0.05),0 2px 8px -2px rgba(0,0,0,0.08)}
+    .stat-card .stat-icon{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px}
+    .stat-card .stat-info .stat-value{font-size:24px;font-weight:600;color:#000000d9}
+    .stat-card .stat-info .stat-label{font-size:14px;color:#00000073}
+    .filter-bar{background:#fff;padding:16px 24px;border-radius:8px;margin-bottom:16px}
+    .filter-row{display:flex;flex-wrap:wrap;gap:20px 24px;align-items:center}
+    .filter-item{display:inline-flex;flex-direction:row;align-items:center;gap:8px}
+    .filter-item label{font-size:14px;color:#000000d9;font-weight:normal;white-space:nowrap}
+    .ant-table-wrapper{background:#fff;border-radius:8px;overflow:hidden}
+    .ant-table{width:100%;border-collapse:collapse}
+    .ant-table thead th{background:#fafafa;padding:12px 16px;font-weight:600;font-size:14px;color:#000000d9;border-bottom:1px solid #f0f0f0}
+    .ant-table tbody td{padding:12px 16px;font-size:14px;color:#000000d9;border-bottom:1px solid #f0f0f0}
+    .ant-table tbody tr{transition:background .2s}
+    .ant-table tbody tr:hover{background:#fafafa}
+    .ant-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:normal;border:1px solid}
+    .ant-tag-error{background:#fff2f0;color:#ff4d4f;border-color:#ffccc7}
+    .ant-tag-warning{background:#fffbe6;color:#faad14;border-color:#ffe58f}
+    .ant-tag-success{background:#f6ffed;color:#52c41a;border-color:#b7eb8f}
+    .ant-tag-processing{background:#e6f7ff;color:#1890ff;border-color:#91caff}
+    .ant-tag-default{background:#f5f5f5;color:#00000073;border-color:#d9d9d9}
+    .ant-btn{display:inline-flex;align-items:center;justify-content:center;padding:4px 15px;border-radius:4px;font-size:14px;border:1px solid #d9d9d9;background:#fff;color:#000000d9;cursor:pointer}
+    .ant-btn-primary{background:#1677ff;border-color:#1677ff;color:#fff}
+    .ant-btn-link{border:none;background:none;color:#1677ff;padding:0;height:auto;font-size:14px}
+    .ant-btn-link:hover{color:#4096ff}
+    .ant-select{padding:4px 11px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px;background:#fff;cursor:pointer}
+    .ant-input{padding:4px 11px;border:1px solid #d9d9d9;border-radius:4px;font-size:14px}
+    .ant-pagination{display:flex;align-items:center;gap:4px}
+    .ant-pagination .page-item{padding:4px 12px;border-radius:4px;border:1px solid #d9d9d9;cursor:pointer}
+    .ant-pagination .page-item.active{background:#1677ff;color:#fff;border-color:#1677ff}
+    .ant-pagination .page-item:hover{border-color:#1677ff;color:#1677ff}
+    .ant-tab.active::after{z-index:1}
+    /* 弹窗样式 */
+    .modal-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center}
+    .modal-box{background:#fff;border-radius:8px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 6px 16px rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05)}
+    .modal-header{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0}
+    .modal-header h3{font-size:16px;font-weight:600;color:#000000d9}
+    .modal-close{cursor:pointer;font-size:16px;color:#00000073;background:none;border:none;padding:4px}
+    .modal-close:hover{color:#000000d9}
+    .modal-body{padding:24px;overflow-y:auto;flex:1;max-height:calc(80vh - 120px)}
+    .modal-footer{padding:12px 24px;display:flex;justify-content:flex-end;border-top:1px solid #f0f0f0}
+    /* Descriptions 样式 */
+    .desc-section{margin-bottom:20px}
+    .desc-section:last-child{margin-bottom:0}
+    .desc-section-title{font-size:14px;font-weight:600;color:#000000d9;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0}
+    .desc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+    .desc-item{display:flex;border-bottom:1px solid #f0f0f0;padding:8px 0}
+    .desc-item.full{grid-column:1/-1}
+    .desc-label{width:140px;flex-shrink:0;background:#fafafa;padding:4px 12px;font-size:14px;color:#00000073}
+    .desc-value{flex:1;padding:4px 12px;font-size:14px;color:#000000d9}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <h2>异常状态事件</h2>
+      </div>
+      <!-- 统计卡片 -->
+      <div class="grid grid-cols-4 gap-4 mb-4">
+        <div class="stat-card"><div class="stat-icon bg-[#fff2f0] text-[#ff4d4f]">🔴</div><div class="stat-info"><div class="stat-value">12</div><div class="stat-label">未处理事件数(今日)</div></div></div>
+        <div class="stat-card"><div class="stat-icon bg-[#e6f7ff] text-[#1890ff]">⚠️</div><div class="stat-info"><div class="stat-value">5</div><div class="stat-label">正在处理事件数</div></div></div>
+        <div class="stat-card"><div class="stat-icon bg-[#f6ffed] text-[#52c41a]">✅</div><div class="stat-info"><div class="stat-value">48</div><div class="stat-label">已处理事件数(今日)</div></div></div>
+        <div class="stat-card"><div class="stat-icon bg-[#f5f5f5] text-[#00000073]">📊</div><div class="stat-info"><div class="stat-value">75</div><div class="stat-label">累计事件总数</div></div></div>
+      </div>
+      <!-- Tab 页签区 -->
+      <div class="ant-tabs mb-4">
+        <span class="ant-tab active" onclick="switchTab(this,'tab-ew01')">车辆运行异常预警</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-ew02')">车辆碰撞事件预警</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-ew03')">车载终端异常预警</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-alt04')">临牌有效期告警</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-alt05')">电子围栏越界告警</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-alt06')">测试时段合规性告警</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-alt07')">安全员到岗状态告警</span>
+      </div>
+
+      <!-- ========== Tab1: 车辆运行异常预警 ========== -->
+      <div id="tab-ew01" class="alarm-tab-content">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>预警类型</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
+            <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" style="width:130px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn">导出</button></div>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <colgroup><col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:200px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px"></colgroup>
+              <thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>VIN码</th><th>事件内容描述</th><th>事件详情</th><th>发生时间</th><th>处理状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr class="bg-[#fff2f0]"><td>EW01-20260511-001</td><td><span class="ant-tag ant-tag-processing">预警</span></td><td>鄂F·A001</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000001</td><td>车速超限</td><td>当前速度62km/h，限速50km/h</td><td>2026-05-11 14:28:30</td><td><span class="ant-tag ant-tag-warning">待处理</span></td><td><button class="ant-btn-link" onclick="showDetail('EW01-20260511-001')">查看详情</button></td></tr>
+                <tr><td>EW01-20260511-002</td><td><span class="ant-tag ant-tag-processing">预警</span></td><td>鄂F·C007</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000004</td><td>自动驾驶系统异常</td><td>路径规划模块异常，可能与高精地图数据不一致有关</td><td>2026-05-11 13:45:10</td><td><span class="ant-tag ant-tag-processing">处理中</span></td><td><button class="ant-btn-link" onclick="showDetail('EW01-20260511-002')">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 2 条</span>
+            <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab2: 车辆碰撞事件预警 ========== -->
+      <div id="tab-ew02" class="alarm-tab-content" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>碰撞严重程度</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
+            <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" style="width:130px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn">导出</button></div>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <colgroup><col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:200px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px"></colgroup>
+              <thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>VIN码</th><th>事件内容描述</th><th>事件详情</th><th>发生时间</th><th>处理状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr class="bg-[#fff2f0]"><td>EW02-20260511-001</td><td><span class="ant-tag ant-tag-processing">预警</span></td><td>鄂F·A001</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000001</td><td>碰撞事件预警</td><td>车辆发生明显冲击，加速度急剧变化</td><td>2026-05-11 10:30:00</td><td><span class="ant-tag ant-tag-warning">待处理</span></td><td><button class="ant-btn-link" onclick="showDetail('EW02-20260511-001')">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 1 条</span>
+            <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab3: 车载终端异常预警 ========== -->
+      <div id="tab-ew03" class="alarm-tab-content" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>故障类型</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
+            <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" style="width:130px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn">导出</button></div>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <colgroup><col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:200px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px"></colgroup>
+              <thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>VIN码</th><th>事件内容描述</th><th>事件详情</th><th>发生时间</th><th>处理状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr class="bg-[#fff2f0]"><td>EW03-20260511-001</td><td><span class="ant-tag ant-tag-processing">预警</span></td><td>鄂F·D010</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000005</td><td>传感器数据异常</td><td>激光雷达离线，距离前方障碍物约200m</td><td>2026-05-11 14:05:18</td><td><span class="ant-tag ant-tag-warning">待处理</span></td><td><button class="ant-btn-link" onclick="showDetail('EW03-20260511-001')">查看详情</button></td></tr>
+                <tr><td>EW03-20260511-002</td><td><span class="ant-tag ant-tag-processing">预警</span></td><td>鄂F·E005</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000006</td><td>通信中断</td><td>车辆离线超过30分钟</td><td>2026-05-11 11:20:30</td><td><span class="ant-tag ant-tag-success">已处理</span></td><td><button class="ant-btn-link" onclick="showDetail('EW03-20260511-002')">查看详情</button></td></tr>
+                <tr class="bg-[#fff2f0]"><td>EW03-20260511-003</td><td><span class="ant-tag ant-tag-processing">预警</span></td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>电池电量低</td><td>SOC低于20%（当前18.5%）</td><td>2026-05-11 13:22:10</td><td><span class="ant-tag ant-tag-warning">待处理</span></td><td><button class="ant-btn-link" onclick="showDetail('EW03-20260511-003')">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 3 条</span>
+            <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab4: 临牌有效期告警 ========== -->
+      <div id="tab-alt04" class="alarm-tab-content" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
+            <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" style="width:130px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn">导出</button></div>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <colgroup><col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:200px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px"></colgroup>
+              <thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>VIN码</th><th>事件内容描述</th><th>事件详情</th><th>发生时间</th><th>处理状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr class="bg-[#fff2f0]"><td>ALT04-20260511-001</td><td><span class="ant-tag ant-tag-warning">告警</span></td><td>鄂F·A002</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000002</td><td>临牌已过期仍上路</td><td>临牌有效期至2026-05-10，当前处于自动驾驶模式且车速35km/h</td><td>2026-05-11 09:30:00</td><td><span class="ant-tag ant-tag-warning">待处理</span></td><td><button class="ant-btn-link" onclick="showDetail('ALT04-20260511-001')">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 1 条</span>
+            <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab5: 电子围栏越界告警 ========== -->
+      <div id="tab-alt05" class="alarm-tab-content" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>越界方向</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
+            <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" style="width:130px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn">导出</button></div>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <colgroup><col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:200px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px"></colgroup>
+              <thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>VIN码</th><th>事件内容描述</th><th>事件详情</th><th>发生时间</th><th>处理状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr class="bg-[#fff2f0]"><td>ALT05-20260511-001</td><td><span class="ant-tag ant-tag-warning">告警</span></td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>电子围栏越界</td><td>车辆驶出指定测试区域，位置：高新区边界附近，当前档位D档，车速28km/h</td><td>2026-05-11 14:15:22</td><td><span class="ant-tag ant-tag-warning">待处理</span></td><td><button class="ant-btn-link" onclick="showDetail('ALT05-20260511-001')">查看详情</button></td></tr>
+                <tr><td>ALT05-20260509-001</td><td><span class="ant-tag ant-tag-warning">告警</span></td><td>鄂F·D010</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000005</td><td>电子围栏越界</td><td>车辆驶入禁止区域，位置：襄城区老城区</td><td>2026-05-09 15:30:00</td><td><span class="ant-tag ant-tag-success">已处理</span></td><td><button class="ant-btn-link" onclick="showDetail('ALT05-20260509-001')">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 2 条</span>
+            <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab6: 测试时段合规性告警 ========== -->
+      <div id="tab-alt06" class="alarm-tab-content" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
+            <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" style="width:130px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn">导出</button></div>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <colgroup><col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:200px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px"></colgroup>
+              <thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>VIN码</th><th>事件内容描述</th><th>事件详情</th><th>发生时间</th><th>处理状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td>ALT06-20260511-001</td><td><span class="ant-tag ant-tag-warning">告警</span></td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>非规定时段测试作业</td><td>车辆在非规定时间段内进行测试作业（06:00前），当前车速40km/h，自动驾驶模式</td><td>2026-05-11 06:15:00</td><td><span class="ant-tag ant-tag-success">已处理</span></td><td><button class="ant-btn-link" onclick="showDetail('ALT06-20260511-001')">查看详情</button></td></tr>
+                <tr><td>ALT06-20260508-001</td><td><span class="ant-tag ant-tag-warning">告警</span></td><td>鄂F·A002</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000002</td><td>非规定时段测试作业</td><td>车辆在非规定时间段内进行测试作业（22:00后），当前车速25km/h，自动驾驶模式</td><td>2026-05-08 22:45:00</td><td><span class="ant-tag ant-tag-success">已处理</span></td><td><button class="ant-btn-link" onclick="showDetail('ALT06-20260508-001')">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 2 条</span>
+            <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab7: 安全员到岗状态告警 ========== -->
+      <div id="tab-alt07" class="alarm-tab-content" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号" style="width:130px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
+            <div class="filter-item"><label>处理状态</label><div class="ant-select">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+            <div class="filter-item"><label>发生日期</label><input class="ant-input" type="date" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" style="width:130px"></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn">导出</button></div>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <colgroup><col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:200px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px"></colgroup>
+              <thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>VIN码</th><th>事件内容描述</th><th>事件详情</th><th>发生时间</th><th>处理状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr class="bg-[#fff2f0]"><td>ALT07-20260511-001</td><td><span class="ant-tag ant-tag-warning">告警</span></td><td>鄂F·B003</td><td style="font-family:monospace;font-size:12px">LSVAA4189N2000003</td><td>安全员未到岗</td><td>排班上岗时段08:00-18:00，安全员状态：未到岗，车辆自动驾驶模式，车速30km/h</td><td>2026-05-11 08:30:00</td><td><span class="ant-tag ant-tag-warning">待处理</span></td><td><button class="ant-btn-link" onclick="showDetail('ALT07-20260511-001')">查看详情</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 1 条</span>
+            <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='alarm';
+/* Tab 切换 */
+function switchTab(el, id){
+  document.querySelectorAll('.ant-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.alarm-tab-content').forEach(t=>t.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+/* 事件详情数据 */
+const EVENT_DATA = {
+  'EW01-20260511-001': {type:'车辆运行异常预警',cat:'预警',plate:'鄂F·A001',vin:'LSVAA4189N2000001',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-11 14:28:30',status:'待处理',desc:'车速超限',detail:'当前速度62km/h，限速50km/h',
+    trigger:[
+      {label:'异常子类型',value:'车速超限'},{label:'当前车速',value:'62 km/h'},{label:'限速值',value:'50 km/h'},{label:'驾驶模式',value:'自动驾驶'},{label:'定位坐标',value:'32.0456, 112.1498'}
+    ]},
+  'EW01-20260511-002': {type:'车辆运行异常预警',cat:'预警',plate:'鄂F·C007',vin:'LSVAA4189N2000004',enterprise:'襄阳达安汽车检测中心有限公司',time:'2026-05-11 13:45:10',status:'处理中',desc:'自动驾驶系统异常',detail:'路径规划模块异常，可能与高精地图数据不一致有关',
+    trigger:[
+      {label:'异常子类型',value:'偏离路线'},{label:'当前车速',value:'45 km/h'},{label:'偏离距离',value:'15 m'},{label:'驾驶模式',value:'自动驾驶'},{label:'定位坐标',value:'32.0512, 112.1387'}
+    ]},
+  'EW02-20260511-001': {type:'车辆碰撞事件预警',cat:'预警',plate:'鄂F·A001',vin:'LSVAA4189N2000001',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-11 10:30:00',status:'待处理',desc:'碰撞事件预警',detail:'车辆发生明显冲击，加速度急剧变化',
+    trigger:[
+      {label:'碰撞严重程度',value:'一般'},{label:'碰撞前车速',value:'55 km/h'},{label:'碰撞后车速',value:'12 km/h'},{label:'速度变化量',value:'43 km/h'},{label:'冲击加速度',value:'8.5 m/s²'},{label:'姿态变化',value:'车辆前倾约5度'},{label:'驾驶模式',value:'自动驾驶'},{label:'定位坐标',value:'32.0478, 112.1523'}
+    ]},
+  'EW03-20260511-001': {type:'车载终端异常预警',cat:'预警',plate:'鄂F·D010',vin:'LSVAA4189N2000005',enterprise:'襄阳智能汽车测试有限公司',time:'2026-05-11 14:05:18',status:'待处理',desc:'传感器数据异常',detail:'激光雷达离线，距离前方障碍物约200m',
+    trigger:[
+      {label:'故障子类型',value:'传感器故障'},{label:'故障码',value:'TC-E1003'},{label:'故障描述',value:'激光雷达设备无响应'},{label:'受影响设备',value:'激光雷达-LiDAR-01'},{label:'最后通信时间',value:'2026-05-11 14:03:45'}
+    ]},
+  'EW03-20260511-002': {type:'车载终端异常预警',cat:'预警',plate:'鄂F·E005',vin:'LSVAA4189N2000006',enterprise:'襄阳车联网运营有限公司',time:'2026-05-11 11:20:30',status:'已处理',desc:'通信中断',detail:'车辆离线超过30分钟',
+    trigger:[
+      {label:'故障子类型',value:'数据中断'},{label:'故障码',value:'TC-D2001'},{label:'故障描述',value:'4G/5G通信链路中断'},{label:'离线时长',value:'32 分钟'},{label:'最后通信时间',value:'2026-05-11 10:48:12'}
+    ]},
+  'EW03-20260511-003': {type:'车载终端异常预警',cat:'预警',plate:'鄂F·B003',vin:'LSVAA4189N2000003',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-11 13:22:10',status:'待处理',desc:'电池电量低',detail:'SOC低于20%（当前18.5%）',
+    trigger:[
+      {label:'故障子类型',value:'其他'},{label:'故障码',value:'TC-B3005'},{label:'故障描述',value:'动力电池SOC过低'},{label:'受影响设备',value:'动力电池管理系统(BMS)'}
+    ]},
+  'ALT04-20260511-001': {type:'临牌有效期告警',cat:'告警',plate:'鄂F·A002',vin:'LSVAA4189N2000002',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-11 09:30:00',status:'待处理',desc:'临牌已过期仍上路',detail:'临牌有效期至2026-05-10，当前处于自动驾驶模式且车速35km/h',
+    trigger:[
+      {label:'临牌有效期',value:'2026-05-10'},{label:'数据生成时间',value:'2026-05-11 09:30:00'},{label:'是否超期',value:'是'},{label:'超期时长',value:'1 天'},{label:'驾驶模式',value:'自动驾驶'},{label:'当前车速',value:'35 km/h'}
+    ]},
+  'ALT05-20260511-001': {type:'电子围栏越界告警',cat:'告警',plate:'鄂F·B003',vin:'LSVAA4189N2000003',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-11 14:15:22',status:'待处理',desc:'电子围栏越界',detail:'车辆驶出指定测试区域，位置：高新区边界附近，当前档位D档，车速28km/h',
+    trigger:[
+      {label:'关联围栏名称',value:'高新区自动驾驶测试区域'},{label:'越界方向',value:'驶出围栏'},{label:'定位坐标',value:'32.0389, 112.1567'},{label:'驶出距离',value:'120 m'},{label:'当前车速',value:'28 km/h'},{label:'档位',value:'D档'},{label:'驾驶模式',value:'自动驾驶'}
+    ]},
+  'ALT05-20260509-001': {type:'电子围栏越界告警',cat:'告警',plate:'鄂F·D010',vin:'LSVAA4189N2000005',enterprise:'襄阳智能汽车测试有限公司',time:'2026-05-09 15:30:00',status:'已处理',desc:'电子围栏越界',detail:'车辆驶入禁止区域，位置：襄城区老城区',
+    trigger:[
+      {label:'关联围栏名称',value:'襄城区禁行区域'},{label:'越界方向',value:'驶入禁行区'},{label:'定位坐标',value:'32.0123, 112.1345'},{label:'驶出距离',value:'250 m'},{label:'当前车速',value:'20 km/h'},{label:'档位',value:'D档'},{label:'驾驶模式',value:'自动驾驶'}
+    ]},
+  'ALT06-20260511-001': {type:'测试时段合规性告警',cat:'告警',plate:'鄂F·B003',vin:'LSVAA4189N2000003',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-11 06:15:00',status:'已处理',desc:'非规定时段测试作业',detail:'车辆在非规定时间段内进行测试作业（06:00前），当前车速40km/h，自动驾驶模式',
+    trigger:[
+      {label:'允许测试时段',value:'06:00 - 22:00'},{label:'数据生成时间',value:'2026-05-11 05:45:00'},{label:'是否在时段外',value:'是'},{label:'偏离时长',value:'15 分钟'},{label:'驾驶模式',value:'自动驾驶'},{label:'当前车速',value:'40 km/h'}
+    ]},
+  'ALT06-20260508-001': {type:'测试时段合规性告警',cat:'告警',plate:'鄂F·A002',vin:'LSVAA4189N2000002',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-08 22:45:00',status:'已处理',desc:'非规定时段测试作业',detail:'车辆在非规定时间段内进行测试作业（22:00后），当前车速25km/h，自动驾驶模式',
+    trigger:[
+      {label:'允许测试时段',value:'06:00 - 22:00'},{label:'数据生成时间',value:'2026-05-08 22:45:00'},{label:'是否在时段外',value:'是'},{label:'偏离时长',value:'45 分钟'},{label:'驾驶模式',value:'自动驾驶'},{label:'当前车速',value:'25 km/h'}
+    ]},
+  'ALT07-20260511-001': {type:'安全员到岗状态告警',cat:'告警',plate:'鄂F·B003',vin:'LSVAA4189N2000003',enterprise:'襄阳东风智能网联科技有限公司',time:'2026-05-11 08:30:00',status:'待处理',desc:'安全员未到岗',detail:'排班上岗时段08:00-18:00，安全员状态：未到岗，车辆自动驾驶模式，车速30km/h',
+    trigger:[
+      {label:'排班时段',value:'08:00 - 18:00'},{label:'安全员状态',value:'未到岗'},{label:'数据生成时间',value:'2026-05-11 08:30:00'},{label:'是否在排班时段内',value:'是'},{label:'驾驶模式',value:'自动驾驶'},{label:'当前车速',value:'30 km/h'}
+    ]}
+};
+/* 打开事件详情弹窗 */
+function showDetail(eventId){
+  const d = EVENT_DATA[eventId];
+  if(!d) return;
+  const catClass = d.cat==='预警' ? 'ant-tag-processing' : 'ant-tag-warning';
+  const statusClass = d.status==='待处理' ? 'ant-tag-warning' : d.status==='处理中' ? 'ant-tag-processing' : 'ant-tag-success';
+  let triggerRows = '';
+  d.trigger.forEach(item => {
+    triggerRows += '<div class="desc-item"><div class="desc-label">'+item.label+'</div><div class="desc-value">'+item.value+'</div></div>';
+  });
+  const body = `
+    <div class="desc-section">
+      <div class="desc-section-title">基础信息</div>
+      <div class="desc-grid">
+        <div class="desc-item"><div class="desc-label">事件编号</div><div class="desc-value">${eventId}</div></div>
+        <div class="desc-item"><div class="desc-label">事件分类</div><div class="desc-value"><span class="ant-tag ${catClass}">${d.cat}</span></div></div>
+        <div class="desc-item"><div class="desc-label">事件类型</div><div class="desc-value">${d.type}</div></div>
+        <div class="desc-item"><div class="desc-label">车牌号</div><div class="desc-value">${d.plate}</div></div>
+        <div class="desc-item"><div class="desc-label">VIN码</div><div class="desc-value" style="font-family:monospace;font-size:12px">${d.vin}</div></div>
+        <div class="desc-item"><div class="desc-label">所属企业</div><div class="desc-value">${d.enterprise}</div></div>
+        <div class="desc-item"><div class="desc-label">发生时间</div><div class="desc-value">${d.time}</div></div>
+        <div class="desc-item"><div class="desc-label">处理状态</div><div class="desc-value"><span class="ant-tag ${statusClass}">${d.status}</span></div></div>
+        <div class="desc-item full"><div class="desc-label">事件内容描述</div><div class="desc-value">${d.desc}</div></div>
+      </div>
+    </div>
+    <div class="desc-section">
+      <div class="desc-section-title">触发条件</div>
+      <div class="desc-grid">${triggerRows}</div>
+    </div>
+    <div class="desc-section">
+      <div class="desc-section-title">处理信息</div>
+      <div class="desc-grid">
+        <div class="desc-item"><div class="desc-label">当前处理状态</div><div class="desc-value"><span class="ant-tag ${statusClass}">${d.status}</span></div></div>
+        <div class="desc-item"><div class="desc-label">处理人</div><div class="desc-value">${d.status==='已处理'?'张三':'—'}</div></div>
+        <div class="desc-item"><div class="desc-label">处理时间</div><div class="desc-value">${d.status==='已处理'?'2026-05-11 16:00:00':'—'}</div></div>
+        <div class="desc-item full"><div class="desc-label">处理备注</div><div class="desc-value">${d.status==='已处理'?'已确认并处理完毕':'—'}</div></div>
+      </div>
+    </div>`;
+  openModal('事件详情 — '+eventId, body, {width:'680px'});
+}
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>
