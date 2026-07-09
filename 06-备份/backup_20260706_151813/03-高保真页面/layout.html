@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { primary: { DEFAULT: '#1677ff', hover: '#4096ff', disabled: '#85a5cc' } } } }
+    }
+  </script>
+  <style>
+    /* 工作台补充样式：空状态与卡片标题区 */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-header h4 { font-size: 16px; font-weight: 600; color: #000000d9; line-height: 1.4; }
+    .section-more { font-size: 12px; color: #1677ff; text-decoration: none; transition: color .2s; }
+    .section-more:hover { color: #4096ff; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 16px; color: #00000040; font-size: 14px; }
+    .empty-state svg { margin-bottom: 12px; color: #00000026; }
+    /* 功能导航分组 */
+    .nav-subgroup { margin-bottom: 12px; }
+    .nav-subgroup:last-child { margin-bottom: 0; }
+    .nav-subgroup-title { display: block; font-size: 12px; color: #00000073; margin-bottom: 6px; font-weight: 500; letter-spacing: 0.2px; }
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <!-- 页面标题 -->
+      <div class="page-header"><h2>工作台</h2></div>
+
+      <!-- 第一行：核心统计指标卡 -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6" id="statCards">
+        <div class="stat-card" data-role="admin,enterprise">
+          <div class="stat-info">
+            <div class="stat-label">在线车辆数</div>
+            <div class="stat-value">128</div>
+          </div>
+          <div class="stat-icon bg-[#e6f4ff]"><svg viewBox="64 64 896 896" width="28" height="28" fill="#1677ff"><path d="M740 568H284c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h456c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0-144H284c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h456c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"/></svg></div>
+        </div>
+        <div class="stat-card" data-role="admin,enterprise">
+          <div class="stat-info">
+            <div class="stat-label">今日告警数</div>
+            <div class="stat-value">96</div>
+          </div>
+          <div class="stat-icon bg-[#fffbe6]"><svg viewBox="64 64 896 896" width="28" height="28" fill="#faad14"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372zm-32-464c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V272c0-4.4 3.6-8 8-8h-48c-4.4 0-8 3.6-8 8v148zm0 224c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v48z"/></svg></div>
+        </div>
+        <div class="stat-card" data-role="admin,enterprise">
+          <div class="stat-info">
+            <div class="stat-label">今日事故数</div>
+            <div class="stat-value">3</div>
+          </div>
+          <div class="stat-icon bg-[#fff2f0]"><svg viewBox="64 64 896 896" width="28" height="28" fill="#ff4d4f"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372zm-48-604a8 8 0 00-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V288a8 8 0 00-8-8h-48zm0 376a8 8 0 00-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48a8 8 0 00-8-8h-48z"/></svg></div>
+        </div>
+        <div class="stat-card" data-role="admin,enterprise">
+          <div class="stat-info">
+            <div class="stat-label">累计测试里程</div>
+            <div class="stat-value">352,680 <span class="stat-unit">km</span></div>
+          </div>
+          <div class="stat-icon bg-[#f6ffed]"><svg viewBox="64 64 896 896" width="28" height="28" fill="#52c41a"><path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L429.6 695.2 227 456c-6.1-7.6-15.3-12.2-25.1-12.2H132c-10.6 0-16.8 12.4-10.1 20.1l279.6 344.4c12.4 15.3 35.4 15.3 47.8 0L922 210.1c6.7-7.7.5-20.1-10-20.1z"/></svg></div>
+        </div>
+        <div class="stat-card" data-role="admin,enterprise">
+          <div class="stat-info">
+            <div class="stat-label">许可到期预警</div>
+            <div class="stat-value">8</div>
+          </div>
+          <div class="stat-icon bg-[#fff7e6]"><svg viewBox="64 64 896 896" width="28" height="28" fill="#fa8c16"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372zm-32-464v176c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8zm0-148v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8z"/></svg></div>
+        </div>
+        <div class="stat-card" data-role="admin">
+          <div class="stat-info">
+            <div class="stat-label">今日上线企业</div>
+            <div class="stat-value">42</div>
+          </div>
+          <div class="stat-icon bg-[#f9f0ff]"><svg viewBox="64 64 896 896" width="28" height="28" fill="#722ed1"><path d="M854.6 289.1a362.49 362.49 0 00-79.9-115.7 370.83 370.83 0 00-118.2-77.8C610.7 76.6 562.1 67 512 67c-50.1 0-98.7 9.6-144.5 28.5-44.3 18.3-84 44.5-118.2 77.8A362.49 362.49 0 00169.4 289c-19.5 45-29.4 92.8-29.4 142 0 70.6 16.9 140.9 50.1 208.5 28.2 57.3 67.6 113.7 117.1 167.6 49 53.2 107.2 103.7 173 150.2 5.2 3.7 10.5 6.2 16 7.5 3.4.8 6.8 1.2 10.2 1.2 12 0 23.3-4.6 31.8-12.9 5.3-5.2 9.3-11.5 11.7-18.5 1.3-3.7 2.2-7.6 2.6-11.6.2-2 .3-4.1.3-6.1v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v28.6c-49.5-37.7-91.8-77.8-125.8-119-36.5-44.2-65-89.9-84.5-135.8C205.4 548.6 192 489.5 192 431c0-38.5 7.5-75.8 22.3-110.7 14.4-33.8 35-64.1 61.3-90.1 26.2-25.8 56.8-46.2 91-60.6C401.1 155.1 438.8 148 477 147h70c38.2 1 75.9 8.1 110.4 22.6 34.2 14.4 64.8 34.8 91 60.6 26.3 26 46.9 56.3 61.3 90.1C824.5 355.2 832 392.5 832 431c0 37.1-4.6 75.4-13.7 113.7-8.8 37-22.4 75.2-40.4 113.5-4.6 9.8.2 21.3 10.4 24.4l53.3 15.3c8.2 2.4 16.8-1.8 20.2-9.6 20.8-47.7 36.5-95.7 46.7-142.7 10.5-48.7 15.8-96 15.8-141.6-.1-49.2-10-97-29.5-142z"/></svg></div>
+        </div>
+      </div>
+
+      <!-- 第二行：最近准入申请 + 待办/公告 -->
+      <div class="flex flex-col lg:flex-row gap-6 mb-6">
+        <!-- 最近准入申请 -->
+        <div class="card flex-1" style="min-width: 0;">
+          <div class="section-header">
+            <h4>最近准入申请</h4>
+            <a href="monitor/access-apply/road-test.html" class="section-more">查看全部 →</a>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="ant-table" id="recentApplyTable">
+              <thead>
+                <tr>
+                  <th class="col-code">申请编号</th>
+                  <th>申请类型</th>
+                  <th>申请主体</th>
+                  <th class="col-num">车辆数</th>
+                  <th class="col-status">申请状态</th>
+                  <th class="col-code">申请时间</th>
+                  <th class="col-action">操作</th>
+                </tr>
+              </thead>
+              <tbody id="recentApplyTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 右侧：待办 + 公告 -->
+        <div class="flex flex-col gap-6" style="flex: 0 0 360px; min-width: 0;">
+          <!-- 待办事项 -->
+          <div class="card" style="min-width: 0;">
+            <div class="section-header">
+              <h4>待办事项</h4>
+              <a href="monitor/access-approve/approve.html" class="section-more" data-role="admin">查看全部 →</a>
+            </div>
+            <div class="space-y-3" id="todoList"></div>
+          </div>
+
+          <!-- 系统公告 -->
+          <div class="card" style="min-width: 0;">
+            <div class="section-header">
+              <h4>系统公告</h4>
+              <a href="monitor/service/notice.html" class="section-more">查看全部 →</a>
+            </div>
+            <div class="space-y-1" id="noticeList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第三行：功能导航 -->
+      <div class="card" id="navSection">
+        <div class="section-header">
+          <h4>功能导航</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="nav-card" data-role="admin">
+            <div class="nav-card-header">
+              <span class="nav-card-icon" style="background:#e6f4ff;color:#1677ff"><svg viewBox="64 64 896 896" width="18" height="18" fill="currentColor"><path d="M854.6 289.1a362.49 362.49 0 00-79.9-115.7 370.83 370.83 0 00-118.2-77.8C610.7 76.6 562.1 67 512 67c-50.1 0-98.7 9.6-144.5 28.5-44.3 18.3-84 44.5-118.2 77.8A362.49 362.49 0 00169.4 289c-19.5 45-29.4 92.8-29.4 142 0 70.6 16.9 140.9 50.1 208.5 28.2 57.3 67.6 113.7 117.1 167.6 49 53.2 107.2 103.7 173 150.2 5.2 3.7 10.5 6.2 16 7.5 3.4.8 6.8 1.2 10.2 1.2 12 0 23.3-4.6 31.8-12.9 5.3-5.2 9.3-11.5 11.7-18.5 1.3-3.7 2.2-7.6 2.6-11.6.2-2 .3-4.1.3-6.1v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v28.6c-49.5-37.7-91.8-77.8-125.8-119-36.5-44.2-65-89.9-84.5-135.8C205.4 548.6 192 489.5 192 431c0-38.5 7.5-75.8 22.3-110.7 14.4-33.8 35-64.1 61.3-90.1 26.2-25.8 56.8-46.2 91-60.6C401.1 155.1 438.8 148 477 147h70c38.2 1 75.9 8.1 110.4 22.6 34.2 14.4 64.8 34.8 91 60.6 26.3 26 46.9 56.3 61.3 90.1C824.5 355.2 832 392.5 832 431c0 37.1-4.6 75.4-13.7 113.7-8.8 37-22.4 75.2-40.4 113.5-4.6 9.8.2 21.3 10.4 24.4l53.3 15.3c8.2 2.4 16.8-1.8 20.2-9.6 20.8-47.7 36.5-95.7 46.7-142.7 10.5-48.7 15.8-96 15.8-141.6-.1-49.2-10-97-29.5-142z"/></svg></span>
+              <span class="nav-card-title">开放道路资源管理</span>
+            </div>
+            <div class="nav-card-links">
+              <a href="road/catalog/filing.html" class="nav-link">道路信息建档</a>
+              <a href="road/catalog/control.html" class="nav-link">动态管控</a>
+              <a href="road/visualization/map.html" class="nav-link">地图可视化</a>
+              <a href="road/evaluation/result.html" class="nav-link">评估结果</a>
+              <a href="road/evaluation/config.html" class="nav-link">评估配置</a>
+              <a href="road/evaluation/log.html" class="nav-link">评估日志</a>
+              <a href="road/statistics/index.html" class="nav-link">区域统计</a>
+            </div>
+          </div>
+          <div class="nav-card" data-role="admin,enterprise">
+            <div class="nav-card-header">
+              <span class="nav-card-icon" style="background:#e6f4ff;color:#1677ff"><svg viewBox="64 64 896 896" width="18" height="18" fill="currentColor"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"/><path d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"/></svg></span>
+              <span class="nav-card-title">测试示范监管</span>
+            </div>
+            <div class="nav-card-links">
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">准入信息管理</span>
+                <a href="monitor/access-info/company.html" class="nav-link">企业登记</a>
+                <a href="monitor/access-info/vehicle.html" class="nav-link">车辆登记</a>
+                <a href="monitor/access-info/person.html" class="nav-link">人员登记</a>
+              </div>
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">准入申请</span>
+                <a href="monitor/access-apply/road-test.html" class="nav-link">道路测试</a>
+                <a href="monitor/access-apply/demo-apply.html" class="nav-link">示范应用</a>
+                <a href="monitor/access-apply/demo-operate.html" class="nav-link">商业化试点</a>
+                <a href="monitor/access-apply/business.html" class="nav-link">业务申请</a>
+              </div>
+              <div class="nav-subgroup" data-role="admin">
+                <span class="nav-subgroup-title">准入审批管理</span>
+                <a href="monitor/access-approve/approve.html" class="nav-link">审批管理</a>
+                <a href="monitor/access-approve/terminate.html" class="nav-link">资格终止</a>
+                <a href="monitor/access-approve/report.html" class="nav-link">报告管理</a>
+              </div>
+              <div class="nav-subgroup" data-role="admin">
+                <span class="nav-subgroup-title">审批配置</span>
+                <a href="monitor/approve-config/config.html" class="nav-link">审批配置</a>
+              </div>
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">车辆状态监控</span>
+                <a href="monitor/vehicle-monitor/monitor-map.html" class="nav-link">监控一张图</a>
+                <a href="monitor/vehicle-monitor/running.html" class="nav-link">运行监控</a>
+                <a href="monitor/vehicle-monitor/alarm.html" class="nav-link">异常告警</a>
+                <a href="monitor/vehicle-monitor/accident.html" class="nav-link">事故上报</a>
+                <a href="monitor/vehicle-monitor/accident-review.html" class="nav-link" data-role="admin">事故审核</a>
+              </div>
+              <div class="nav-subgroup" data-role="admin">
+                <span class="nav-subgroup-title">测试服务管理</span>
+                <a href="monitor/service/notice.html" class="nav-link">信息发布</a>
+                <a href="monitor/service/feedback-manage.html" class="nav-link">在线反馈管理</a>
+                <a href="monitor/service/fence.html" class="nav-link">电子围栏</a>
+                <a href="monitor/service/evaluation.html" class="nav-link">测试评价</a>
+              </div>
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">信息公开与在线反馈</span>
+                <a href="monitor/public/info.html" class="nav-link">信息公开</a>
+                <a href="monitor/public/feedback.html" class="nav-link">在线反馈</a>
+              </div>
+            </div>
+          </div>
+          <div class="nav-card" data-role="admin">
+            <div class="nav-card-header">
+              <span class="nav-card-icon" style="background:#f6ffed;color:#52c41a"><svg viewBox="64 64 896 896" width="18" height="18" fill="currentColor"><path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L429.6 695.2 227 456c-6.1-7.6-15.3-12.2-25.1-12.2H132c-10.6 0-16.8 12.4-10.1 20.1l279.6 344.4c12.4 15.3 35.4 15.3 47.8 0L922 210.1c6.7-7.7.5-20.1-10-20.1z"/></svg></span>
+              <span class="nav-card-title">监测数据分析</span>
+            </div>
+            <div class="nav-card-links">
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">测试数据分析</span>
+                <a href="data-analysis/analysis/overview.html" class="nav-link">数据总览</a>
+                <a href="data-analysis/analysis/alarm-stats.html" class="nav-link">告警统计</a>
+                <a href="data-analysis/analysis/violation-stats.html" class="nav-link">违法事故</a>
+                <a href="data-analysis/analysis/running-analysis.html" class="nav-link">运行分析</a>
+                <a href="data-analysis/analysis/warning-analysis.html" class="nav-link">预警分析</a>
+                <a href="data-analysis/analysis/mileage-analysis.html" class="nav-link">里程分析</a>
+                <a href="data-analysis/analysis/industry-analysis.html" class="nav-link">产业分析</a>
+              </div>
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">数据查询检索</span>
+                <a href="data-analysis/query/company-query.html" class="nav-link">企业</a>
+                <a href="data-analysis/query/safety-driver-query.html" class="nav-link">安全员</a>
+                <a href="data-analysis/query/vehicle-query.html" class="nav-link">车辆</a>
+                <a href="data-analysis/query/device-query.html" class="nav-link">设备</a>
+                <a href="data-analysis/query/fault-query.html" class="nav-link">车辆故障</a>
+              </div>
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">事故数据分析</span>
+                <a href="data-analysis/accident/accident-parse.html" class="nav-link">事故解析</a>
+                <a href="data-analysis/accident/accident-cause.html" class="nav-link">事故成因</a>
+                <a href="data-analysis/accident/accident-feature.html" class="nav-link">事故特征</a>
+                <a href="data-analysis/accident/accident-judge.html" class="nav-link">事故研判</a>
+              </div>
+              <div class="nav-subgroup">
+                <span class="nav-subgroup-title">测试示范分析</span>
+                <a href="data-analysis/demo/road-test-analysis.html" class="nav-link">道路测试</a>
+                <a href="data-analysis/demo/demo-apply-analysis.html" class="nav-link">示范应用</a>
+                <a href="data-analysis/demo/demo-operate-analysis.html" class="nav-link">商业化试点</a>
+              </div>
+            </div>
+          </div>
+          <div class="nav-card" data-role="admin">
+            <div class="nav-card-header">
+              <span class="nav-card-icon" style="background:#fff7e6;color:#fa8c16"><svg viewBox="64 64 896 896" width="18" height="18" fill="currentColor"><path d="M424.6 180.4l-151.2-53a8 8 0 00-10.2 4.8l-53 151.2a8 8 0 004.8 10.2l151.2 53a8 8 0 0010.2-4.8l53-151.2a8 8 0 00-4.8-10.2zM881 519.8l-151.2-53a8 8 0 00-10.2 4.8l-53 151.2a8 8 0 004.8 10.2l151.2 53a8 8 0 0010.2-4.8l53-151.2a8 8 0 00-4.8-10.2zM519.8 881l-53-151.2a8 8 0 00-10.2-4.8l-151.2 53a8 8 0 00-4.8 10.2l53 151.2a8 8 0 0010.2 4.8l151.2-53a8 8 0 004.8-10.2zM180.4 424.6l53 151.2a8 8 0 0010.2 4.8l151.2-53a8 8 0 004.8-10.2l-53-151.2a8 8 0 00-10.2-4.8l-151.2 53a8 8 0 00-4.8 10.2z"/></svg></span>
+              <span class="nav-card-title">平台管理</span>
+            </div>
+            <div class="nav-card-links">
+              <a href="platform/dict/index.html" class="nav-link">数据字典</a>
+              <a href="platform/log/index.html" class="nav-link">操作日志</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+// 页面标识，供 common.js 识别当前菜单与布局
+var PAGE_ID = 'home';
+
+// 申请状态映射
+var statusMap = {
+  draft: { label: '草稿', cls: 'ant-tag-default' },
+  pending_review: { label: '待初审', cls: 'ant-tag-processing' },
+  pending_committee: { label: '待专班审核', cls: 'ant-tag-processing' },
+  pending_committee_confirm: { label: '待专班审核确认', cls: 'ant-tag-processing' },
+  pending_expert_review: { label: '待专家评审', cls: 'ant-tag-processing' },
+  pending_session: { label: '待专题会审议', cls: 'ant-tag-processing' },
+  rejected: { label: '已退回', cls: 'ant-tag-error' },
+  withdrawn: { label: '已撤回', cls: 'ant-tag-default' },
+  pending_plate: { label: '待上传牌照', cls: 'ant-tag-warning' },
+  active: { label: '已生效', cls: 'ant-tag-success' },
+  expired: { label: '已过期', cls: 'ant-tag-default' },
+  terminated: { label: '已终止', cls: 'ant-tag-error' }
+};
+
+// 最近准入申请示例数据
+var recentApplications = [
+  { id: 'RT202604001', type: '初次申请', module: '道路测试', company: 'A公司', vehicleCount: 2, status: 'pending_review', time: '2026-04-10' },
+  { id: 'DA202604002', type: '延期申请', module: '示范应用', company: 'B公司', vehicleCount: 1, status: 'active', time: '2026-04-05' },
+  { id: 'RT202604003', type: '变更申请', module: '道路测试', company: 'D公司', vehicleCount: 1, status: 'rejected', time: '2026-04-08' },
+  { id: 'DO202604004', type: '初次申请', module: '商业化试点', company: 'A公司', vehicleCount: 1, status: 'active', time: '2026-04-12' },
+  { id: 'DA202604005', type: '初次申请', module: '示范应用', company: 'D公司', vehicleCount: 1, status: 'pending_expert_review', time: '2026-04-24' },
+  { id: 'RT202604006', type: '初次申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'pending_plate', time: '2026-04-25' },
+  { id: 'DA202604007', type: '初次申请', module: '示范应用', company: 'G公司', vehicleCount: 1, status: 'active', time: '2026-04-28' },
+  { id: 'DO202605001', type: '初次申请', module: '商业化试点', company: 'J公司', vehicleCount: 1, status: 'pending_committee', time: '2026-05-01' },
+  { id: 'RT202605002', type: '延期申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'pending_committee_confirm', time: '2026-05-05' },
+  { id: 'DA202605003', type: '初次申请', module: '示范应用', company: 'S公司', vehicleCount: 1, status: 'draft', time: '2026-05-08' }
+];
+
+// 根据业务模块获取详情页链接
+function getModuleLink(item) {
+  if (item.module === '道路测试') return 'monitor/access-apply/road-test.html';
+  if (item.module === '示范应用') return 'monitor/access-apply/demo-apply.html';
+  if (item.module === '商业化试点') return 'monitor/access-apply/demo-operate.html';
+  return '#';
+}
+
+// 渲染最近准入申请表格
+function renderRecentApplications() {
+  var tbody = document.getElementById('recentApplyTbody');
+  if (!tbody) return;
+
+  if (!recentApplications || recentApplications.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><svg viewBox="64 64 896 896" width="48" height="48" fill="currentColor"><path d="M832 64H192c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-260 72h96v96h-96v-96zm-156 0h96v96H416v-96zM192 192h96v96h-96v-96zm640 640H192V384h640v448zM192 832h96v96h-96v-96zm156 0h96v96H416v-96zm312 0h96v96h-96v-96z"/></svg>暂无数据</div></td></tr>';
+    return;
+  }
+
+  var html = '';
+  recentApplications.forEach(function(d) {
+    var st = statusMap[d.status] || statusMap.draft;
+    html += '<tr>' +
+      '<td class="col-code"><a href="' + getModuleLink(d) + '" class="text-[#1677ff] no-underline hover:text-[#4096ff]">' + d.id + '</a></td>' +
+      '<td><span class="ant-tag ant-tag-default">' + d.type + '</span></td>' +
+      '<td>' + d.company + '</td>' +
+      '<td class="col-num">' + d.vehicleCount + '</td>' +
+      '<td class="col-status"><span class="ant-tag ' + st.cls + '">' + st.label + '</span></td>' +
+      '<td class="col-code">' + d.time + '</td>' +
+      '<td class="col-action"><a href="' + getModuleLink(d) + '" class="ant-btn-link">查看</a></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+// 渲染待办事项
+function renderTodos() {
+  var role = localStorage.getItem('platform_role') || 'admin';
+  var todos;
+  if (role === 'enterprise') {
+    todos = [
+      { text: '道路测试准入申请待提交', count: 2, link: 'monitor/access-apply/road-test.html', urgent: true },
+      { text: '在线反馈处理进度', count: 3, link: 'monitor/public/feedback.html', urgent: false },
+      { text: '车辆运行状态待确认', count: 1, link: 'monitor/vehicle-monitor/running.html', urgent: false }
+    ];
+  } else {
+    todos = [
+      { text: '道路测试准入申请待审批', count: 5, link: 'monitor/access-approve/approve.html', urgent: true },
+      { text: '示范应用准入申请待审批', count: 3, link: 'monitor/access-approve/approve.html', urgent: false },
+      { text: '事故审核待处理', count: 2, link: 'monitor/vehicle-monitor/accident-review.html', urgent: true },
+      { text: '在线反馈待回复', count: 4, link: 'monitor/service/feedback-manage.html', urgent: false }
+    ];
+  }
+  var html = '';
+  todos.forEach(function(t) {
+    html += '<a href="' + t.link + '" class="todo-item' + (t.urgent ? ' todo-urgent' : '') + '">' +
+      '<div class="todo-left">' +
+      '<span class="todo-indicator ' + (t.urgent ? 'todo-indicator-danger' : 'todo-indicator-warning') + '"></span>' +
+      '<span class="todo-text">' + t.text + '</span>' +
+      '</div>' +
+      '<span class="ant-tag ' + (t.urgent ? 'ant-tag-error' : 'ant-tag-warning') + ' text-xs">' + t.count + ' 条</span>' +
+      '</a>';
+  });
+  document.getElementById('todoList').innerHTML = html;
+}
+
+// 渲染系统公告
+function renderNotices() {
+  var notices = [
+    { title: '关于2026年第二季度道路测试阶段性报告提交通知', time: '2026-05-15', unread: true },
+    { title: '襄阳市新增开放测试道路路段公告（第12批）', time: '2026-05-10', unread: true },
+    { title: '智能网联汽车道路测试安全管理规范（修订版）发布', time: '2026-05-08', unread: false },
+    { title: '关于规范临时牌照管理的通知', time: '2026-04-28', unread: false },
+    { title: '自动驾驶测试数据上报接口升级公告', time: '2026-04-20', unread: false }
+  ];
+  var html = '';
+  notices.forEach(function(n) {
+    html += '<div class="notice-item">' +
+      '<div class="notice-title-row">' +
+      (n.unread ? '<span class="notice-dot"></span>' : '') +
+      '<span class="notice-title' + (n.unread ? ' notice-unread' : '') + '">' + n.title + '</span>' +
+      '</div>' +
+      '<div class="notice-time">' + n.time + '</div>' +
+      '</div>';
+  });
+  document.getElementById('noticeList').innerHTML = html;
+}
+
+// 根据当前角色过滤无权限元素
+function applyRoleFilter() {
+  var role = localStorage.getItem('platform_role') || 'admin';
+  // 公众用户跳转
+  if (role === 'public') {
+    window.location.replace('monitor/public/info.html');
+    return;
+  }
+  // 企业用户调整标题
+  if (role === 'enterprise') {
+    document.querySelector('.page-header h2').textContent = '企业工作台';
+  }
+  // 隐藏无权限的元素
+  var allRoleElements = document.querySelectorAll('[data-role]');
+  for (var i = 0; i < allRoleElements.length; i++) {
+    var el = allRoleElements[i];
+    var allowedRoles = el.getAttribute('data-role').split(',');
+    if (allowedRoles.indexOf(role) === -1) {
+      el.style.display = 'none';
+    }
+  }
+}
+
+// 页面初始化
+function initAll() {
+  applyRoleFilter();
+  renderRecentApplications();
+  renderTodos();
+  renderNotices();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initAll();
+});
+</script>
+<script src="./common.js"></script>
+</body>
+</html>

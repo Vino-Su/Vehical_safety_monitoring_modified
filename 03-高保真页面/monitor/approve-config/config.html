@@ -3,19 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>测试示范审批配置 - 智能网联汽车安全监测平台</title>
+  <title>材料目录配置 - 智能网联汽车安全监测平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <style>
-    .sub-tab{display:inline-block;padding:6px 16px;font-size:13px;border:1px solid #d9d9d9;border-radius:16px;cursor:pointer;background:#fff;color:#00000073;transition:all .2s;margin-right:8px}
-    .sub-tab:hover{color:#1677ff;border-color:#1677ff}
-    .sub-tab.active{background:#1677ff;color:#fff;border-color:#1677ff}
-    .selectable-item{padding:6px 10px;cursor:pointer;border-radius:4px;font-size:13px}
-    .selectable-item:hover{background:#f0f5ff}
-    .selectable-item.selected{background:#e6f4ff;font-weight:500;color:#1677ff}
+    .cfg-table-container{overflow-x:auto}
+    .cfg-table-container table{min-width:100%;table-layout:fixed}
+    .cfg-desc{font-size:13px;color:#00000073;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cfg-muted td{color:#00000073!important;background:#fafafa}
+    .tag-list{display:flex;flex-wrap:wrap;gap:4px}
+    .tag-list .ant-tag{margin:0}
+    /* 左侧类型树 */
+    .catalog-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:stretch;min-height:calc(100vh - 64px - 48px - 56px - 80px)}
+    .type-tree{background:#fff;border:1px solid #f0f0f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,21,41,.06);display:flex;flex-direction:column}
+    .type-tree-head{padding:12px 16px;border-bottom:1px solid #f0f0f0;background:#fafafa;flex-shrink:0}
+    .type-tree-head h4{font-size:13px;font-weight:600;color:#000000d9}
+    .cat-tabs{display:flex;border-bottom:1px solid #f0f0f0;background:#fafafa;flex-shrink:0}
+    .cat-tab{flex:1;padding:10px 0;text-align:center;font-size:13px;color:#00000073;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none}
+    .cat-tab:hover{color:#1677ff}
+    .cat-tab.active{color:#1677ff;border-bottom-color:#1677ff;font-weight:500;background:#fff}
+    .type-tree-body{flex:1;overflow:auto;min-height:120px}
+    .type-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid #f5f5f5;font-size:13px;color:#000000d9;line-height:20px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:all .15s}
+    .type-item:hover{background:#f0f7ff}
+    .type-item.selected{background:#e6f4ff;color:#1677ff;font-weight:500}
+    .type-item.disabled{color:#00000040;cursor:not-allowed}
+    .type-item.disabled:hover{background:transparent}
+    .type-item .type-cat{font-size:11px;color:#00000073;font-weight:400}
+    /* 右侧目录面板 */
+    .catalog-panel{background:#fff;border:1px solid #f0f0f0;border-radius:8px;padding:16px}
+    .catalog-panel-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+    .catalog-panel-head .title-wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .catalog-panel-head h4{font-size:14px;font-weight:600;color:#000000d9}
+    .catalog-panel-head .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    /* 表单 */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-grid .full{grid-column:1/-1}
+    .field-label{font-size:14px;color:#000000d9;margin-bottom:6px;line-height:20px}
+    .field-label .req{color:#ff4d4f;margin-right:4px}
+    .field-help{font-size:12px;color:#00000073;line-height:18px;margin-top:4px}
+    .field-error{font-size:12px;color:#ff4d4f;line-height:18px;margin-top:4px;display:none}
+    .field-error.show{display:block}
+    .ant-input.err,.ant-input.err:focus{border-color:#ff4d4f!important;box-shadow:0 0 0 2px rgba(255,77,79,.1)!important}
+    textarea.ant-input{height:auto!important;padding:6px 12px!important;line-height:20px;resize:vertical}
+    /* 多选枚举 */
+    .multi-enum-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .multi-enum-grid.err{border:1px solid #ffccc7;border-radius:6px;padding:8px}
+    .multi-enum-option{display:flex;align-items:center;gap:8px;min-height:34px;padding:7px 10px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;font-size:13px;color:#000000d9;line-height:18px;cursor:pointer;transition:all .2s}
+    .multi-enum-option:hover{border-color:#4096ff;background:#f0f7ff}
+    .multi-enum-option.selected{border-color:#91caff;background:#e6f4ff;color:#1677ff}
+    .multi-enum-option input{width:14px;height:14px;flex-shrink:0}
+    /* 开关 */
+    .cfg-switch{width:42px;height:22px;border:none;border-radius:11px;background:#d9d9d9;position:relative;cursor:pointer;transition:background .2s;padding:0;flex-shrink:0}
+    .cfg-switch span{position:absolute;width:18px;height:18px;top:2px;left:2px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s}
+    .cfg-switch.checked{background:#1677ff}
+    .cfg-switch.checked span{left:22px}
+    /* 附件简化（文件名 + 替换入口） */
+    .attach-box{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px dashed #d9d9d9;border-radius:6px;background:#fafafa;font-size:13px;color:#000000d9;min-height:34px}
+    .attach-box.has-file{border-style:solid;background:#f6ffed;border-color:#b7eb8f}
+    .attach-box .attach-icon{color:#52c41a;font-size:14px}
+    .attach-box .attach-empty{color:#00000040}
+    .inline-alert{display:flex;gap:8px;padding:10px 12px;border-radius:6px;font-size:13px;line-height:20px;margin-bottom:16px}
+    .inline-alert.info{background:#e6f4ff;color:#0958d9;border:1px solid #91caff}
+    .inline-alert.warn{background:#fffbe6;color:#ad6800;border:1px solid #ffe58f}
+    .confirm-body{font-size:14px;color:#000000d9;line-height:22px}
+    .confirm-tip{margin-top:12px;font-size:13px;color:#00000073;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;padding:10px 12px;line-height:20px}
+    .toast-msg{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;border:1px solid #f0f0f0;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);padding:10px 22px;font-size:14px;color:#000000d9;white-space:nowrap}
+    .empty-row td{text-align:center;color:#00000040;padding:40px 0!important}
+    .move-btn{padding:0 6px;color:#1677ff;cursor:pointer;font-size:13px;background:none;border:none}
+    .move-btn:hover{color:#4096ff}
+    .move-btn[disabled]{color:#00000040;cursor:not-allowed}
+    /* 版本对比差异表 */
     .diff-table td.added{background:#f6ffed}
     .diff-table td.removed{background:#fff2f0}
     .diff-table td.modified{background:#fff7e6}
+    .diff-tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;line-height:18px}
+    .diff-tag.added{background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f}
+    .diff-tag.removed{background:#fff2f0;color:#cf1322;border:1px solid #ffccc7}
+    .diff-tag.modified{background:#fff7e6;color:#d46b08;border:1px solid #ffd591}
+    .diff-tag.same{background:#fafafa;color:#00000040;border:1px solid #f0f0f0}
+    @media(max-width:1200px){.form-grid,.multi-enum-grid{grid-template-columns:1fr}.catalog-layout{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -24,410 +90,823 @@
   <div class="flex-1 flex flex-col overflow-hidden">
     <header id="topnav"></header>
     <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
-      <div class="page-header"><h2>测试示范审批配置</h2></div>
+      <div class="page-header"><h2>材料目录配置</h2></div>
 
-      <div class="ant-tabs mb-4">
-        <span class="ant-tab active" onclick="switchMainTab(this,'typeConfig')">准入类型与对象/主体配置</span>
-        <span class="ant-tab" onclick="switchMainTab(this,'materialConfig')">材料目录配置</span>
+      <!-- Tab 页签区 -->
+      <div class="ant-tabs">
+        <span class="ant-tab active" data-tab="library" onclick="switchTab(this,'library')">材料项库</span>
+        <span class="ant-tab" data-tab="catalog" onclick="switchTab(this,'catalog')">流程材料目录配置</span>
+        <span class="ant-tab" data-tab="version" onclick="switchTab(this,'version')">目录版本管理</span>
       </div>
 
-      <!-- 准入类型与对象/主体配置 -->
-      <div id="panel-typeConfig">
-        <div class="flex gap-2 mb-3" id="typeSubTabs">
-          <span class="sub-tab active" onclick="switchTypeSubTab(this,'type')">准入类型配置</span>
-          <span class="sub-tab" onclick="switchTypeSubTab(this,'object')">对象类型配置</span>
-          <span class="sub-tab" onclick="switchTypeSubTab(this,'subject')">申请主体类型配置</span>
-        </div>
-
-        <div class="card mb-4">
-          <div class="flex justify-between items-center mb-4">
-            <h4 class="text-sm font-semibold text-[#000000d9]" id="typePanelTitle">准入类型与对象/主体配置列表</h4>
-            <button class="ant-btn ant-btn-primary ant-btn-sm" onclick="openTypeForm('add')">+ 新增</button>
+      <!-- ============ 材料项库 Tab ============ -->
+      <div id="panel-library">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>材料名称/代码</label><input id="mat_kw" class="ant-input" placeholder="材料名称或代码" style="width:200px"></div>
+            <div class="filter-item"><label>提供方</label><select id="mat_provider" class="ant-input" style="width:150px"></select></div>
+            <div class="filter-item"><label>材料状态</label><select id="mat_status" class="ant-input" style="width:120px"><option>全部</option><option>已启用</option><option>已停用</option></select></div>
+            <div class="filter-actions">
+              <button class="ant-btn ant-btn-primary" onclick="queryMaterial()">查询</button>
+              <button class="ant-btn" onclick="resetMaterial()">重置</button>
+            </div>
+            <button class="ant-btn ant-btn-primary" style="margin-left:auto" onclick="openMaterialForm('add')">+ 新增材料项</button>
           </div>
-          <table class="ant-table"><thead id="typeThead"></thead><tbody id="typeTbody"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="cfg-table-container">
+            <table class="ant-table">
+              <colgroup><col style="width:170px"><col style="width:220px"><col style="width:140px"><col style="width:160px"><col style="width:90px"><col style="width:160px"><col style="width:180px"></colgroup>
+              <thead><tr><th>材料代码</th><th>材料名称</th><th>提供方</th><th>格式要求</th><th>状态</th><th>更新时间</th><th>操作</th></tr></thead>
+              <tbody id="materialTbody"></tbody>
+            </table>
+          </div>
+          <div id="materialPagination"></div>
         </div>
       </div>
 
-      <!-- 材料目录配置 -->
-      <div id="panel-materialConfig" style="display:none">
-        <div class="flex gap-2 mb-3" id="materialSubTabs">
-          <span class="sub-tab active" onclick="switchMaterialSubTab(this,'catalog')">材料清单</span>
-          <span class="sub-tab" onclick="switchMaterialSubTab(this,'version')">目录版本管理</span>
-          <span class="sub-tab" onclick="switchMaterialSubTab(this,'relation')">材料目录关系管理</span>
+      <!-- ============ 流程材料目录配置 Tab ============ -->
+      <div id="panel-catalog" style="display:none">
+        <div class="inline-alert info">
+          <span>💡</span>
+          <div>每个测试示范类型最多存在 <b>一个当前已发布材料目录版本</b> 与 <b>一个草稿版本</b>；保存草稿不影响企业端新发起申请展示的材料目录，发布后仅新发起申请使用新版本，历史申请保留提交时目录快照。</div>
         </div>
-        <div id="materialContent"></div>
+        <div class="catalog-layout">
+          <!-- 左侧类型树 -->
+          <div class="type-tree">
+            <div class="type-tree-head"><h4>测试示范类型</h4></div>
+            <div class="cat-tabs">
+              <div class="cat-tab active" data-cat="道路测试" onclick="switchCatTab(this,'道路测试')">道路测试</div>
+              <div class="cat-tab" data-cat="示范应用" onclick="switchCatTab(this,'示范应用')">示范应用</div>
+              <div class="cat-tab" data-cat="商业化试点" onclick="switchCatTab(this,'商业化试点')">商业化试点</div>
+            </div>
+            <div class="type-tree-body" id="catalogTypeTree"></div>
+          </div>
+          <!-- 右侧目录配置 -->
+          <div class="catalog-panel" id="catalogPanel"></div>
+        </div>
+      </div>
+
+      <!-- ============ 目录版本管理 Tab ============ -->
+      <div id="panel-version" style="display:none">
+        <div class="catalog-layout">
+          <!-- 左侧类型树（含停用） -->
+          <div class="type-tree">
+            <div class="type-tree-head"><h4>测试示范类型（含停用）</h4></div>
+            <div class="cat-tabs">
+              <div class="cat-tab active" data-cat="道路测试" onclick="switchVersionCatTab(this,'道路测试')">道路测试</div>
+              <div class="cat-tab" data-cat="示范应用" onclick="switchVersionCatTab(this,'示范应用')">示范应用</div>
+              <div class="cat-tab" data-cat="商业化试点" onclick="switchVersionCatTab(this,'商业化试点')">商业化试点</div>
+            </div>
+            <div class="type-tree-body" id="versionTypeTree"></div>
+          </div>
+          <!-- 右侧版本列表 -->
+          <div class="catalog-panel" id="versionPanel"></div>
+        </div>
       </div>
     </main>
   </div>
 </div>
+
 <script>
 var PAGE_ID='approve-config';
-var currentMainTab='typeConfig';
-var currentTypeSub='type';
-var currentMaterialSub='catalog';
+var currentTab='library';
 
-var typeData=[
-  {code:'ROAD_TEST',name:'道路测试准入',desc:'L2-L4级自动驾驶车辆道路测试中心区域测试许可',objects:['乘用车','商用车','公交'],subjects:['整车制造企业','自动驾驶解决方案提供商'],status:'已启用',time:'2026-04-15'},
-  {code:'ROAD_RENEW',name:'道路测试延期',desc:'道路测试许可有效期届满前的延期申请',objects:['乘用车','商用车','公交'],subjects:['整车制造企业','自动驾驶解决方案提供商'],status:'已启用',time:'2026-04-18'},
-  {code:'ROAD_CHANGE',name:'道路测试变更',desc:'测试车辆、测试路线等信息的变更申请',objects:['乘用车','商用车','公交'],subjects:['整车制造企业','自动驾驶解决方案提供商'],status:'已启用',time:'2026-04-22'},
-  {code:'DEMO_APP',name:'示范应用准入',desc:'在指定区域内开展载人载物示范应用运营活动',objects:['乘用车','配送车','环卫车','出租车'],subjects:['整车制造企业','运营服务商'],status:'已启用',time:'2026-04-20'},
-  {code:'DEMO_RENEW',name:'示范应用延期',desc:'示范应用许可有效期届满前的延期申请',objects:['乘用车','配送车','环卫车','出租车'],subjects:['整车制造企业','运营服务商'],status:'已启用',time:'2026-04-25'},
-  {code:'DEMO_ADD',name:'示范应用新增',desc:'新增示范应用车辆或扩展运营范围',objects:['乘用车','配送车','环卫车','出租车'],subjects:['整车制造企业','运营服务商'],status:'已启用',time:'2026-04-28'},
-  {code:'DEMO_OP',name:'商业化试点准入',desc:'商业化运营服务许可',objects:['出租车','网约车'],subjects:['运营服务商','公共交通企业'],status:'已启用',time:'2026-04-25'},
-  {code:'DEMO_OP_RENEW',name:'商业化试点延期',desc:'商业化试点许可有效期届满前的延期申请',objects:['出租车','网约车'],subjects:['运营服务商','公共交通企业'],status:'停用',time:'2026-05-01'}
-];
+/* ============ 枚举与联动数据源 ============ */
+var CATEGORIES=['道路测试','示范应用','商业化试点'];
+var SUBTYPES=['初次申请','延期申请','变更申请','新增相同配置车辆'];
+var PROVIDERS=['申请单位','车辆制造商','第三方检测机构','保险公司','准入管理部门','其他'];
+var FORMAT_OPTS=['PDF','DOC','DOCX','XLS','XLSX','JPG','PNG','ZIP','其他'];
+var catPrefix={'道路测试':'RT','示范应用':'DA','商业化试点':'CP'};
+var subMap={'初次申请':'INITIAL','延期申请':'RENEW','变更申请':'CHANGE','新增相同配置车辆':'ADD_VEHICLE'};
 
-var objectData=[
-  {code:'PASSENGER_CAR',name:'乘用车',desc:'5座及以下小型乘用车(含轿车/SUV等)',status:'已启用',time:'2026-04-01'},
-  {code:'COMMERCIAL',name:'商用车',desc:'货运及商用车辆',status:'已启用',time:'2026-04-01'},
-  {code:'BUS',name:'公交车',desc:'城市公交客运车辆',status:'已启用',time:'2026-04-01'},
-  {code:'DELIVERY',name:'配送车/物流车/无人零售车',desc:'末端配送及物流运输车辆',status:'已启用',time:'2026-04-01'},
-  {code:'TAXI',name:'出租车',desc:'传统巡游出租车',status:'已启用',time:'2026-04-05'},
-  {code:'RIDE_HAILING',name:'网约车',desc:'网络预约出租汽车',status:'已启用',time:'2026-04-05'},
-  {code:'SANITATION',name:'环卫车',desc:'道路清扫、垃圾运输等环卫作业车辆',status:'已启用',time:'2026-04-08'},
-  {code:'SHUTTLE',name:'接驳车',desc:'园区、景区等封闭区域接驳车辆',status:'停用',time:'2026-04-10'}
-];
-
-var subjectData=[
-  {code:'OEM',name:'整车制造企业',desc:'具有整车生产资质的汽车制造商',status:'已启用',time:'2026-04-01'},
-  {code:'OPERATOR',name:'运营服务商',desc:'从事出行或物流服务的运营商',status:'已启用',time:'2026-04-01'},
-  {code:'SOLUTION',name:'自动驾驶解决方案提供商',desc:'提供自动驾驶系统解决方案的企业',status:'已启用',time:'2026-04-01'},
-  {code:'PUBLIC_TRANSIT',name:'公共交通企业',desc:'城市公交、客运等公共交通运营企业',status:'已启用',time:'2026-04-05'},
-  {code:'TECH_COMPANY',name:'科技企业',desc:'从事智能网联汽车技术研发的科技企业',status:'已启用',time:'2026-04-08'},
-  {code:'RESEARCH',name:'科研院所',desc:'从事自动驾驶相关研究的科研机构',status:'停用',time:'2026-04-10'}
-];
-
-var materialEntries=[
-  {code:'MAT_SAFETY',name:'安全评估报告',provider:'准入管理部门',required:'是',format:'PDF',version:'CL_V3',status:'已启用',time:'2026-04-20'},
-  {code:'MAT_APPLY',name:'准入申请书',provider:'准入管理部门',required:'是',format:'PDF',version:'CL_V2',status:'已启用',time:'2026-04-18'},
-  {code:'MAT_PLAN',name:'示范应用/运营计划书',provider:'申请单位',required:'是',format:'PDF',version:'CL_V4',status:'已启用',time:'2026-04-22'},
-  {code:'MAT_PLATFORM',name:'平台对接证明',provider:'准入管理部门',required:'否',format:'PDF',version:'CL_V1',status:'已启用',time:'2026-04-10'},
-  {code:'MAT_INSURANCE',name:'保险凭证',provider:'保险公司',required:'是',format:'PDF',version:'CL_V1',status:'已启用',time:'2026-04-08'},
-  {code:'MAT_SELF_DECL',name:'安全性自我声明',provider:'申请单位',required:'是',format:'PDF',version:'CL_V2',status:'已启用',time:'2026-04-12'},
-  {code:'MAT_VEHICLE_CERT',name:'车辆出厂合格证',provider:'车辆制造商',required:'是',format:'PDF',version:'CL_V1',status:'已启用',time:'2026-04-05'},
-  {code:'MAT_DRIVER_LICENSE',name:'驾驶员资质证明',provider:'申请单位',required:'是',format:'PDF',version:'CL_V1',status:'已启用',time:'2026-04-06'},
-  {code:'MAT_TEST_REPORT',name:'自动驾驶功能测试报告',provider:'第三方检测机构',required:'是',format:'PDF',version:'CL_V3',status:'已启用',time:'2026-04-15'},
-  {code:'MAT_ROUTE_PLAN',name:'测试路线方案',provider:'申请单位',required:'是',format:'PDF',version:'CL_V2',status:'已启用',time:'2026-04-16'},
-  {code:'MAT_BUSINESS_LICENSE',name:'企业营业执照',provider:'申请单位',required:'是',format:'PDF',version:'CL_V1',status:'已启用',time:'2026-04-03'},
-  {code:'MAT_TECH_SPEC',name:'车辆技术参数说明',provider:'车辆制造商',required:'是',format:'PDF',version:'CL_V2',status:'已启用',time:'2026-04-09'},
-  {code:'MAT_SENSOR_INFO',name:'传感器配置信息',provider:'申请单位',required:'是',format:'PDF',version:'CL_V1',status:'已启用',time:'2026-04-11'},
-  {code:'MAT_EMERGENCY_PLAN',name:'应急处置预案',provider:'申请单位',required:'是',format:'PDF',version:'CL_V2',status:'停用',time:'2026-04-25'}
-];
-
-function switchMainTab(el,tabId){
-  currentMainTab=tabId;
-  document.querySelectorAll('.ant-tab').forEach(function(t){t.classList.remove('active')});
-  el.classList.add('active');
-  document.getElementById('panel-typeConfig').style.display=tabId==='typeConfig'?'':'none';
-  document.getElementById('panel-materialConfig').style.display=tabId==='materialConfig'?'':'none';
-  if(tabId==='typeConfig')renderTypeTable();
-  else renderMaterialContent();
-}
-
-function switchTypeSubTab(el,sub){
-  currentTypeSub=sub;
-  document.querySelectorAll('#typeSubTabs .sub-tab').forEach(function(t){t.classList.remove('active')});
-  el.classList.add('active');
-  var titles={type:'准入类型与对象/主体配置列表',object:'对象类型配置列表',subject:'申请主体类型配置列表'};
-  document.getElementById('typePanelTitle').innerText=titles[sub]||'配置';
-  renderTypeTable();
-}
-
-function switchMaterialSubTab(el,sub){
-  currentMaterialSub=sub;
-  document.querySelectorAll('#materialSubTabs .sub-tab').forEach(function(t){t.classList.remove('active')});
-  el.classList.add('active');
-  renderMaterialContent();
-}
-
-function getCurrentArray(){
-  if(currentTypeSub==='type')return typeData;
-  if(currentTypeSub==='object')return objectData;
-  return subjectData;
-}
-
-function renderTypeTable(){
-  var data=getCurrentArray();
-  var headers;
-  if(currentTypeSub==='type'){
-    headers=['类型代码','类型名称描述','适用对象','适用主体','状态','更新时间'];
-  }else if(currentTypeSub==='object'){
-    headers=['对象代码','对象名称描述','说明','状态','更新时间'];
-  }else{
-    headers=['主体代码','主体名称描述','说明','状态','更新时间'];
-  }
-  document.getElementById('typeThead').innerHTML='<tr>'+headers.map(function(h){return'<th>'+h+'</th>';}).join('')+'</tr>';
-  var html='';
-  data.forEach(function(d){
-    var scls=d.status==='已启用'?'ant-tag-success':'ant-tag-default';
-    var stag='<span class="ant-tag '+scls+'">'+d.status+'</span>';
-    var row='';
-    if(currentTypeSub==='type'){
-      row='<td>'+d.code+'</td><td>'+d.name+'</td><td>'+(d.objects.join(', '))+'</td><td>'+(d.subjects.join(', '))+'</td><td>'+stag+'</td><td>'+d.time+'</td>';
-    }else{
-      row='<td>'+d.code+'</td><td>'+d.name+'</td><td>'+(d.desc||'-')+'</td><td>'+stag+'</td><td>'+d.time+'</td>';
-    }
-    row+='<td class="flex gap-1"><button class="ant-btn-link" onclick="openTypeForm(\'edit\',\''+d.code+'\')">编辑</button>'+
-       '<button class="ant-btn-link" onclick="toggleStatus(\''+d.code+'\')">'+(d.status==='已启用'?'停用':'启用')+'</button>'+
-       '<button class="ant-btn-link danger">删除</button></td>';
-    html+='<tr>'+row+'</tr>';
-  });
-  document.getElementById('typeTbody').innerHTML=html;
-}
-
-function openTypeForm(mode,code){
-  var arr=getCurrentArray();
-  var item=null;
-  if(mode==='edit')item=arr.find(function(x){return x.code===code});
-  var title=mode==='add'?'新增':'编辑';
-  if(currentTypeSub==='type')title+='准入类型';
-  else if(currentTypeSub==='object')title+='对象类型';
-  else title+='申请主体类型';
-
-  var formHtml='';
-  if(currentTypeSub==='type'){
-    formHtml='<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>类型代码</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?item.code:'')+'" '+(mode==='edit'?'readonly style="background:#f5f5f5"':'')+' placeholder="如ROAD_TEST"></div></div>'+
-      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>类型名称描述</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?item.name:'')+'" placeholder="如道路测试准入"></div></div>'+
-      '<div class="ant-form-item"><div class="ant-form-label">类型说明</div><div class="ant-form-control"><textarea class="ant-input" rows="2">'+(mode==='edit'?(item.desc||''):'' )+'</textarea></div></div>'+
-      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>适用对象</div><div class="ant-form-control">'+
-        '<select multiple style="height:80px;width:100%;border:1px solid #d9d9d9;border-radius:6px;padding:4px 8px;font-size:13px">'+
-        objectData.filter(function(o){return o.status==='已启用';}).map(function(o){return '<option value="'+o.code+'"'+((mode==='edit'&&item.objects.indexOf(o.name)>-1)?' selected':'')+'>'+o.name+'</option>';}).join('')+
-        '</select></div></div>'+
-      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>适用主体</div><div class="ant-form-control">'+
-        '<select multiple style="height:80px;width:100%;border:1px solid #d9d9d9;border-radius:6px;padding:4px 8px;font-size:13px">'+
-        subjectData.filter(function(s){return s.status==='已启用';}).map(function(s){return '<option value="'+s.code+'"'+((mode==='edit'&&item.subjects.indexOf(s.name)>-1)?' selected':'')+'>'+s.name+'</option>';}).join('')+
-        '</select></div></div>';
-  }else{
-    formHtml='<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>代码</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?item.code:'')+'" '+(mode==='edit'?'readonly style="background:#f5f5f5"':'')+' placeholder="如PASSENGER_CAR"></div></div>'+
-      '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>名称</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?item.name:'')+'" placeholder="如乘用车"></div></div>'+
-      '<div class="ant-form-item"><div class="ant-form-label">说明</div><div class="ant-form-control"><textarea class="ant-input" rows="2">'+(mode==='edit'?(item.desc||''):'' )+'</textarea></div></div>';
-  }
-  openModal(title,formHtml,{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">保存</button>'});
-}
-
-function toggleStatus(code){
-  var arr=getCurrentArray();
-  var item=arr.find(function(x){return x.code===code});
-  if(item)item.status=item.status==='已启用'?'停用':'已启用';
-  renderTypeTable();
-}
-
-function renderMaterialContent(){
-  var container=document.getElementById('materialContent');
-  if(currentMaterialSub==='catalog'){
-    container.innerHTML=
-      '<div class="card mb-4"><div class="flex justify-between items-center mb-4"><h4 class="text-sm font-semibold text-[#000000d9]">材料清单</h4><button class="ant-btn ant-btn-primary ant-btn-sm" onclick="openMaterialForm(\'add\')">+ 新增材料</button></div>'+
-      '<table class="ant-table"><thead><tr><th>材料代码</th><th>材料名称</th><th>提供方</th><th>是否必填</th><th>格式要求</th><th>材料版本号</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody>'+
-      materialEntries.map(function(m){
-        var ms=m.status==='已启用'?'ant-tag-success':'ant-tag-default';
-        return '<tr><td>'+m.code+'</td><td>'+m.name+'</td><td>'+m.provider+'</td><td>'+m.required+'</td><td>'+m.format+'</td>'+
-          '<td><button class="ant-btn-link" onclick="showMaterialVersion(\''+m.code+'\')">'+m.version+'</button></td>'+
-          '<td><span class="ant-tag '+ms+'">'+m.status+'</span></td><td>'+m.time+'</td>'+
-          '<td class="flex gap-1"><button class="ant-btn-link" onclick="openMaterialForm(\'edit\',\''+m.code+'\')">编辑</button>'+
-          '<button class="ant-btn-link">'+(m.status==='已启用'?'停用':'启用')+'</button>'+
-          '<button class="ant-btn-link danger">删除</button></td></tr>';
-      }).join('')+'</tbody></table></div>';
-  }else if(currentMaterialSub==='version'){
-    container.innerHTML='<div class="card"><div class="grid grid-cols-12 gap-4"><div class="col-span-4"><h4 class="text-sm font-semibold text-[#000000d9] mb-3">选择准入类型</h4><div class="rounded-lg border border-[#f0f0f0] overflow-hidden">'+
-      typeData.map(function(t){return '<div class="selectable-item" id="ver-type-'+t.code+'" onclick="selectVersionType(\''+t.code+'\')">'+t.name+'</div>';}).join('')+
-      '</div></div><div class="col-span-8" id="versionRight"><p class="text-sm text-[#00000073] mt-3">请选择左侧的准入类型以查看其目录清单版本历史记录和差异对比功能。</p></div></div></div>';
-    selectVersionType('ROAD_TEST');
-  }else if(currentMaterialSub==='relation'){
-    container.innerHTML='<div class="card"><div class="grid grid-cols-12 gap-4"><div class="col-span-4"><h4 class="text-sm font-semibold text-[#000000d9] mb-3">选择准入类型</h4><div class="rounded-lg border border-[#f0f0f0] overflow-hidden">'+
-      typeData.map(function(t){return '<div class="selectable-item" id="rel-type-'+t.code+'" onclick="selectRelType(\''+t.code+'\')">'+t.name+'</div>';}).join('')+
-      '</div></div><div class="col-span-8" id="relationRight"><h4 class="text-sm font-semibold text-[#000000d9] mb-3">在此处可对选定类型的材料清单进行自定义调整，移除不需要的材料项或添加新的材料项。</h4><div id="relMaterials"></div></div></div></div>';
-    selectRelType('ROAD_TEST');
-  }
-}
-
-function showMaterialVersion(code){
-  var m=materialEntries.find(function(x){return x.code===code});
-  if(!m)return;
-  openModal('材料版本历史 - '+m.name,
-    '<p class="text-xs text-[#00000073] mb-3">此为单个材料的版本记录，与目录清单版本号相互独立。</p>'+
-    '<table class="ant-table"><thead><tr><th>材料版本号</th><th>发布时间</th><th>操作人</th><th>变更内容</th></tr></thead><tbody>'+
-    '<tr><td><span class="text-[#1677ff] font-medium">'+m.version+'</span></td><td>'+m.time+'</td><td>平台管理员</td><td>当前版本</td></tr>'+
-    '</tbody></table>',
-    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
-}
-
-function openMaterialForm(mode,code){
-  var m=null;
-  if(mode==='edit')m=materialEntries.find(function(x){return x.code===code});
-  var title=mode==='add'?'新增材料':'编辑材料 - '+(m?m.name:'');
-  var body=(mode==='edit'?'<p class="text-xs text-[#00000073] mb-3">修改材料信息将影响后续所有使用该材料的准入流程。</p>':'')+
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>材料代码</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?m.code:'')+'" '+(mode==='edit'?'readonly style="background:#f5f5f5"':'')+'></div></div>'+
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>材料名称</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?m.name:'')+'"></div></div>'+
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>提供方</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?m.provider:'')+'"></div></div>'+
-    '<div class="ant-form-item"><div class="ant-form-label">格式要求</div><div class="ant-form-control"><input class="ant-input" value="'+(mode==='edit'?m.format:'')+'"></div></div>'+
-    '<div class="ant-form-item"><div class="ant-form-label">是否必填</div><div class="ant-form-control"><div class="ant-select" style="width:100%">'+(mode==='edit'&&m.required===''?'请选择':m.required)+' <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>';
-  openModal(title,body,{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">保存</button>'});
-}
-
-var selectedVersions={};
-function selectVersionType(code){
-  document.querySelectorAll('[id^="ver-type-"]').forEach(function(el){el.classList.remove('selected')});
-  var el=document.getElementById('ver-type-'+code);
-  if(el)el.classList.add('selected');
-  var typeName=typeData.find(function(t){return t.code===code})?typeData.find(function(t){return t.code===code}).name:code;
-  var catalogVersionHistory={
-    'ROAD_TEST':[
-      {catalogVer:'ML_V3',time:'2026-04-15',operator:'平台管理员',changes:'新增自动驾驶等级要求字段，优化材料清单结构',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_ROUTE_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO']},
-      {catalogVer:'ML_V2',time:'2026-03-20',operator:'张三',changes:'调整适用对象范围，新增商用车类型',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_ROUTE_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE']},
-      {catalogVer:'ML_V1',time:'2026-01-10',operator:'平台管理员',changes:'初始版本发布',materials:['MAT_APPLY','MAT_SAFETY','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE']}
-    ],
-    'DEMO_APP':[
-      {catalogVer:'ML_V4',time:'2026-04-20',operator:'李四',changes:'新增示范应用安全评估要求，完善材料清单',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO','MAT_PLATFORM']},
-      {catalogVer:'ML_V3',time:'2026-03-15',operator:'平台管理员',changes:'调整运营区域范围定义',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_PLATFORM']},
-      {catalogVer:'ML_V2',time:'2026-02-08',operator:'王五',changes:'新增载客人数限制要求',materials:['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE']},
-      {catalogVer:'ML_V1',time:'2026-01-15',operator:'平台管理员',changes:'初始版本发布',materials:['MAT_APPLY','MAT_SAFETY','MAT_VEHICLE_CERT','MAT_INSURANCE','MAT_BUSINESS_LICENSE']}
-    ],
-    'DEMO_OP':[
-      {catalogVer:'ML_V2',time:'2026-04-25',operator:'赵六',changes:'新增商业化运营资质要求',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_PLATFORM']},
-      {catalogVer:'ML_V1',time:'2026-03-01',operator:'平台管理员',changes:'初始版本发布',materials:['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE']}
-    ]
-  };
-  var history=catalogVersionHistory[code]||[];
-  if(!selectedVersions[code])selectedVersions[code]=[];
-  var html='<h4 class="text-sm font-semibold text-[#000000d9] mb-3">'+typeName+' - 目录清单版本历史</h4>';
-  html+='<p class="text-xs text-[#00000073] mb-3">请勾选至少两个版本进行对比分析。</p>';
-  if(history.length>0){
-    html+='<table class="ant-table"><thead><tr><th><input type="checkbox" class="ant-checkbox" id="ver-select-all" onclick="toggleAllVersions(\''+code+'\')"></th><th>目录清单版本号</th><th>发布时间</th><th>操作人</th><th>变更内容</th></tr></thead><tbody>';
-    history.forEach(function(h,idx){
-      var checked=selectedVersions[code].indexOf(h.catalogVer)>-1;
-      html+='<tr><td><input type="checkbox" class="ant-checkbox ver-checkbox" data-ver="'+h.catalogVer+'" data-code="'+code+'" '+(checked?'checked':'')+' onclick="toggleVersionSelect(\''+code+'\',\''+h.catalogVer+'\')"></td>'+
-        '<td><span class="text-[#1677ff] font-medium">'+h.catalogVer+'</span></td><td>'+h.time+'</td><td>'+h.operator+'</td><td>'+h.changes+'</td></tr>';
+/* ============ 测试示范类型数据（与 approval-config 一致：3大类×4子类型=12条） ============ */
+function buildTypeData(){
+  var rows=[];
+  CATEGORIES.forEach(function(cat){
+    SUBTYPES.forEach(function(sub){
+      rows.push({code:catPrefix[cat]+'_'+subMap[sub],name:cat+sub,category:cat,subType:sub,status:'已启用'});
     });
-    html+='</tbody></table>';
-    html+='<div class="mt-3 flex gap-2"><button class="ant-btn ant-btn-primary" onclick="compareVersions(\''+code+'\')">版本对比</button><button class="ant-btn" onclick="clearVersionSelect(\''+code+'\')">清空选择</button></div>';
-  }else{
-    html+='<p class="text-sm text-[#00000073]">暂无版本历史数据</p>';
+  });
+  // 演示：商业化试点延期申请为停用类型，仍可在版本管理中查看历史目录
+  var cp=rows.find(function(r){return r.code==='CP_RENEW';});
+  if(cp)cp.status='已停用';
+  return rows;
+}
+var typeData=buildTypeData();
+function getTypeName(code){var t=typeData.find(function(x){return x.code===code;});return t?t.name:code;}
+function getTypeActive(code){var t=typeData.find(function(x){return x.code===code;});return t?t.status==='已启用':true;}
+
+/* ============ 材料项库数据 ============ */
+var materialData=[
+  {code:'MAT_INSURANCE',name:'保险凭证',desc:'自动驾驶车辆测试示范期间的有效保险凭证',provider:'保险公司',formats:['PDF'],sizeLimit:20,status:'已启用',time:'2026-04-08 10:20:30'},
+  {code:'MAT_TEST_REPORT',name:'自动驾驶功能测试报告',desc:'由第三方检测机构出具的自动驾驶功能测试报告',provider:'第三方检测机构',formats:['PDF'],sizeLimit:50,status:'已启用',time:'2026-04-15 14:30:00'},
+  {code:'MAT_APPLY',name:'测试示范准入申请书',desc:'申请单位填写的测试示范准入申请表',provider:'申请单位',formats:['PDF','DOC','DOCX'],sizeLimit:20,status:'已启用',time:'2026-04-18 09:15:22'},
+  {code:'MAT_SAFETY',name:'安全评估报告',desc:'自动驾驶系统安全评估报告，由准入管理部门出具',provider:'准入管理部门',formats:['PDF'],sizeLimit:30,status:'已启用',time:'2026-04-20 16:45:10'},
+  {code:'MAT_SELF_DECL',name:'安全性自我声明',desc:'申请单位出具的安全性自我声明文件',provider:'申请单位',formats:['PDF'],sizeLimit:10,status:'已启用',time:'2026-04-12 11:00:00'},
+  {code:'MAT_VEHICLE_CERT',name:'车辆出厂合格证',desc:'车辆制造商出具的车辆出厂合格证明',provider:'车辆制造商',formats:['PDF','JPG','PNG'],sizeLimit:10,status:'已启用',time:'2026-04-05 08:30:00'},
+  {code:'MAT_DRIVER_LICENSE',name:'驾驶员资质证明',desc:'安全员/驾驶员的驾驶资质证明材料',provider:'申请单位',formats:['PDF','JPG','PNG'],sizeLimit:10,status:'已启用',time:'2026-04-06 13:20:00'},
+  {code:'MAT_ROUTE_PLAN',name:'测试路线方案',desc:'道路测试路线规划方案文件',provider:'申请单位',formats:['PDF','DOC'],sizeLimit:20,status:'已启用',time:'2026-04-16 10:10:00'},
+  {code:'MAT_BUSINESS_LICENSE',name:'企业营业执照',desc:'申请单位的企业营业执照扫描件',provider:'申请单位',formats:['PDF','JPG','PNG'],sizeLimit:10,status:'已启用',time:'2026-04-03 09:00:00'},
+  {code:'MAT_TECH_SPEC',name:'车辆技术参数说明',desc:'车辆关键技术参数说明文件',provider:'车辆制造商',formats:['PDF','DOC'],sizeLimit:20,status:'已启用',time:'2026-04-09 15:30:00'},
+  {code:'MAT_SENSOR_INFO',name:'传感器配置信息',desc:'车辆传感器配置清单',provider:'申请单位',formats:['PDF','XLSX'],sizeLimit:20,status:'已启用',time:'2026-04-11 14:00:00'},
+  {code:'MAT_PLAN',name:'示范应用运营计划书',desc:'示范应用/商业化试点的运营计划书',provider:'申请单位',formats:['PDF','DOC'],sizeLimit:30,status:'已启用',time:'2026-04-22 11:30:00'},
+  {code:'MAT_PLATFORM',name:'平台对接证明',desc:'与监管平台对接完成的证明文件',provider:'准入管理部门',formats:['PDF'],sizeLimit:10,status:'已启用',time:'2026-04-10 16:00:00'},
+  {code:'MAT_EMERGENCY_PLAN',name:'应急处置预案',desc:'自动驾驶车辆应急处置预案',provider:'申请单位',formats:['PDF','DOC'],sizeLimit:20,status:'已停用',time:'2026-04-25 17:30:00'}
+];
+function getMaterial(code){return materialData.find(function(x){return x.code===code;});}
+function getMaterialName(code){var m=getMaterial(code);return m?m.name:code;}
+function getMaterialFormats(code){var m=getMaterial(code);return m?m.formats.slice():['PDF'];}
+function materialActive(code){var m=getMaterial(code);return m?m.status==='已启用':true;}
+
+/* ============ 流程材料目录 + 版本数据 ============ */
+// 目录材料项构造器
+function item(code,opts){
+  opts=opts||{};
+  var m=getMaterial(code);
+  return {
+    code:code,
+    name:m?m.name:code,
+    required:opts.required!==false,
+    sort:opts.sort!=null?opts.sort:100,
+    formats:opts.formats?opts.formats.slice():(m?m.formats.slice():['PDF']),
+    fillInstruction:opts.fillInstruction||'',
+    applicableCondition:opts.applicableCondition||''
+  };
+}
+// 道路测试初次申请 V3 材料清单
+var RT_V3=['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_ROUTE_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO'].map(function(c){return item(c);});
+RT_V3[2]=item('MAT_SELF_DECL',{fillInstruction:'逐项声明自动化驾驶系统安全相关情况，加盖单位公章',applicableCondition:'所有申请均需提供'});
+var RT_V2=['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_ROUTE_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE'].map(function(c){return item(c);});
+var RT_V1=['MAT_APPLY','MAT_SAFETY','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE'].map(function(c){return item(c);});
+// 示范应用初次申请
+var DA_V4=['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO','MAT_PLATFORM'].map(function(c){return item(c);});
+var DA_V3=['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_PLATFORM'].map(function(c){return item(c);});
+var DA_V2=['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE'].map(function(c){return item(c);});
+var DA_V1=['MAT_APPLY','MAT_SAFETY','MAT_VEHICLE_CERT','MAT_INSURANCE','MAT_BUSINESS_LICENSE'].map(function(c){return item(c);});
+// 商业化试点初次申请
+var CP_V2=['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_PLATFORM'].map(function(c){return item(c);});
+var CP_V1=['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE'].map(function(c){return item(c);});
+
+// catalogData[typeCode] = { versions:[{version,status,materials,publishTime,operator,changeSummary}], draft:[items] or null }
+var catalogData={
+  'RT_INITIAL':{versions:[
+    {version:'ML_V3',status:'已发布',materials:RT_V3,publishTime:'2026-04-15 10:00:00',operator:'平台管理员',changeSummary:'新增自动驾驶等级要求字段，新增车辆技术参数说明与传感器配置信息'},
+    {version:'ML_V2',status:'历史版本',materials:RT_V2,publishTime:'2026-03-20 14:00:00',operator:'张三',changeSummary:'调整适用对象范围，新增商用车类型所需材料'},
+    {version:'ML_V1',status:'历史版本',materials:RT_V1,publishTime:'2026-01-10 09:00:00',operator:'平台管理员',changeSummary:'初始版本发布'}
+  ],draft:null},
+  'DA_INITIAL':{versions:[
+    {version:'ML_V4',status:'已发布',materials:DA_V4,publishTime:'2026-04-20 11:00:00',operator:'李四',changeSummary:'新增示范应用安全评估要求，补充平台对接证明'},
+    {version:'ML_V3',status:'历史版本',materials:DA_V3,publishTime:'2026-03-15 15:00:00',operator:'平台管理员',changeSummary:'调整运营区域范围定义'},
+    {version:'ML_V2',status:'历史版本',materials:DA_V2,publishTime:'2026-02-08 10:00:00',operator:'王五',changeSummary:'新增载客人数限制要求'},
+    {version:'ML_V1',status:'历史版本',materials:DA_V1,publishTime:'2026-01-15 09:00:00',operator:'平台管理员',changeSummary:'初始版本发布'}
+  ],draft:null},
+  'CP_INITIAL':{versions:[
+    {version:'ML_V2',status:'已发布',materials:CP_V2,publishTime:'2026-04-25 14:00:00',operator:'赵六',changeSummary:'新增商业化运营资质要求，补充平台对接证明'},
+    {version:'ML_V1',status:'历史版本',materials:CP_V1,publishTime:'2026-03-01 09:00:00',operator:'平台管理员',changeSummary:'初始版本发布'}
+  ],draft:null}
+};
+// 其他类型初始化为仅有一条已发布 ML_V1（基于道路测试基础材料）
+function ensureCatalog(code){
+  if(!catalogData[code]){
+    catalogData[code]={versions:[
+      {version:'ML_V1',status:'已发布',materials:['MAT_APPLY','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_VEHICLE_CERT'].map(function(c){return item(c);}),
+        publishTime:'2026-04-01 09:00:00',operator:'平台管理员',changeSummary:'初始版本发布'}
+    ],draft:null};
   }
-  document.getElementById('versionRight').innerHTML=html;
+}
+// 为 RT_INITIAL 预置一个草稿（演示草稿编辑场景）
+catalogData['RT_INITIAL'].draft=RT_V3.map(function(it){var c={};for(var k in it)c[k]=it[k];return c;});
+catalogData['RT_INITIAL'].draft.push(item('MAT_EMERGENCY_PLAN',{required:true,sort:200,fillInstruction:'请补充应急处置预案（演示草稿新增项）'}));
+
+function getPublishedVersion(code){
+  ensureCatalog(code);
+  var d=catalogData[code];
+  return d.versions.find(function(v){return v.status==='已发布';})||null;
+}
+function getDraftItems(code){
+  ensureCatalog(code);
+  return catalogData[code].draft;
+}
+function nextVersionCode(code){
+  ensureCatalog(code);
+  var d=catalogData[code];
+  var nums=d.versions.map(function(v){return parseInt(v.version.replace('ML_V',''),10)||0;});
+  return 'ML_V'+(Math.max.apply(null,nums)+1);
 }
 
-function toggleAllVersions(code){
-  var catalogVersionHistory={
-    'ROAD_TEST':['ML_V3','ML_V2','ML_V1'],
-    'DEMO_APP':['ML_V4','ML_V3','ML_V2','ML_V1'],
-    'DEMO_OP':['ML_V2','ML_V1']
-  };
-  var all=catalogVersionHistory[code]||[];
-  var cb=document.getElementById('ver-select-all');
-  if(cb.checked){
-    selectedVersions[code]=all.slice();
-  }else{
-    selectedVersions[code]=[];
-  }
-  document.querySelectorAll('.ver-checkbox[data-code="'+code+'"]').forEach(function(el){
-    el.checked=cb.checked;
+/* ============ 分页器（材料项库） ============ */
+var materialState={page:1,size:10,pager:null};
+function initPagers(){
+  if(typeof Pagination==='undefined')return;
+  materialState.pager=new Pagination({container:'materialPagination',pageSize:10,pageSizeOptions:[10,20,50,100],size:'medium',
+    onPageChange:function(p,s){materialState.page=p;materialState.size=s;renderMaterial();}});
+}
+
+/* ============ Tab 切换 ============ */
+function switchTab(el,tab){
+  currentTab=tab;
+  document.querySelectorAll('.ant-tabs .ant-tab').forEach(function(t){t.classList.remove('active');});
+  var target=el;
+  if(!target||!target.classList){target=document.querySelector('.ant-tab[data-tab="'+tab+'"]');}
+  if(target&&target.classList)target.classList.add('active');
+  document.getElementById('panel-library').style.display=tab==='library'?'':'none';
+  document.getElementById('panel-catalog').style.display=tab==='catalog'?'':'none';
+  document.getElementById('panel-version').style.display=tab==='version'?'':'none';
+  if(tab==='catalog'){renderCatalogTypeTree();if(!selectedCatalogType)selectCatalogType(firstCatalogType());}
+  if(tab==='version'){renderVersionTypeTree();if(!selectedVersionType)selectVersionType(firstVersionType());}
+  if(location.hash!=='#'+tab)history.replaceState(null,'','#'+tab);
+}
+function switchTabByName(tab){
+  var el=document.querySelector('.ant-tab[data-tab="'+tab+'"]');
+  switchTab(el,tab);
+}
+
+/* ============ 工具 ============ */
+function statusTag(status){
+  return status==='已启用'
+    ? '<span class="ant-tag ant-tag-success">已启用</span>'
+    : '<span class="ant-tag ant-tag-default">已停用</span>';
+}
+function versionStatusTag(status){
+  if(status==='已发布')return '<span class="ant-tag ant-tag-success">已发布</span>';
+  if(status==='草稿')return '<span class="ant-tag ant-tag-processing">草稿</span>';
+  return '<span class="ant-tag ant-tag-default">历史版本</span>';
+}
+function escapeHTML(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function nowStr(){var d=new Date();var p=function(n){return n<10?'0'+n:''+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}
+function todayStr(){var d=new Date();var p=function(n){return n<10?'0'+n:''+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+
+/* ============ 材料项库：查询/渲染 ============ */
+function getMaterialFiltered(){
+  var kw=document.getElementById('mat_kw').value.trim();
+  var pv=document.getElementById('mat_provider').value;
+  var st=document.getElementById('mat_status').value;
+  return materialData.filter(function(d){
+    if(kw&&d.name.indexOf(kw)===-1&&d.code.indexOf(kw)===-1)return false;
+    if(pv!=='全部'&&d.provider!==pv)return false;
+    if(st!=='全部'&&d.status!==st)return false;
+    return true;
   });
 }
+function renderMaterial(){
+  var data=getMaterialFiltered();
+  var total=data.length;
+  var totalPages=Math.max(1,Math.ceil(total/materialState.size));
+  if(materialState.page>totalPages)materialState.page=totalPages;
+  var start=(materialState.page-1)*materialState.size;
+  var rows=data.slice(start,start+materialState.size);
+  document.getElementById('materialTbody').innerHTML=rows.length?rows.map(function(d){
+    var muted=d.status==='已停用'?' class="cfg-muted"':'';
+    return '<tr'+muted+'>'+
+      '<td class="col-code">'+d.code+'</td>'+
+      '<td>'+d.name+'</td>'+
+      '<td>'+d.provider+'</td>'+
+      '<td><div class="tag-list">'+d.formats.map(function(f){return '<span class="ant-tag ant-tag-default">'+f+'</span>';}).join('')+'</div></td>'+
+      '<td class="col-status">'+statusTag(d.status)+'</td>'+
+      '<td class="col-code">'+d.time+'</td>'+
+      '<td class="col-action">'+
+        '<button class="ant-btn-link" onclick="openMaterialForm(\'edit\',\''+d.code+'\')">编辑</button>'+
+        '<button class="ant-btn-link" onclick="confirmToggleMaterial(\''+d.code+'\')">'+(d.status==='已启用'?'停用':'启用')+'</button>'+
+        '<button class="ant-btn-link" style="color:#ff4d4f" onclick="confirmDeleteMaterial(\''+d.code+'\')">删除</button>'+
+      '</td></tr>';
+  }).join(''):'<tr class="empty-row"><td colspan="7">暂无数据</td></tr>';
+  if(materialState.pager)materialState.pager.setTotal(total);
+}
+function queryMaterial(){materialState.page=1;renderMaterial();showToast('查询完成');}
+function resetMaterial(){document.getElementById('mat_kw').value='';document.getElementById('mat_provider').value='全部';document.getElementById('mat_status').value='全部';materialState.page=1;renderMaterial();showToast('已重置筛选条件');}
 
-function toggleVersionSelect(code,ver){
-  var idx=selectedVersions[code].indexOf(ver);
-  if(idx>-1){
-    selectedVersions[code].splice(idx,1);
+/* ============ 材料项库：新增/编辑表单 ============ */
+function openMaterialForm(mode,code){
+  var itemObj=mode==='edit'?getMaterial(code):null;
+  var body=
+    '<div class="form-grid">'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>材料代码</div>'+
+        '<input id="f_mat_code" class="ant-input" value="'+(itemObj?itemObj.code:'')+'" '+(mode==='edit'?'readonly style="background:#f5f5f5"':'')+' placeholder="限大写字母、数字、下划线，如 MAT_INSURANCE">'+
+        '<div class="field-help">全局唯一，新增后不可修改；建议格式 MAT_{英文简称}</div><div class="field-error" id="err_mat_code"></div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>材料名称</div>'+
+        '<input id="f_mat_name" class="ant-input" value="'+(itemObj?escapeHTML(itemObj.name):'')+'" maxlength="80" placeholder="如 保险凭证">'+
+        '<div class="field-error" id="err_mat_name"></div></div>'+
+      '<div class="full"><div class="field-label">材料说明</div>'+
+        '<textarea id="f_mat_desc" class="ant-input" rows="2" maxlength="300" placeholder="说明材料用途，不描述某个流程是否必填（最长300字符）">'+(itemObj?escapeHTML(itemObj.desc):'')+'</textarea>'+
+        '<div class="field-help">材料项库仅维护材料基础信息；是否必填、排序等属于流程材料目录配置</div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>提供方</div>'+
+        '<select id="f_mat_provider" class="ant-input">'+PROVIDERS.map(function(p){return '<option'+(itemObj&&itemObj.provider===p?' selected':'')+'>'+p+'</option>';}).join('')+'</select>'+
+        '<div class="field-error" id="err_mat_provider"></div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>单文件大小限制（MB）</div>'+
+        '<input id="f_mat_size" type="number" class="ant-input" min="1" max="200" value="'+(itemObj?itemObj.sizeLimit:20)+'">'+
+        '<div class="field-help">取值范围 1-200 整数</div><div class="field-error" id="err_mat_size"></div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>格式要求</div>'+
+        multiEnum('f_mat_formats',FORMAT_OPTS,itemObj?itemObj.formats:[])+'<div class="field-help">至少选择 1 项</div><div class="field-error" id="err_mat_formats"></div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>状态</div>'+
+        '<select id="f_mat_status" class="ant-input"><option'+(itemObj&&itemObj.status==='已停用'?'':' selected')+'>已启用</option><option'+(itemObj&&itemObj.status==='已停用'?' selected':'')+'>已停用</option></select>'+
+        '<div class="field-help">已启用：可被流程材料目录选择；已停用：后续目录配置不可选，历史目录版本与历史申请快照保留</div></div>'+
+    '</div>';
+  openModal((mode==='add'?'新增材料项':'编辑材料项'),body,{width:720,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="saveMaterial(\''+mode+'\',\''+(code||'')+'\')">保存</button>'});
+}
+function saveMaterial(mode,code){
+  clearErrors(['err_mat_code','err_mat_name','err_mat_provider','err_mat_size','err_mat_formats']);
+  var c=document.getElementById('f_mat_code').value.trim();
+  var n=document.getElementById('f_mat_name').value.trim();
+  var pv=document.getElementById('f_mat_provider').value;
+  var size=parseInt(document.getElementById('f_mat_size').value,10);
+  var formats=getEnumValues('f_mat_formats');
+  var st=document.getElementById('f_mat_status').value;
+  var ok=true;
+  if(!c){setError('f_mat_code','err_mat_code','材料代码不可为空且必须全局唯一');ok=false;}
+  else if(!/^[A-Z0-9_]+$/.test(c)){setError('f_mat_code','err_mat_code','代码限大写字母、数字、下划线');ok=false;}
+  else if(mode==='add'&&materialData.some(function(x){return x.code===c;})){setError('f_mat_code','err_mat_code','代码已存在，必须全局唯一');ok=false;}
+  if(!n){setError('f_mat_name','err_mat_name','材料名称不可为空');ok=false;}
+  else if(n.length>80){setError('f_mat_name','err_mat_name','材料名称最长 80 字符');ok=false;}
+  if(!formats.length){setEnumError('f_mat_formats','err_mat_formats','请至少选择一种格式');ok=false;}
+  if(isNaN(size)||size<1||size>200){setError('f_mat_size','err_mat_size','单文件大小限制为 1-200 整数');ok=false;}
+  if(!ok)return;
+  var desc=document.getElementById('f_mat_desc').value.trim();
+  if(mode==='add'){
+    materialData.unshift({code:c,name:n,desc:desc,provider:pv,formats:formats,sizeLimit:size,status:st,time:nowStr()});
   }else{
-    selectedVersions[code].push(ver);
+    var it=getMaterial(code);if(it){it.name=n;it.desc=desc;it.provider=pv;it.formats=formats;it.sizeLimit=size;it.status=st;it.time=nowStr();}
+  }
+  closeModal();renderMaterial();showToast('保存成功');
+}
+
+/* ============ 启用/停用 二次确认 ============ */
+function confirmToggleMaterial(code){
+  var it=getMaterial(code);if(!it)return;
+  var target=it.status==='已启用'?'停用':'启用';
+  var body='<div class="confirm-body">确认将材料项“<b>'+it.name+'</b>”'+target+'吗？</div>'+
+    '<div class="confirm-tip">该操作仅影响后续目录配置可选项，历史目录版本与历史申请快照不受影响。</div>';
+  openModal('确认状态变更',body,{width:440,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="applyToggleMaterial(\''+code+'\')">确定</button>'});
+}
+function applyToggleMaterial(code){
+  var it=getMaterial(code);if(it){it.status=it.status==='已启用'?'已停用':'已启用';it.time=nowStr();}
+  closeModal();renderMaterial();showToast('状态已更新');
+}
+function confirmDeleteMaterial(code){
+  var it=getMaterial(code);if(!it)return;
+  var body='<div class="confirm-body">确认删除材料项“<b>'+it.name+'</b>”吗？</div>'+
+    '<div class="confirm-tip">删除后未来流程材料目录将无法引用该材料项，历史目录版本与历史申请快照不受影响（逻辑删除）。</div>';
+  openModal('确认删除',body,{width:440,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="applyDeleteMaterial(\''+code+'\')">确定</button>'});
+}
+function applyDeleteMaterial(code){
+  materialData=materialData.filter(function(x){return x.code!==code;});
+  closeModal();renderMaterial();showToast('删除成功');
+}
+
+/* ============ 多选枚举组件（材料格式） ============ */
+function multiEnum(id,opts,selected){
+  return '<div class="multi-enum-grid" id="'+id+'">'+opts.map(function(o){
+    var checked=selected.indexOf(o)>-1;
+    return '<label class="multi-enum-option'+(checked?' selected':'')+'"><input type="checkbox" value="'+o+'" '+(checked?'checked':'')+' onchange="syncEnum(this)"><span>'+o+'</span></label>';
+  }).join('')+'</div>';
+}
+function syncEnum(input){var op=input.closest('.multi-enum-option');if(op)op.classList.toggle('selected',input.checked);}
+function getEnumValues(id){
+  var vals=[];document.querySelectorAll('#'+id+' input[type="checkbox"]').forEach(function(c){if(c.checked)vals.push(c.value);});return vals;
+}
+
+/* ============ 流程材料目录配置 Tab ============ */
+var selectedCatalogType=null;
+var selectedCatalogCat='道路测试';
+function switchCatTab(el,cat){
+  selectedCatalogCat=cat;
+  document.querySelectorAll('.cat-tabs .cat-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  renderCatalogTypeTree();
+}
+function firstCatalogType(){
+  var f=typeData.find(function(t){return t.status==='已启用'&&t.category===selectedCatalogCat;});
+  return f?f.code:null;
+}
+function renderCatalogTypeTree(){
+  var list=typeData.filter(function(t){return t.status==='已启用'&&t.category===selectedCatalogCat;});
+  document.getElementById('catalogTypeTree').innerHTML=list.length?list.map(function(t){
+    var sel=selectedCatalogType===t.code;
+    return '<div class="type-item'+(sel?' selected':'')+'" onclick="selectCatalogType(\''+t.code+'\')">'+
+      '<span>'+t.subType+'</span><span class="type-cat">'+t.code+'</span></div>';
+  }).join(''):'<div class="empty-row" style="padding:30px 0">该大类下暂无已启用类型</div>';
+}
+function selectCatalogType(code){
+  selectedCatalogType=code;
+  renderCatalogTypeTree();
+  renderCatalogPanel();
+}
+function getEditingItems(){
+  // 优先草稿；无草稿时复制当前已发布版本为草稿基础（仅展示，未点保存草稿前不持久化）
+  var code=selectedCatalogType;ensureCatalog(code);
+  if(catalogData[code].draft)return catalogData[code].draft;
+  var pub=getPublishedVersion(code);
+  return pub?pub.materials.map(function(it){var c={};for(var k in it)c[k]=it[k];return c;}):[];
+}
+function renderCatalogPanel(){
+  var code=selectedCatalogType;
+  if(!code){document.getElementById('catalogPanel').innerHTML='<div class="empty-row" style="padding:40px 0">请选择左侧测试示范类型</div>';return;}
+  var t=typeData.find(function(x){return x.code===code;});
+  var pub=getPublishedVersion(code);
+  var hasDraft=!!catalogData[code].draft;
+  var items=getEditingItems();
+  var body='';
+  body+='<div class="catalog-panel-head">'+
+    '<div class="title-wrap">'+
+      '<h4>'+t.name+'</h4>'+
+      (hasDraft?'<span class="ant-tag ant-tag-processing">编辑中（草稿）</span>':'<span class="ant-tag ant-tag-success">当前已发布：'+(pub?pub.version:'-')+'</span>')+
+      '<span class="field-help" style="margin-top:0">材料项数：'+items.length+'</span>'+
+    '</div>'+
+    '<div class="actions">'+
+      '<button class="ant-btn ant-btn-primary" onclick="openAddCatalogItem()">+ 添加材料项</button>'+
+      '<button class="ant-btn" onclick="saveCatalogDraft()">保存草稿</button>'+
+      '<button class="ant-btn ant-btn-primary" onclick="openPublishVersion()">发布版本</button>'+
+    '</div></div>';
+  if(!hasDraft){
+    body+='<div class="inline-alert warn" style="margin-bottom:12px"><span>⚠️</span><div>当前展示的是已发布版本 <b>'+(pub?pub.version:'-')+'</b> 的材料清单快照，编辑后将自动创建草稿；点击「保存草稿」后才会持久化为草稿版本。</div></div>';
+  }
+  body+='<div class="cfg-table-container"><table class="ant-table">'+
+    '<colgroup><col style="width:60px"><col style="width:160px"><col style="width:82px"><col style="width:170px"><col><col style="width:200px"></colgroup>'+
+    '<thead><tr><th>排序号</th><th>材料名称</th><th>是否必填</th><th>上传格式</th><th>填报说明</th><th>操作</th></tr></thead><tbody>';
+  if(items.length){
+    // 按排序号排序展示
+    var sorted=items.map(function(it,idx){it._idx=idx;return it;}).sort(function(a,b){return (a.sort-b.sort)||(a._idx-b._idx);});
+    sorted.forEach(function(it,idx){
+      var stopped=!materialActive(it.code);
+      body+='<tr'+(stopped?' class="cfg-muted"':'')+'>'+
+        '<td class="col-code">'+it.sort+'</td>'+
+        '<td>'+it.name+(stopped?' <span class="ant-tag ant-tag-default" style="margin-left:4px">已停用</span>':'')+'</td>'+
+        '<td>'+(it.required?'<span class="ant-tag ant-tag-error">必填</span>':'<span class="ant-tag ant-tag-default">选填</span>')+'</td>'+
+        '<td><div class="tag-list">'+it.formats.map(function(f){return '<span class="ant-tag ant-tag-default">'+f+'</span>';}).join('')+'</div></td>'+
+        '<td><div class="cfg-desc" title="'+escapeHTML(it.fillInstruction)+'">'+(it.fillInstruction||'-')+'</div></td>'+
+        '<td class="col-action" style="white-space:nowrap">'+
+          '<button class="move-btn" '+((idx===0)?'disabled':'')+' onclick="moveCatalogItem(\''+it.code+'\',-1)">↑ 上移</button>'+
+          '<button class="move-btn" '+(idx===sorted.length-1?'disabled':'')+' onclick="moveCatalogItem(\''+it.code+'\',1)">↓ 下移</button>'+
+          '<button class="ant-btn-link" onclick="openCatalogItemForm(\''+it.code+'\')">编辑</button>'+
+          '<button class="ant-btn-link" style="color:#ff4d4f" onclick="removeCatalogItem(\''+it.code+'\')">移除</button>'+
+        '</td></tr>';
+    });
+  }else{
+    body+='<tr class="empty-row"><td colspan="6">暂无材料项，请点击「添加材料项」</td></tr>';
+  }
+  body+='</tbody></table></div>';
+  document.getElementById('catalogPanel').innerHTML=body;
+}
+// 操作草稿前确保草稿存在
+function ensureDraft(){
+  var code=selectedCatalogType;ensureCatalog(code);
+  if(!catalogData[code].draft){
+    var pub=getPublishedVersion(code);
+    catalogData[code].draft=pub?pub.materials.map(function(it){var c={};for(var k in it)c[k]=it[k];return c;}):[];
   }
 }
-
-function clearVersionSelect(code){
-  selectedVersions[code]=[];
-  document.querySelectorAll('.ver-checkbox[data-code="'+code+'"]').forEach(function(el){el.checked=false;});
-  var allCb=document.getElementById('ver-select-all');
-  if(allCb)allCb.checked=false;
-}
-
-function compareVersions(code){
-  var vers=selectedVersions[code]||[];
-  if(vers.length<2){
-    alert('请至少选择两个版本进行对比');
+function openAddCatalogItem(){
+  ensureDraft();
+  var items=catalogData[selectedCatalogType].draft;
+  var used={};items.forEach(function(it){used[it.code]=true;});
+  var available=materialData.filter(function(m){return m.status==='已启用'&&!used[m.code];});
+  if(!available.length){
+    var body='<div class="confirm-body">当前材料项库中没有可添加的已启用材料项。</div>'+
+      '<div class="confirm-tip">请先在「材料项库」Tab 中新增或启用材料项后再添加。</div>';
+    openModal('添加材料项',body,{width:640,maskClosable:false,footer:'<button class="ant-btn ant-btn-primary" onclick="closeModal()">知道了</button>'});
     return;
   }
-  var catalogVersionHistory={
-    'ROAD_TEST':{
-      'ML_V3':{catalogVer:'ML_V3',time:'2026-04-15',operator:'平台管理员',changes:'新增自动驾驶等级要求字段，优化材料清单结构',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_ROUTE_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO']},
-      'ML_V2':{catalogVer:'ML_V2',time:'2026-03-20',operator:'张三',changes:'调整适用对象范围，新增商用车类型',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_ROUTE_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE']},
-      'ML_V1':{catalogVer:'ML_V1',time:'2026-01-10',operator:'平台管理员',changes:'初始版本发布',materials:['MAT_APPLY','MAT_SAFETY','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE']}
-    },
-    'DEMO_APP':{
-      'ML_V4':{catalogVer:'ML_V4',time:'2026-04-20',operator:'李四',changes:'新增示范应用安全评估要求，完善材料清单',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO','MAT_PLATFORM']},
-      'ML_V3':{catalogVer:'ML_V3',time:'2026-03-15',operator:'平台管理员',changes:'调整运营区域范围定义',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_PLATFORM']},
-      'ML_V2':{catalogVer:'ML_V2',time:'2026-02-08',operator:'王五',changes:'新增载客人数限制要求',materials:['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE']},
-      'ML_V1':{catalogVer:'ML_V1',time:'2026-01-15',operator:'平台管理员',changes:'初始版本发布',materials:['MAT_APPLY','MAT_SAFETY','MAT_VEHICLE_CERT','MAT_INSURANCE','MAT_BUSINESS_LICENSE']}
-    },
-    'DEMO_OP':{
-      'ML_V2':{catalogVer:'ML_V2',time:'2026-04-25',operator:'赵六',changes:'新增商业化运营资质要求',materials:['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_PLATFORM']},
-      'ML_V1':{catalogVer:'ML_V1',time:'2026-03-01',operator:'平台管理员',changes:'初始版本发布',materials:['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE']}
+  var listHtml=available.map(function(m){return '<label class="multi-enum-option"><input type="radio" name="addmat" value="'+m.code+'"><span>'+m.name+'（'+m.code+'）</span></label>';}).join('');
+  var body='<div class="field-label">从材料项库选择已启用材料项加入当前流程目录</div>'+
+    '<div class="multi-enum-grid" style="grid-template-columns:1fr">'+listHtml+'</div>'+
+    '<div class="field-error" id="err_add_mat"></div>';
+  openModal('添加材料项',body,{width:720,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="addCatalogItem()">添加</button>'});
+}
+function addCatalogItem(){
+  var sel=document.querySelector('input[name="addmat"]:checked');
+  if(!sel){var e=document.getElementById('err_add_mat');e.textContent='请选择一个材料项';e.classList.add('show');return;}
+  var code=sel.value;var m=getMaterial(code);
+  catalogData[selectedCatalogType].draft.push(item(code,{sort:(catalogData[selectedCatalogType].draft.length+1)*10}));
+  closeModal();renderCatalogPanel();showToast('已加入目录，请配置流程级属性并保存草稿');
+}
+function openCatalogItemForm(code){
+  ensureDraft();
+  var items=catalogData[selectedCatalogType].draft;
+  var it=items.find(function(x){return x.code===code;});if(!it)return;
+  var body=
+    '<div class="form-grid">'+
+      '<div class="full"><div class="field-label">材料项</div>'+
+        '<input class="ant-input" value="'+it.name+'（'+it.code+'）" readonly style="background:#f5f5f5">'+
+        '<div class="field-help">来源于材料项库，不可在此修改</div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>是否必填</div>'+
+        '<select id="f_ci_required" class="ant-input"><option'+(it.required?' selected':'')+'>是</option><option'+(!it.required?' selected':'')+'>否</option></select>'+
+        '<div class="field-help">属于流程目录属性，不属于材料项基础属性</div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>排序号</div>'+
+        '<input id="f_ci_sort" type="number" class="ant-input" min="1" max="999" value="'+it.sort+'"><div class="field-error" id="err_ci_sort"></div>'+
+        '<div class="field-help">1-999 整数，数值越小越靠前</div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>上传格式</div>'+
+        multiEnum('f_ci_formats',FORMAT_OPTS,it.formats)+'<div class="field-help">默认继承材料项格式要求，可按流程目录覆盖，至少选择 1 项</div><div class="field-error" id="err_ci_formats"></div></div>'+
+      '<div class="full"><div class="field-label">填报说明</div>'+
+        '<textarea id="f_ci_fill" class="ant-input" rows="2" maxlength="500" placeholder="面向企业端展示（最长500字符）">'+escapeHTML(it.fillInstruction)+'</textarea></div>'+
+      '<div class="full"><div class="field-label">适用条件</div>'+
+        '<textarea id="f_ci_cond" class="ant-input" rows="2" maxlength="300" placeholder="如：仅新增车辆时必填、涉及运营区域变更时必填（最长300字符）">'+escapeHTML(it.applicableCondition)+'</textarea></div>'+
+    '</div>';
+  openModal('编辑目录材料项',body,{width:800,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="saveCatalogItem(\''+code+'\')">保存</button>'});
+}
+var currentEditItemCode='';
+function saveCatalogItem(code){
+  currentEditItemCode=code;
+  clearErrors(['err_ci_sort','err_ci_formats']);
+  var required=document.getElementById('f_ci_required').value==='是';
+  var sort=parseInt(document.getElementById('f_ci_sort').value,10);
+  var formats=getEnumValues('f_ci_formats');
+  var ok=true;
+  if(isNaN(sort)||sort<1||sort>999){setError('f_ci_sort','err_ci_sort','排序号为 1-999 整数');ok=false;}
+  if(!formats.length){setEnumError('f_ci_formats','err_ci_formats','请至少选择一种上传格式');ok=false;}
+  if(!ok)return;
+  var fill=document.getElementById('f_ci_fill').value.trim();
+  var cond=document.getElementById('f_ci_cond').value.trim();
+  var it=catalogData[selectedCatalogType].draft.find(function(x){return x.code===code;});
+  if(it){it.required=required;it.sort=sort;it.formats=formats;it.fillInstruction=fill;it.applicableCondition=cond;}
+  closeModal();renderCatalogPanel();showToast('已更新，请点击「保存草稿」持久化');
+}
+function moveCatalogItem(code,dir){
+  ensureDraft();
+  var items=catalogData[selectedCatalogType].draft;
+  items.sort(function(a,b){return (a.sort-b.sort);});
+  var idx=items.findIndex(function(x){return x.code===code;});
+  var target=idx+dir;
+  if(target<0||target>=items.length)return;
+  var a=items[idx].sort,b=items[target].sort;
+  items[idx].sort=b;items[target].sort=a;
+  renderCatalogPanel();showToast('已调整排序，请点击「保存草稿」持久化');
+}
+function removeCatalogItem(code){
+  var it=getMaterial(code)||{name:code};
+  var body='<div class="confirm-body">确认从当前流程目录移除材料项“<b>'+it.name+'</b>”吗？</div>'+
+    '<div class="confirm-tip">移除仅作用于当前草稿目录，已发布版本与历史申请不受影响。</div>';
+  openModal('确认移除',body,{width:440,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="applyRemoveCatalogItem(\''+code+'\')">确定</button>'});
+}
+function applyRemoveCatalogItem(code){
+  ensureDraft();
+  catalogData[selectedCatalogType].draft=catalogData[selectedCatalogType].draft.filter(function(x){return x.code!==code;});
+  closeModal();renderCatalogPanel();showToast('已移除，请点击「保存草稿」持久化');
+}
+function saveCatalogDraft(){
+  ensureDraft();
+  var items=catalogData[selectedCatalogType].draft;
+  // 校验：重复材料项
+  var seen={};var dup=[];
+  items.forEach(function(it){
+    if(seen[it.code])dup.push(it.name);seen[it.code]=true;
+  });
+  if(dup.length){showToast('同一流程材料目录中存在重复材料项：'+dup.join('、'));return;}
+  if(!items.length){showToast('请至少添加一个材料项后保存草稿');return;}
+  showToast('草稿已保存');
+}
+function openPublishVersion(){
+  ensureDraft();
+  var code=selectedCatalogType;var t=typeData.find(function(x){return x.code===code;});
+  var items=catalogData[code].draft;
+  // 发布前校验
+  var seen={};var dup=[];var stopped=[];
+  items.forEach(function(it){
+    if(seen[it.code])dup.push(it.name);seen[it.code]=true;
+    if(!materialActive(it.code))stopped.push(it.name);
+  });
+  if(!items.length){showToast('请至少添加一个材料项后发布');return;}
+  if(dup.length){showToast('存在重复材料项：'+dup.join('、'));return;}
+  if(stopped.length){showToast('当前材料项已停用，请移除或替换后再发布：'+stopped.join('、'));return;}
+  var suggested=nextVersionCode(code);
+  var body=
+    '<div class="inline-alert warn"><span>⚠️</span><div>发布后仅影响新发起申请使用新版本，已提交申请继续使用提交时固化的目录快照。</div></div>'+
+    '<div class="form-grid">'+
+      '<div class="full"><div class="field-label">所属测试示范类型</div>'+
+        '<input class="ant-input" value="'+t.name+'" readonly style="background:#f5f5f5"></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>新版本号</div>'+
+        '<input id="f_pv_version" class="ant-input" value="'+suggested+'" placeholder="如 '+suggested+'">'+
+        '<div class="field-help">建议按 ML_V{序号} 生成，同一测试示范类型下唯一</div><div class="field-error" id="err_pv_version"></div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>变更说明</div>'+
+        '<textarea id="f_pv_change" class="ant-input" rows="3" maxlength="500" placeholder="说明本次材料目录调整内容（最长500字符）"></textarea><div class="field-error" id="err_pv_change"></div></div>'+
+      '<div class="full"><label class="multi-enum-option" style="cursor:pointer"><input type="checkbox" id="f_pv_confirm" onchange="this.closest(\'.multi-enum-option\').classList.toggle(\'selected\',this.checked)"><span>确认发布后仅影响新发起申请，历史申请不受影响</span></label><div class="field-error" id="err_pv_confirm"></div></div>'+
+    '</div>';
+  openModal('发布目录版本',body,{width:640,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="applyPublishVersion()">发布</button>'});
+}
+function applyPublishVersion(){
+  clearErrors(['err_pv_version','err_pv_change','err_pv_confirm']);
+  var code=selectedCatalogType;var d=catalogData[code];
+  var ver=document.getElementById('f_pv_version').value.trim();
+  var change=document.getElementById('f_pv_change').value.trim();
+  var confirm=document.getElementById('f_pv_confirm').checked;
+  var ok=true;
+  if(!ver){setError('f_pv_version','err_pv_version','请填写新版本号');ok=false;}
+  else if(d.versions.some(function(v){return v.version===ver;})){setError('f_pv_version','err_pv_version','版本号在同一测试示范类型下必须唯一');ok=false;}
+  if(!change){setError('f_pv_change','err_pv_change','请填写本次目录版本变更说明');ok=false;}
+  if(!confirm){setError('f_pv_confirm','err_pv_confirm','请勾选发布确认');ok=false;}
+  if(!ok)return;
+  // 当前已发布版本转历史
+  d.versions.forEach(function(v){if(v.status==='已发布')v.status='历史版本';});
+  d.versions.unshift({version:ver,status:'已发布',materials:d.draft.map(function(it){var c={};for(var k in it)c[k]=it[k];return c;}),publishTime:nowStr(),operator:'平台管理员',changeSummary:change});
+  d.draft=null;
+  closeModal();renderCatalogPanel();showToast('发布成功');
+}
+
+/* ============ 目录版本管理 Tab ============ */
+var selectedVersionType=null;
+var selectedVersionCat='道路测试';
+var versionFilter={status:'全部'};
+function switchVersionCatTab(el,cat){
+  selectedVersionCat=cat;
+  document.querySelectorAll('#panel-version .cat-tabs .cat-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  renderVersionTypeTree();
+  var first=firstVersionType();
+  if(first)selectVersionType(first);
+}
+function firstVersionType(){var t=typeData.find(function(x){return x.category===selectedVersionCat;});return t?t.code:null;}
+function renderVersionTypeTree(){
+  var list=typeData.filter(function(t){return t.category===selectedVersionCat;});
+  document.getElementById('versionTypeTree').innerHTML=list.length?list.map(function(t){
+    var sel=selectedVersionType===t.code;
+    return '<div class="type-item'+(sel?' selected':'')+'" onclick="selectVersionType(\''+t.code+'\')">'+
+      '<span>'+t.subType+(t.status==='已停用'?' <span class="ant-tag ant-tag-default" style="margin-left:4px">已停用</span>':'')+'</span>'+
+      '<span class="type-cat">'+t.code+'</span></div>';
+  }).join(''):'<div class="empty-row" style="padding:30px 0">该大类下暂无类型</div>';
+}
+function selectVersionType(code){
+  selectedVersionType=code;versionFilter.status='全部';
+  renderVersionTypeTree();renderVersionPanel();
+}
+function renderVersionPanel(){
+  var code=selectedVersionType;
+  if(!code){document.getElementById('versionPanel').innerHTML='<div class="empty-row" style="padding:40px 0">请选择左侧测试示范类型</div>';return;}
+  var t=typeData.find(function(x){return x.code===code;});
+  ensureCatalog(code);
+  var versions=catalogData[code].versions.slice();
+  // 草稿单独注入到列表顶部展示
+  var draftItems=catalogData[code].draft;
+  var rows=[];
+  if(draftItems){rows.push({version:'草稿',status:'草稿',materials:draftItems,publishTime:'-',operator:'-',changeSummary:'编辑中的草稿版本'});}
+  versions.forEach(function(v){if(versionFilter.status==='全部'||v.status===versionFilter.status)rows.push(v);});
+  var body='<div class="catalog-panel-head">'+
+    '<div class="title-wrap"><h4>'+t.name+' - 目录版本</h4><span class="field-help" style="margin-top:0">已发布+历史版本数：'+versions.length+(draftItems?'，另有草稿 1':'')+'</span></div>'+
+    '<div class="actions"><label style="font-size:13px;color:#00000073">版本状态 </label>'+
+      '<select id="ver_status" class="ant-input" style="width:130px" onchange="changeVersionFilter()">'+
+        ['全部','草稿','已发布','历史版本'].map(function(s){return '<option'+(versionFilter.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select>'+
+      '<button class="ant-btn" onclick="resetVersionFilter()">重置</button>'+
+    '</div></div>';
+  body+='<div class="cfg-table-container"><table class="ant-table">'+
+    '<colgroup><col style="width:120px"><col style="width:120px"><col style="width:90px"><col style="width:140px"><col style="width:100px"><col></colgroup>'+
+    '<thead><tr><th>目录版本号</th><th>版本状态</th><th>材料数量</th><th>发布时间</th><th>操作人</th><th>操作</th></tr></thead><tbody>';
+  if(rows.length){
+    rows.forEach(function(v){
+      var isDraft=v.status==='草稿';
+      body+='<tr>'+
+        '<td class="col-code">'+v.version+'</td>'+
+        '<td>'+versionStatusTag(v.status)+'</td>'+
+        '<td>'+(v.materials?v.materials.length:0)+'</td>'+
+        '<td class="col-code">'+v.publishTime+'</td>'+
+        '<td>'+v.operator+'</td>'+
+        '<td class="col-action">'+
+          (isDraft?'':'<button class="ant-btn-link" onclick="viewVersionDetail(\''+code+'\',\''+v.version+'\')">查看</button>')+
+          (isDraft?'':'<button class="ant-btn-link" onclick="openComparePicker(\''+code+'\',\''+v.version+'\')">版本对比</button>')+
+          (isDraft||v.status==='已发布'?'':'<button class="ant-btn-link" onclick="copyAsNewVersion(\''+code+'\',\''+v.version+'\')">复制为新版本</button>')+
+        '</td></tr>';
+    });
+  }else{
+    body+='<tr class="empty-row"><td colspan="6">暂无数据</td></tr>';
+  }
+  body+='</tbody></table></div>';
+  document.getElementById('versionPanel').innerHTML=body;
+}
+function changeVersionFilter(){
+  versionFilter.status=document.getElementById('ver_status').value;
+  renderVersionPanel();
+}
+function resetVersionFilter(){versionFilter.status='全部';renderVersionPanel();showToast('已重置筛选条件');}
+
+function viewVersionDetail(code,ver){
+  ensureCatalog(code);
+  var v=catalogData[code].versions.find(function(x){return x.version===ver;});if(!v)return;
+  var body='<div class="form-grid" style="margin-bottom:12px">'+
+    '<div><div class="field-label">所属测试示范类型</div><div class="ant-input" style="background:#f5f5f5">'+getTypeName(code)+'</div></div>'+
+    '<div><div class="field-label">版本状态</div><div style="padding-top:6px">'+versionStatusTag(v.status)+'</div></div>'+
+    '<div><div class="field-label">发布时间</div><div style="padding-top:6px">'+v.publishTime+'</div></div>'+
+    '<div><div class="field-label">操作人</div><div style="padding-top:6px">'+v.operator+'</div></div>'+
+    '<div class="full"><div class="field-label">变更说明</div><div style="padding:8px 12px;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;font-size:13px;color:#000000d9">'+escapeHTML(v.changeSummary)+'</div></div>'+
+  '</div>';
+  body+='<div class="cfg-table-container"><table class="ant-table">'+
+    '<colgroup><col style="width:60px"><col style="width:220px"><col style="width:90px"><col><col></colgroup>'+
+    '<thead><tr><th>排序号</th><th>材料名称</th><th>是否必填</th><th>上传格式</th><th>填报说明</th></tr></thead><tbody>';
+  var sorted=v.materials.slice().sort(function(a,b){return a.sort-b.sort;});
+  sorted.forEach(function(it){
+    body+='<tr><td>'+it.sort+'</td><td>'+it.name+'</td><td>'+(it.required?'必填':'选填')+'</td>'+
+      '<td><div class="tag-list">'+it.formats.map(function(f){return '<span class="ant-tag ant-tag-default">'+f+'</span>';}).join('')+'</div></td>'+
+      '<td><div class="cfg-desc" title="'+escapeHTML(it.fillInstruction)+'">'+(it.fillInstruction||'-')+'</div></td></tr>';
+  });
+  body+='</tbody></table></div>';
+  openModal('目录版本详情 - '+ver,body,{width:900,maskClosable:false,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+
+function openComparePicker(code,baseVer){
+  ensureCatalog(code);
+  var others=catalogData[code].versions.filter(function(v){return v.version!==baseVer;});
+  if(!others.length){showToast('当前类型仅有 1 个版本，无法对比');return;}
+  var list=others.map(function(v){return '<label class="multi-enum-option"><input type="radio" name="comparetarget" value="'+v.version+'"><span>'+v.version+'（'+versionStatusTag(v.status)+' '+v.publishTime+'）</span></label>';}).join('');
+  var body='<div class="field-label">选择与 <b>'+baseVer+'</b> 对比的目标版本</div>'+
+    '<div class="multi-enum-grid" style="grid-template-columns:1fr">'+list+'</div><div class="field-error" id="err_compare"></div>';
+  openModal('选择对比版本',body,{width:520,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="compareVersions(\''+code+'\',\''+baseVer+'\')">开始对比</button>'});
+}
+function compareVersions(code,baseVer){
+  var sel=document.querySelector('input[name="comparetarget"]:checked');
+  if(!sel){var e=document.getElementById('err_compare');e.textContent='请选择一个目标版本';e.classList.add('show');return;}
+  var targetVer=sel.value;
+  ensureCatalog(code);
+  var v1=catalogData[code].versions.find(function(x){return x.version===baseVer;});
+  var v2=catalogData[code].versions.find(function(x){return x.version===targetVer;});
+  if(!v1||!v2)return;
+  var map1={},map2={};
+  v1.materials.forEach(function(it){map1[it.code]=it;});
+  v2.materials.forEach(function(it){map2[it.code]=it;});
+  var allCodes=Object.keys(Object.assign({},map1,map2)).sort();
+  var added=0,removed=0,modified=0,same=0;
+  var rowsHtml=allCodes.map(function(c){
+    var a=map1[c],b=map2[c];
+    var changeType='',changeText='',cellCls='';
+    if(a&&!b){changeType='removed';changeText='<span class="diff-tag removed">已移除</span>';cellCls='removed';removed++;}
+    else if(!a&&b){changeType='added';changeText='<span class="diff-tag added">新增</span>';cellCls='added';added++;}
+    else{
+      var diffs=[];
+      if(a.required!==b.required)diffs.push('必填');
+      if(a.sort!==b.sort)diffs.push('排序');
+      if(a.formats.join(',')!==b.formats.join(','))diffs.push('格式');
+      var f1=a.fillInstruction||'',f2=b.fillInstruction||'';
+      if(f1!==f2)diffs.push('填报说明');
+      if(diffs.length){changeType='modified';changeText='<span class="diff-tag modified">变更：'+diffs.join('、')+'</span>';cellCls='modified';modified++;}
+      else{changeText='<span class="diff-tag same">无变化</span>';same++;}
     }
-  };
-  var typeHistory=catalogVersionHistory[code]||{};
-  var v1=vers[0],v2=vers[1];
-  var h1=typeHistory[v1],h2=typeHistory[v2];
-  if(!h1||!h2)return;
-  var m1=h1.materials||[],m2=h2.materials||[];
-  var allCodes=[].concat(m1).concat(m2).filter(function(v,i,a){return a.indexOf(v)===i;});
-  var typeName=typeData.find(function(t){return t.code===code})?typeData.find(function(t){return t.code===code}).name:code;
-  var html='<h4 class="text-sm font-semibold text-[#000000d9] mb-4">'+typeName+' - 版本对比 ('+v1+' vs '+v2+')</h4>';
-  html+='<div class="grid grid-cols-2 gap-4 mb-4"><div class="p-3 bg-[#f6ffed] rounded"><span class="text-xs text-[#00000073]">基准版本</span><br><span class="font-medium text-[#52c41a]">'+v1+'</span> ('+h1.time+')</div>';
-  html+='<div class="p-3 bg-[#e6f4ff] rounded"><span class="text-xs text-[#00000073]">对比版本</span><br><span class="font-medium text-[#1677ff]">'+v2+'</span> ('+h2.time+')</div></div>';
-  html+='<table class="ant-table diff-table"><thead><tr><th>材料代码</th><th>材料名称</th><th>'+v1+'</th><th>'+v2+'</th><th>变化</th></tr></thead><tbody>';
-  allCodes.sort().forEach(function(matCode){
-    var mat=materialEntries.find(function(m){return m.code===matCode});
-    var matName=mat?mat.name:matCode;
-    var in1=m1.indexOf(matCode)>-1,in2=m2.indexOf(matCode)>-1;
-    var changeType='',changeText='';
-    if(in1&&!in2){changeType='removed';changeText='<span class="text-[#ff4d4f]">已移除</span>';}
-    else if(!in1&&in2){changeType='added';changeText='<span class="text-[#52c41a]">新增</span>';}
-    else{changeText='<span class="text-[#00000040]">无变化</span>';}
-    html+='<tr'+(changeType?' class="'+changeType+'"':'')+'><td>'+matCode+'</td><td>'+matName+'</td><td>'+(in1?'<span class="text-[#52c41a]">✓</span>':'<span class="text-[#d9d9d9]">-</span>')+'</td><td>'+(in2?'<span class="text-[#1677ff]">✓</span>':'<span class="text-[#d9d9d9]">-</span>')+'</td><td>'+changeText+'</td></tr>';
-  });
-  html+='</tbody></table>';
-  html+='<div class="mt-4 p-3 bg-[#fafafa] rounded"><h5 class="text-sm font-medium mb-2">变更摘要</h5>';
-  var added=m2.filter(function(c){return m1.indexOf(c)===-1;});
-  var removed=m1.filter(function(c){return m2.indexOf(c)===-1;});
-  html+='<p class="text-xs text-[#00000073]">新增材料：'+(added.length?added.map(function(c){var m=materialEntries.find(function(x){return x.code===c});return m?m.name:c;}).join('、'):'无')+'</p>';
-  html+='<p class="text-xs text-[#00000073]">移除材料：'+(removed.length?removed.map(function(c){var m=materialEntries.find(function(x){return x.code===c});return m?m.name:c;}).join('、'):'无')+'</p>';
-  html+='<p class="text-xs text-[#00000073]">材料总数：'+v1+' 共 '+m1.length+' 项 → '+v2+' 共 '+m2.length+' 项</p></div>';
-  openModal('目录清单版本对比',html,{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+    var fmtStr=function(it){return it?'<div class="tag-list" style="display:inline">'+it.formats.map(function(f){return '<span class="ant-tag ant-tag-default">'+f+'</span>';}).join('')+'</div>':'<span style="color:#00000040">-</span>';};
+    var propStr=function(it){
+      if(!it)return '<span style="color:#00000040">-</span>';
+      return '必填:'+(it.required?'是':'否')+' · 排序:'+it.sort;
+    };
+    return '<tr>'+
+      '<td class="col-code">'+c+'</td><td>'+getMaterialName(c)+'</td>'+
+      '<td class="'+(a&&b?cellCls:'')+'">'+(changeType==='added'?'<span style="color:#00000040">-</span>':propStr(a))+'</td>'+
+      '<td class="'+(a&&b?cellCls:'')+'">'+(changeType==='removed'?'<span style="color:#00000040">-</span>':propStr(b))+'</td>'+
+      '<td>'+(changeType==='added'?'<span style="color:#00000040">-</span>':fmtStr(a))+'</td>'+
+      '<td>'+(changeType==='removed'?'<span style="color:#00000040">-</span>':fmtStr(b))+'</td>'+
+      '<td>'+changeText+'</td></tr>';
+  }).join('');
+  var summary='<div class="inline-alert info" style="margin-top:12px"><span>📊</span><div>'+
+    '<b>'+baseVer+'</b>（'+v1.materials.length+' 项） → <b>'+targetVer+'</b>（'+v2.materials.length+' 项）；'+
+    '新增 '+added+' 项，移除 '+removed+' 项，属性变更 '+modified+' 项，无变化 '+same+' 项。</div></div>';
+  var body='<div class="grid grid-cols-2 gap-4 mb-4">'+
+      '<div class="p-3 bg-[#f6ffed] rounded"><span class="text-xs text-[#00000073]">基准版本</span><br><span class="font-medium text-[#52c41a]">'+baseVer+'</span> ('+v1.publishTime+')</div>'+
+      '<div class="p-3 bg-[#e6f4ff] rounded"><span class="text-xs text-[#00000073]">对比版本</span><br><span class="font-medium text-[#1677ff]">'+targetVer+'</span> ('+v2.publishTime+')</div>'+
+    '</div>'+
+    '<div class="cfg-table-container"><table class="ant-table diff-table">'+
+    '<colgroup><col style="width:160px"><col style="width:200px"><col><col><col style="width:140px"><col style="width:140px"><col style="width:180px"></colgroup>'+
+    '<thead><tr><th>材料代码</th><th>材料名称</th><th>'+baseVer+' 属性</th><th>'+targetVer+' 属性</th><th>'+baseVer+' 格式</th><th>'+targetVer+' 格式</th><th>变化</th></tr></thead><tbody>'+
+    rowsHtml+'</tbody></table></div>'+summary;
+  openModal('目录版本对比 ('+baseVer+' vs '+targetVer+')',body,{width:960,maskClosable:false,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+function copyAsNewVersion(code,ver){
+  ensureCatalog(code);
+  var v=catalogData[code].versions.find(function(x){return x.version===ver;});if(!v)return;
+  if(catalogData[code].draft){
+    var body='<div class="confirm-body">当前类型已存在草稿，复制将覆盖现有草稿，是否继续？</div>'+
+      '<div class="confirm-tip">复制 '+ver+' 的材料清单为新的草稿，可在「流程材料目录配置」中继续编辑后发布。</div>';
+    openModal('确认覆盖草稿',body,{width:440,maskClosable:false,
+      footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="doCopyAsNewVersion(\''+code+'\',\''+ver+'\')">确定</button>'});
+    return;
+  }
+  doCopyAsNewVersion(code,ver);
+}
+function doCopyAsNewVersion(code,ver){
+  var v=catalogData[code].versions.find(function(x){return x.version===ver;});if(!v)return;
+  catalogData[code].draft=v.materials.map(function(it){var c={};for(var k in it)c[k]=it[k];return c;});
+  closeModal();showToast('已复制为新草稿，请到「流程材料目录配置」继续编辑');
 }
 
-function selectRelType(code){
-  document.querySelectorAll('[id^="rel-type-"]').forEach(function(el){el.classList.remove('selected')});
-  var el=document.getElementById('rel-type-'+code);
-  if(el)el.classList.add('selected');
-  var typeMaterials={
-    'ROAD_TEST':['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_ROUTE_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO'],
-    'ROAD_RENEW':['MAT_APPLY','MAT_SAFETY','MAT_TEST_REPORT','MAT_INSURANCE','MAT_BUSINESS_LICENSE'],
-    'ROAD_CHANGE':['MAT_APPLY','MAT_ROUTE_PLAN','MAT_INSURANCE'],
-    'DEMO_APP':['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_TEST_REPORT','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_TECH_SPEC','MAT_SENSOR_INFO','MAT_PLATFORM'],
-    'DEMO_RENEW':['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE'],
-    'DEMO_ADD':['MAT_APPLY','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_TECH_SPEC','MAT_SENSOR_INFO'],
-    'DEMO_OP':['MAT_APPLY','MAT_SAFETY','MAT_SELF_DECL','MAT_PLAN','MAT_VEHICLE_CERT','MAT_DRIVER_LICENSE','MAT_INSURANCE','MAT_BUSINESS_LICENSE','MAT_PLATFORM'],
-    'DEMO_OP_RENEW':['MAT_APPLY','MAT_SAFETY','MAT_PLAN','MAT_INSURANCE','MAT_BUSINESS_LICENSE']
-  };
-  var selectedCodes=typeMaterials[code]||[];
-  var html='<h4 class="text-sm font-semibold text-[#000000d9] mb-3">材料清单配置</h4>';
-  html+='<p class="text-xs text-[#00000073] mb-3">勾选需要关联的材料项，取消勾选可移除关联。</p>';
-  html+='<div class="space-y-2">';
-  materialEntries.forEach(function(m){
-    var checked=selectedCodes.indexOf(m.code)>-1;
-    html+='<label class="flex items-center gap-2 p-2 rounded hover:bg-[#f5f5f5] cursor-pointer">'+
-      '<input type="checkbox" '+(checked?'checked':'')+' class="ant-checkbox">'+
-      '<span class="text-sm">'+m.name+'</span>'+
-      '<span class="text-xs text-[#00000040]">('+m.code+')</span>'+
-      (m.required==='是'?'<span class="ant-tag ant-tag-processing text-[10px]">必填</span>':'')+
-    '</label>';
-  });
-  html+='</div>';
-  html+='<div class="mt-4 pt-4 border-t border-[#f0f0f0]"><button class="ant-btn ant-btn-primary">保存配置</button></div>';
-  document.getElementById('relMaterials').innerHTML=html;
-}
+/* ============ 通用工具（表单校验/Toast） ============ */
+function setError(inputId,errId,msg){var i=document.getElementById(inputId);if(i)i.classList.add('err');var e=document.getElementById(errId);if(e){e.textContent=msg;e.classList.add('show');}}
+function setEnumError(gridId,errId,msg){var g=document.getElementById(gridId);if(g)g.classList.add('err');var e=document.getElementById(errId);if(e){e.textContent=msg;e.classList.add('show');}}
+function clearErrors(ids){ids.forEach(function(id){var e=document.getElementById(id);if(e){e.classList.remove('show');e.textContent='';}});
+  document.querySelectorAll('.ant-input.err').forEach(function(i){i.classList.remove('err');});
+  document.querySelectorAll('.multi-enum-grid.err').forEach(function(g){g.classList.remove('err');});}
+function showToast(msg){var ex=document.querySelector('.toast-msg');if(ex)ex.remove();var t=document.createElement('div');t.className='toast-msg';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(function(){if(t.parentNode)t.remove();},300);},2000);}
 
-document.addEventListener('DOMContentLoaded',function(){renderTypeTable()});
+document.addEventListener('DOMContentLoaded',function(){
+  // 提供方下拉初始化
+  var pv=document.getElementById('mat_provider');
+  pv.innerHTML='<option>全部</option>'+PROVIDERS.map(function(p){return '<option>'+p+'</option>';}).join('');
+  initPagers();
+  renderMaterial();
+  // 支持 URL hash 直接打开指定 Tab（便于截图验证与深链接）
+  var hash=(location.hash||'').replace('#','');
+  if(hash==='catalog'||hash==='version'){switchTabByName(hash);}
+});
 </script>
 <script src="../../common.js"></script>
+<script src="../../components/pagination-component.js"></script>
 </body>
 </html>

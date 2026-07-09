@@ -178,7 +178,8 @@ pager.reset();                    // 重置到第一页
 | 准入审批管理 | 审批管理 | `approve` |
 | | 资格终止管理 | `terminate` |
 | | 报告管理 | `report` |
-| 自定义配置 | 测试示范审批配置 | `approve-config` |
+| 自定义配置 | 测试示范审批配置 | `approval-config` |
+| | 材料目录配置 | `approve-config` |
 | | 异常事件规则配置 | `abnormal-rule-config` |
 | 车辆状态监控 | 监控一张图 | `monitor-map` |
 | | 车辆运行监控 | `running` |

@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电子围栏管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <style>
+    .fence-list{display:flex;flex-direction:column;gap:0}
+    .fence-item{padding:14px 16px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:all .2s}
+    .fence-item:hover{background:#fafafa}
+    .fence-item.selected{background:#e6f4ff;border-left:3px solid #1677ff}
+    .fence-item .fence-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+    .fence-item .fence-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;font-size:14px;color:#000000d9;line-height:1.4}
+    .fence-item .fence-tags{flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap}
+    .fence-item .fence-actions{display:flex;gap:4px;flex-wrap:wrap}
+    .fence-item .fence-actions button{font-size:12px;padding:2px 8px}
+    #map{width:100%;height:100%;z-index:1}
+    .map-toolbar{position:absolute;top:16px;left:16px;display:flex;gap:8px;z-index:1000}
+    .map-toolbar button{height:32px;padding:0 14px;border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;border:1px solid #d9d9d9;background:#fff;color:#000000d9;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;align-items:center;gap:4px;white-space:nowrap}
+    .map-toolbar button:hover{border-color:#1677ff;color:#1677ff}
+    .map-toolbar button.active{background:#1677ff;color:#fff;border-color:#1677ff}
+    .map-toolbar button.danger-btn{border-color:#ff4d4f;color:#ff4d4f}
+    .map-toolbar button.danger-btn:hover{background:#fff2f0}
+    .map-toolbar button.save-btn{border-color:#52c41a;color:#52c41a}
+    .map-toolbar button.save-btn:hover{background:#f6ffed}
+    .map-toolbar .toolbar-sep{width:1px;background:#e8e8e8;margin:4px 0}
+    .map-legend{position:absolute;bottom:20px;left:16px;background:rgba(255,255,255,.96);border-radius:8px;padding:12px 16px;box-shadow:0 6px 16px rgba(0,0,0,.08);font-size:12px;z-index:1000;backdrop-filter:blur(6px)}
+    .map-legend .legend-title{font-weight:600;margin-bottom:8px;color:#000000d9}
+    .map-legend .legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+    .map-legend .legend-color{width:20px;height:12px;border-radius:2px;flex-shrink:0}
+    .map-legend .legend-label{color:#00000073}
+    .drawing-tip{position:absolute;top:16px;right:16px;background:#fff;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);padding:12px 16px;z-index:1000;font-size:13px;color:#000000d9;max-width:320px;display:none}
+    .drawing-tip.show{display:block}
+    .drawing-tip .tip-title{font-weight:600;margin-bottom:4px}
+    .drawing-tip .tip-text{color:#00000073;font-size:12px;line-height:1.5}
+    .drawing-tip .tip-fence-name{color:#1677ff;font-weight:500}
+    .fence-detail-panel{position:absolute;top:0;right:0;bottom:0;width:300px;background:#fff;box-shadow:-4px 0 16px rgba(0,0,0,.08);z-index:1001;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease}
+    .fence-detail-panel.show{transform:translateX(0)}
+    .fence-detail-panel .panel-header{padding:16px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .fence-detail-panel .panel-header .panel-title{font-weight:600;font-size:15px;color:#000000d9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px}
+    .fence-detail-panel .panel-close{cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#00000073;transition:all .2s;border:none;background:transparent;font-size:16px;flex-shrink:0}
+    .fence-detail-panel .panel-close:hover{background:#f5f5f5;color:#000000d9}
+    .fence-detail-panel .panel-body{flex:1;overflow-y:auto;padding:0}
+    .fence-detail-panel .panel-footer{padding:12px 20px;border-top:1px solid #f0f0f0;flex-shrink:0}
+    .detail-row{display:flex;padding:10px 20px;border-bottom:1px solid #fafafa}
+    .detail-row .detail-label{width:100px;min-width:100px;font-size:13px;color:#00000073;line-height:22px}
+    .detail-row .detail-value{flex:1;font-size:13px;color:#000000d9;line-height:22px}
+    .detail-row .detail-value .ant-tag{vertical-align:middle}
+    .detail-row-alt{background:#fafafa}
+    .ant-modal-body .checkbox-group{display:flex;flex-direction:column;gap:8px}
+    .ant-modal-body .checkbox-group label{display:flex;align-items:center;gap:8px;font-size:14px;color:#000000d9;cursor:pointer}
+    .ant-modal-body .checkbox-group input[type="checkbox"]{width:16px;height:16px;accent-color:#1677ff;cursor:pointer}
+    .search-bar{padding:12px 16px;border-bottom:1px solid #f0f0f0;background:#fff;flex-shrink:0}
+    .search-bar .search-row{display:flex;gap:8px;margin-bottom:8px}
+    .search-bar .search-row:last-child{margin-bottom:0}
+    .search-bar input,.search-bar select{height:32px;font-size:13px;border:1px solid #d9d9d9;border-radius:6px;padding:0 10px;outline:none;transition:border-color .2s}
+    .search-bar input:focus,.search-bar select:focus{border-color:#1677ff}
+    .search-bar input{flex:1}
+    .search-bar select{width:130px;cursor:pointer}
+    .search-bar .search-btns{display:flex;gap:6px}
+    .search-bar .search-btns button{height:32px;padding:0 14px;border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;border:1px solid #d9d9d9;background:#fff;color:#000000d9}
+    .search-bar .search-btns button:hover{border-color:#1677ff;color:#1677ff}
+    .search-bar .search-btns button.primary{background:#1677ff;color:#fff;border-color:#1677ff}
+    .search-bar .search-btns button.primary:hover{background:#4096ff}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 flex flex-col overflow-hidden bg-[#f0f2f5] p-0">
+      <div class="page-header" style="padding:16px 24px;margin-bottom:0">
+        <h2>电子围栏管理</h2>
+        <div class="flex gap-2">
+          <button class="ant-btn ant-btn-primary" onclick="openFenceModal()">+ 新建电子围栏</button>
+        </div>
+      </div>
+      <div class="flex flex-1 min-h-0 overflow-hidden">
+        <div class="w-[400px] min-w-[400px] bg-white flex flex-col overflow-hidden border-r border-[#f0f0f0]">
+          <div class="search-bar">
+            <div class="search-row">
+              <input type="text" id="searchName" placeholder="搜索围栏名称">
+              <select id="searchStatus">
+                <option value="">全部状态</option>
+                <option value="待配置矢量">待配置矢量</option>
+                <option value="开放">开放</option>
+                <option value="暂停">暂停</option>
+                <option value="关闭">关闭</option>
+              </select>
+            </div>
+            <div class="search-btns">
+              <button class="primary" onclick="doSearch()">查询</button>
+              <button onclick="resetSearch()">重置</button>
+            </div>
+          </div>
+          <div class="fence-list flex-1 overflow-y-auto" id="fenceList"></div>
+        </div>
+        <div class="flex-1 relative">
+          <div id="map" style="width:100%;height:100%"></div>
+          <div class="map-toolbar" id="mapToolbar" style="display:none">
+            <button class="active" id="btnDraw" onclick="startDrawPolygon()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5z"/></svg>
+              开始绘制多边形区域
+            </button>
+            <button class="danger-btn" id="btnClear" onclick="clearDrawing()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              清除绘制
+            </button>
+            <div class="toolbar-sep" id="toolbarSep" style="display:none"></div>
+            <button class="save-btn" id="btnSave" onclick="saveDrawing()" style="display:none">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              保存
+            </button>
+            <button id="btnCancel" onclick="cancelDrawing()" style="display:none">取消</button>
+          </div>
+          <div class="drawing-tip" id="drawingTip">
+            <div class="tip-title">图形绘制模式</div>
+            <div class="tip-text">正在为电子围栏：<span class="tip-fence-name" id="drawingFenceName"></span> 进行图形绘制操作。<br>提示：在地图上依次点击各个顶点，完成多边形区域的绘制后双击结束，然后点击"保存"确认。</div>
+          </div>
+          <div class="fence-detail-panel" id="fenceDetailPanel">
+            <div class="panel-header">
+              <span class="panel-title" id="panelTitle"></span>
+              <button class="panel-close" onclick="deselectFence()">✕</button>
+            </div>
+            <div class="panel-body" id="panelBody"></div>
+            <div class="panel-footer">
+              <button class="ant-btn" style="width:100%" onclick="deselectFence()">关闭</button>
+            </div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-title">围栏图例</div>
+            <div class="legend-item"><div class="legend-color" style="background:rgba(22,119,255,.25);border:2px solid #1677ff"></div><div class="legend-label">开放 - 允许区域</div></div>
+            <div class="legend-item"><div class="legend-color" style="background:rgba(250,173,20,.2);border:2px solid #faad14"></div><div class="legend-label">暂停 - 允许区域</div></div>
+            <div class="legend-item"><div class="legend-color" style="background:rgba(140,140,140,.1);border:2px solid #8c8c8c"></div><div class="legend-label">关闭 - 允许区域</div></div>
+            <div class="legend-item"><div class="legend-color" style="background:rgba(200,200,200,.2);border:2px dashed #bfbfbf"></div><div class="legend-label">待配置矢量</div></div>
+            <div class="legend-item" style="margin-top:8px;padding-top:8px;border-top:1px dashed #f0f0f0"><div class="legend-color" style="background:rgba(255,77,79,.10);border:2px dashed #ff4d4f"></div><div class="legend-label" style="font-weight:500;color:#000000d9">禁止通行区域</div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='fence';
+var map=null;
+var fenceLayers={};
+var selectedFenceId=null;
+var drawingMode=false;
+var drawingPolygon=null;
+var drawingPoints=[];
+var drawingMarkers=[];
+var currentEditingFence=null;
+var originalCoords=null;
+var previewMode=false;
+
+var fenceData=[
+  {
+    id:1,
+    name:'樊城区-高新区测试路段-东津新区',
+    fenceType:'允许通行区域',
+    runStatus:'开放',
+    length:'18.6',
+    speedLimitEnabled:true,
+    speedLimit:60,
+    supportApply:true,
+    ruleConfig:['车辆越界报警','已停用车辆自动移除'],
+    limited:false,validStart:null,validEnd:null,
+    controlNote:'高新区智能网联汽车道路测试示范路段，限速60km/h，全程监控覆盖，需按规定时段和路线行驶。',
+    plates:['鄂F·A001','鄂F·A002','鄂F·A003','鄂F·A005','鄂F·A008'],
+    coords:[[32.042,112.135],[32.048,112.145],[32.055,112.150],[32.060,112.142],[32.058,112.128],[32.050,112.122],[32.042,112.135]]
+  },
+  {
+    id:2,
+    name:'樊城区-襄城环线路段-B品牌试验场',
+    fenceType:'允许通行区域',
+    runStatus:'开放',
+    length:'12.5',
+    speedLimitEnabled:true,
+    speedLimit:80,
+    supportApply:true,
+    ruleConfig:['车辆越界报警','已停用车辆自动移除'],
+    limited:false,validStart:null,validEnd:null,
+    controlNote:'襄城环线道路测试示范路段，限速80km/h，设置车辆越界报警，覆盖B品牌试验车辆专用区域。',
+    plates:['鄂F·B001','鄂F·B002','鄂F·B003'],
+    coords:[[32.010,112.120],[32.015,112.130],[32.020,112.128],[32.022,112.115],[32.016,112.108],[32.010,112.120]]
+  },
+  {
+    id:3,
+    name:'高新区产业园内部道路及停车场',
+    fenceType:'允许通行区域',
+    runStatus:'暂停',
+    length:'6.3',
+    speedLimitEnabled:false,
+    speedLimit:null,
+    supportApply:true,
+    ruleConfig:['车辆越界报警','已停用车辆自动移除'],
+    limited:false,validStart:null,validEnd:null,
+    controlNote:'',
+    plates:['鄂F·C001','鄂F·C005'],
+    coords:[[32.065,112.155],[32.070,112.162],[32.075,112.158],[32.074,112.148],[32.068,112.146],[32.065,112.155]]
+  },
+  {
+    id:4,
+    name:'襄州区-老城区禁止驶入区域',
+    fenceType:'禁止通行区域',
+    runStatus:'开放',
+    length:'8.4',
+    speedLimitEnabled:false,
+    speedLimit:null,
+    supportApply:false,
+    ruleConfig:['车辆越界报警','已停用车辆自动移除'],
+    limited:false,validStart:null,validEnd:null,
+    controlNote:'老城区道路狭窄、人流密集，长期禁止自动驾驶车辆驶入，所有违规驶入行为将实时触发越界报警。',
+    plates:[],
+    coords:[[32.005,112.095],[32.012,112.105],[32.018,112.100],[32.016,112.088],[32.008,112.085],[32.005,112.095]]
+  },
+  {
+    id:5,
+    name:'襄城区-人民广场核心禁区（重大活动保障）',
+    fenceType:'禁止通行区域',
+    runStatus:'开放',
+    length:'4.2',
+    speedLimitEnabled:false,
+    speedLimit:null,
+    supportApply:false,
+    ruleConfig:['车辆越界报警'],
+    limited:true,validStart:'2026-07-10',validEnd:'2026-07-20',
+    controlNote:'因重大活动安保需要，7月10日至7月20日期间，人民广场核心区域全面禁止自动驾驶车辆通行，请提前规划绕行路线。',
+    plates:[],
+    coords:[[32.022,112.135],[32.028,112.142],[32.032,112.138],[32.030,112.130],[32.025,112.128],[32.022,112.135]]
+  },
+  {
+    id:6,
+    name:'东津新区临时测试区域',
+    fenceType:'允许通行区域',
+    runStatus:'关闭',
+    length:'3.2',
+    speedLimitEnabled:false,
+    speedLimit:null,
+    supportApply:false,
+    ruleConfig:['车辆越界报警'],
+    limited:false,validStart:null,validEnd:null,
+    controlNote:'',
+    plates:['鄂F·E001'],
+    coords:[[32.030,112.180],[32.035,112.188],[32.040,112.186],[32.039,112.176],[32.033,112.174],[32.030,112.180]]
+  },
+  {
+    id:7,
+    name:'鱼梁洲经开区新建测试区',
+    fenceType:'允许通行区域',
+    runStatus:'待配置矢量',
+    length:'0',
+    speedLimitEnabled:false,
+    speedLimit:null,
+    supportApply:true,
+    ruleConfig:['车辆越界报警','已停用车辆自动移除'],
+    limited:false,validStart:null,validEnd:null,
+    controlNote:'',
+    plates:[],
+    coords:null
+  }
+];
+
+function getRunStatusTag(s){
+  if(s==='开放') return '<span class="ant-tag ant-tag-processing">开放</span>';
+  if(s==='暂停') return '<span class="ant-tag ant-tag-warning">暂停</span>';
+  if(s==='关闭') return '<span class="ant-tag ant-tag-error">关闭</span>';
+  if(s==='待配置矢量') return '<span class="ant-tag ant-tag-default">待配置矢量</span>';
+  return '<span class="ant-tag ant-tag-default">'+s+'</span>';
+}
+
+function getFenceColor(f){
+  // 禁止通行区域：无视状态，统一红色虚线（物理禁区语义）
+  if(f.fenceType==='禁止通行区域'){
+    return {fill:'rgba(255,77,79,0.10)',stroke:'#ff4d4f',dashArray:'6,4'};
+  }
+  // 允许通行区域：按状态区分颜色
+  if(f.runStatus==='开放') return {fill:'rgba(22,119,255,0.15)',stroke:'#1677ff'};
+  if(f.runStatus==='暂停') return {fill:'rgba(250,173,20,0.15)',stroke:'#faad14'};
+  if(f.runStatus==='关闭') return {fill:'rgba(140,140,140,0.10)',stroke:'#8c8c8c'};
+  // 待配置矢量
+  return {fill:'rgba(200,200,200,0.1)',stroke:'#bfbfbf',dashArray:'5,5'};
+}
+
+function getFenceTypeTag(t){
+  if(t==='允许通行区域') return '<span class="ant-tag ant-tag-blue" style="background:#e6f4ff;border-color:#91caff;color:#1677ff">允许通行</span>';
+  if(t==='禁止通行区域') return '<span class="ant-tag ant-tag-red" style="background:#fff1f0;border-color:#ffa39e;color:#ff4d4f">禁止通行</span>';
+  return '<span class="ant-tag ant-tag-default">'+t+'</span>';
+}
+
+function getFenceTypeMeta(f){
+  // 返回 {label, suffix}
+  var t=f.fenceType||'允许通行区域';
+  var suffix='';
+  if(t==='允许通行区域'){
+    if(f.runStatus==='待配置矢量') suffix='· 待配置矢量';
+    else if(f.speedLimitEnabled&&f.speedLimit) suffix='· 限速 '+f.speedLimit+' km/h';
+  }else{
+    if(f.runStatus==='待配置矢量') suffix='· 待配置矢量';
+  }
+  return {label:t, suffix:suffix};
+}
+
+// ========== 搜索筛选 ==========
+
+function doSearch(){
+  var nameKw=document.getElementById('searchName').value.trim().toLowerCase();
+  var statusVal=document.getElementById('searchStatus').value;
+  var filtered=fenceData.filter(function(f){
+    var nameMatch=!nameKw||f.name.toLowerCase().indexOf(nameKw)!==-1;
+    var statusMatch=!statusVal||f.runStatus===statusVal;
+    return nameMatch&&statusMatch;
+  });
+  renderFenceList(filtered);
+}
+
+function resetSearch(){
+  document.getElementById('searchName').value='';
+  document.getElementById('searchStatus').value='';
+  renderFenceList(fenceData);
+}
+
+// ========== 列表渲染 ==========
+
+function renderFenceList(data){
+  var list=data||fenceData;
+  var html='';
+  for(var i=0;i<list.length;i++){
+    var f=list[i];
+    var sel=selectedFenceId===f.id?' selected':'';
+    var hasValidGraphic=f.coords&&f.coords.length>=3&&f.runStatus!=='待配置矢量';
+    var graphicBtn=hasValidGraphic?'图形编辑':'图形绘制';
+    var meta=getFenceTypeMeta(f);
+    var typeColor=f.fenceType==='禁止通行区域'?'#ff4d4f':'#1677ff';
+    html+='<div class="fence-item'+sel+'" data-id="'+f.id+'" onclick="selectFence('+f.id+')">';
+    html+='<div class="fence-header">';
+    html+='<div class="fence-name">'+f.name+'</div>';
+    html+='<div class="fence-tags">'+getRunStatusTag(f.runStatus)+'</div>';
+    html+='</div>';
+    html+='<div class="fence-meta" style="font-size:12px;color:#00000073;margin-bottom:8px;display:flex;align-items:center;gap:6px">';
+    html+='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+typeColor+'"></span>';
+    html+='<span>'+meta.label+'</span>';
+    if(meta.suffix) html+='<span style="color:#00000040">'+meta.suffix+'</span>';
+    html+='</div>';
+    html+='<div class="fence-actions">';
+    html+='<button class="ant-btn-link" onclick="event.stopPropagation();openPropertyEditModal('+f.id+')">属性编辑</button>';
+    html+='<button class="ant-btn-link" onclick="event.stopPropagation();openGraphicEdit('+f.id+')">'+graphicBtn+'</button>';
+    html+='<button class="ant-btn-link danger" onclick="event.stopPropagation();deleteFence('+f.id+')">删除</button>';
+    html+='</div></div>';
+  }
+  document.getElementById('fenceList').innerHTML=html;
+}
+
+// ========== 选中/取消选中 ==========
+
+function selectFence(id){
+  if(drawingMode||previewMode) return;
+  if(selectedFenceId===id){deselectFence();return;}
+  selectedFenceId=id;
+  renderFenceList();
+  highlightFence(id);
+  var fence=fenceData.find(function(f){return f.id===id;});
+  if(fence&&fence.coords&&fence.coords.length>=3){
+    var bounds=L.latLngBounds(fence.coords.map(function(c){return [c[0],c[1]];}));
+    map.fitBounds(bounds,{padding:[40,40],maxZoom:15});
+  }
+  showDetailPanel(id);
+}
+
+function deselectFence(){
+  selectedFenceId=null;
+  renderFenceList();
+  resetFenceStyles();
+  hideDetailPanel();
+}
+
+function highlightFence(id){
+  Object.keys(fenceLayers).forEach(function(k){
+    if(parseInt(k)===id){
+      fenceLayers[k].setStyle({weight:3,fillOpacity:0.25});
+      fenceLayers[k].bringToFront();
+    }else{
+      var f=fenceData.find(function(x){return x.id===parseInt(k);});
+      var c=getFenceColor(f);
+      fenceLayers[k].setStyle({weight:2,fillOpacity:0.12,color:c.stroke});
+    }
+  });
+}
+
+function resetFenceStyles(){
+  Object.keys(fenceLayers).forEach(function(k){
+    var f=fenceData.find(function(x){return x.id===parseInt(k);});
+    if(!f) return;
+    var c=getFenceColor(f);
+    fenceLayers[k].setStyle({weight:2,fillOpacity:0.12,color:c.stroke,dashArray:c.dashArray||null});
+  });
+}
+
+// ========== 右侧信息面板 ==========
+
+function showDetailPanel(id){
+  var fence=fenceData.find(function(f){return f.id===id;});
+  if(!fence) return;
+  document.getElementById('panelTitle').textContent=fence.name;
+  var body='';
+  var rowIdx=0;
+  function addRow(label,value,isAlt){
+    var cls=isAlt?'detail-row-alt':'';
+    body+='<div class="detail-row '+cls+'"><div class="detail-label">'+label+'</div><div class="detail-value">'+value+'</div></div>';
+  }
+  addRow('电子围栏状态',getRunStatusTag(fence.runStatus),(++rowIdx%2===0));
+  addRow('围栏类型',getFenceTypeTag(fence.fenceType),(++rowIdx%2===0));
+  addRow('围栏长度',fence.runStatus==='待配置矢量'?'—':fence.length+' km',(++rowIdx%2===0));
+  // 禁止通行区域：限期/有效期展示
+  if(fence.fenceType==='禁止通行区域'){
+    var limitText=fence.limited?'限期':'长期';
+    var limitTag=fence.limited
+      ?'<span class="ant-tag ant-tag-warning" style="background:#fffbe6;border-color:#ffe58f;color:#faad14">限期</span>'
+      :'<span class="ant-tag ant-tag-default">长期</span>';
+    addRow('有效期限',limitTag,(++rowIdx%2===0));
+    if(fence.limited&&fence.validStart&&fence.validEnd){
+      addRow('有效期',fence.validStart+' ~ '+(fence.validEnd||'—'),(++rowIdx%2===0));
+    }
+  }
+  // 限速配置（仅允许通行区域）
+  if(fence.fenceType==='允许通行区域'){
+    var speedText='不限速';
+    if(fence.speedLimitEnabled&&fence.speedLimit) speedText='限速 '+fence.speedLimit+' km/h';
+    addRow('限速配置',speedText,(++rowIdx%2===0));
+  }
+  // 规则配置
+  var rules=(fence.ruleConfig||[]).slice();
+  if(fence.fenceType==='允许通行区域'&&fence.supportApply) rules.push('支持申请主体申请该区域');
+  addRow('规则配置',rules.length?rules.join('、'):'—',(++rowIdx%2===0));
+  // 管控要求说明
+  var noteHtml=fence.controlNote?'<span style="font-size:13px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">'+fence.controlNote+'</span>':'—';
+  addRow('管控要求说明',noteHtml,(++rowIdx%2===0));
+  // 包含车辆号牌
+  addRow('包含车辆号牌',fence.plates.length?fence.plates.join(', '):'暂无关联车辆',(++rowIdx%2===0));
+  document.getElementById('panelBody').innerHTML=body;
+  document.getElementById('fenceDetailPanel').classList.add('show');
+}
+
+function hideDetailPanel(){
+  document.getElementById('fenceDetailPanel').classList.remove('show');
+}
+
+// ========== 地图初始化 ==========
+
+function initMap(){
+  map=L.map('map',{zoomControl:false,doubleClickZoom:false,scrollWheelZoom:false}).setView([32.05,112.15],13);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'&copy; OpenStreetMap',
+    maxZoom:18
+  }).addTo(map);
+  fenceData.forEach(function(f){addFenceLayer(f);});
+  map.on('click',function(e){
+    if(drawingMode||previewMode) return;
+    var clickedPoly=false;
+    map.eachLayer(function(layer){
+      if(layer instanceof L.Polygon&&layer.getBounds&&layer.getBounds().contains(e.latlng)) clickedPoly=true;
+    });
+    if(!clickedPoly&&selectedFenceId) deselectFence();
+  });
+  setTimeout(function(){map.invalidateSize();},200);
+}
+
+function addFenceLayer(fence){
+  if(!fence.coords||fence.coords.length<3) return;
+  var color=getFenceColor(fence);
+  var polygon=L.polygon(fence.coords.map(function(c){return [c[0],c[1]];}),{
+    color:color.stroke,
+    weight:2,
+    fillColor:color.stroke,
+    fillOpacity:0.12,
+    dashArray:color.dashArray||null
+  }).addTo(map);
+  polygon.bindTooltip(fence.name,{sticky:true,direction:'top',offset:[0,-10]});
+  polygon.on('click',function(e){
+    if(drawingMode||previewMode) return;
+    L.DomEvent.stopPropagation(e);
+    selectFence(fence.id);
+  });
+  fenceLayers[fence.id]=polygon;
+}
+
+function refreshFenceLayer(fence){
+  if(fenceLayers[fence.id]){map.removeLayer(fenceLayers[fence.id]);delete fenceLayers[fence.id];}
+  addFenceLayer(fence);
+  if(selectedFenceId===fence.id) highlightFence(fence.id);
+}
+
+// ========== 新建围栏 ==========
+
+function openFenceModal(){
+  openModal('新建电子围栏',
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏名称</div><div class="ant-form-control"><input class="ant-input" id="newFenceName" placeholder="请输入电子围栏的名称或标识"></div></div>'+
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>围栏类型</div><div class="ant-form-control"><select class="ant-input" id="newFenceType" style="cursor:pointer" onchange="toggleNewFenceFields()"><option value="允许通行区域" selected>允许通行区域</option><option value="禁止通行区域">禁止通行区域</option></select><div class="text-xs text-[#00000073] mt-1">允许通行区域可作为测试区域，禁止通行区域为物理禁区</div></div></div>'+
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏状态</div><div class="ant-form-control"><select class="ant-input" id="newFenceStatus" style="cursor:pointer"><option value="待配置矢量" selected>待配置矢量</option><option value="开放">开放</option><option value="暂停">暂停</option><option value="关闭">关闭</option></select><div class="text-xs text-[#00000073] mt-1">选择围栏的电子围栏状态</div></div></div>'+
+    '<div id="newFenceTypeOnly">'+
+      '<div class="ant-form-item"><div class="ant-form-label">限速配置</div><div class="ant-form-control"><div style="display:flex;align-items:center;gap:12px"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="newSpeedLimitEnabled" onchange="toggleNewSpeedLimit()"> 是否限速</label><input class="ant-input" id="newSpeedLimit" type="number" min="1" max="200" placeholder="限速值 (km/h)" style="flex:1;max-width:200px;background:#f5f5f5;color:#00000040" disabled></div><div class="text-xs text-[#00000073] mt-1">勾选后填写限速值，范围 1~200 km/h</div></div></div>'+
+      '<div class="ant-form-item"><div class="ant-form-label">规则配置</div><div class="ant-form-control"><div class="checkbox-group"><label><input type="checkbox" id="ruleAlarm" checked> 车辆越界报警</label><label><input type="checkbox" id="ruleAutoRemove" checked> 已停用车辆自动移除</label><label><input type="checkbox" id="ruleApply" checked> 支持申请主体申请该区域</label></div></div></div>'+
+    '</div>'+
+    '<div id="newFenceLimitedBlock" style="display:none">'+
+      '<div class="ant-form-item"><div class="ant-form-label">是否限期</div><div class="ant-form-control"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="newLimited" onchange="toggleNewLimited()"> 限期通行（勾选后设置有效期范围）</label><div class="text-xs text-[#00000073] mt-1">适用于重大活动期间等临时禁行场景，到期后自动失效</div></div></div>'+
+      '<div class="ant-form-item"><div class="ant-form-label">有效期范围</div><div class="ant-form-control" style="display:flex;gap:8px;align-items:center"><input class="ant-input" id="newValidStart" type="date" style="flex:1;background:#f5f5f5;color:#00000040" disabled><span style="color:#00000073;font-size:13px">至</span><input class="ant-input" id="newValidEnd" type="date" style="flex:1;background:#f5f5f5;color:#00000040" disabled></div></div>'+
+    '</div>'+
+    '<div class="ant-form-item"><div class="ant-form-label">管控要求说明</div><div class="ant-form-control"><textarea class="ant-input" id="newControlNote" rows="3" placeholder="请输入该围栏的管控要求说明（非必填，最多500字）" maxlength="500" style="resize:vertical"></textarea></div></div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="saveFenceBasic()">保存基本信息并进入图形绘制阶段</button>'}
+  );
+}
+
+function toggleNewFenceFields(){
+  var type=document.getElementById('newFenceType').value;
+  var allowedBlock=document.getElementById('newFenceTypeOnly');
+  var limitedBlock=document.getElementById('newFenceLimitedBlock');
+  if(allowedBlock) allowedBlock.style.display=(type==='允许通行区域')?'block':'none';
+  if(limitedBlock) limitedBlock.style.display=(type==='禁止通行区域')?'block':'none';
+  // 切换类型时重置限期字段
+  if(type!=='禁止通行区域'){
+    var chk=document.getElementById('newLimited'); if(chk) chk.checked=false;
+    var s=document.getElementById('newValidStart'); if(s){s.value='';s.disabled=true;s.style.background='#f5f5f5';s.style.color='#00000040';}
+    var e=document.getElementById('newValidEnd'); if(e){e.value='';e.disabled=true;e.style.background='#f5f5f5';e.style.color='#00000040';}
+  }
+}
+
+function toggleNewSpeedLimit(){
+  var en=document.getElementById('newSpeedLimitEnabled').checked;
+  var inp=document.getElementById('newSpeedLimit');
+  if(!inp) return;
+  inp.disabled=!en;
+  if(en){inp.style.background='#fff';inp.style.color='#000000d9';}
+  else{inp.style.background='#f5f5f5';inp.style.color='#00000040';inp.value='';}
+}
+
+function toggleNewLimited(){
+  var en=document.getElementById('newLimited').checked;
+  var startInp=document.getElementById('newValidStart');
+  var endInp=document.getElementById('newValidEnd');
+  [startInp,endInp].forEach(function(inp){
+    if(!inp) return;
+    inp.disabled=!en;
+    if(en){inp.style.background='#fff';inp.style.color='#000000d9';}
+    else{inp.style.background='#f5f5f5';inp.style.color='#00000040';inp.value='';}
+  });
+}
+
+function saveFenceBasic(){
+  var name=document.getElementById('newFenceName').value.trim();
+  if(!name){document.getElementById('newFenceName').style.borderColor='#ff4d4f';return;}
+  var fenceType=document.getElementById('newFenceType').value;
+  var status=document.getElementById('newFenceStatus').value;
+  var speedLimitEnabled=false,speedLimit=null,supportApply=false;
+  var limited=false,validStart=null,validEnd=null;
+  var rules=[];
+  if(fenceType==='允许通行区域'){
+    speedLimitEnabled=document.getElementById('newSpeedLimitEnabled').checked;
+    if(speedLimitEnabled){
+      var sl=parseInt(document.getElementById('newSpeedLimit').value,10);
+      if(document.getElementById('newSpeedLimit').value.trim()===''||isNaN(sl)||sl<1||sl>200){
+        document.getElementById('newSpeedLimit').style.borderColor='#ff4d4f';
+        showToast('限速值需在 1~200 km/h 之间');
+        return;
+      }
+      speedLimit=sl;
+    }
+    supportApply=document.getElementById('ruleApply').checked;
+    if(document.getElementById('ruleAlarm').checked) rules.push('车辆越界报警');
+    if(document.getElementById('ruleAutoRemove').checked) rules.push('已停用车辆自动移除');
+  }else{
+    limited=document.getElementById('newLimited').checked;
+    if(limited){
+      validStart=document.getElementById('newValidStart').value||null;
+      validEnd=document.getElementById('newValidEnd').value||null;
+      if(validStart&&validEnd&&validStart>validEnd){
+        showToast('有效期开始日期不能晚于结束日期');
+        return;
+      }
+    }
+    if(document.getElementById('ruleAlarm').checked) rules.push('车辆越界报警');
+    if(document.getElementById('ruleAutoRemove').checked) rules.push('已停用车辆自动移除');
+  }
+  var controlNote=document.getElementById('newControlNote').value.trim()||'';
+  var newId=Date.now();
+  var newFence={
+    id:newId,
+    name:name,
+    fenceType:fenceType,
+    runStatus:status,
+    length:'0',
+    speedLimitEnabled:speedLimitEnabled,
+    speedLimit:speedLimit,
+    supportApply:supportApply,
+    ruleConfig:rules,
+    limited:limited,
+    validStart:validStart,
+    validEnd:validEnd,
+    controlNote:controlNote,
+    plates:[],
+    coords:null
+  };
+  fenceData.push(newFence);
+  renderFenceList();
+  closeModal();
+  showToast('新建电子围栏基本信息已保存成功！接下来将进入图形绘制阶段');
+  openGraphicEdit(newId);
+}
+
+// ========== 属性编辑 ==========
+
+function openPropertyEditModal(id){
+  var fence=fenceData.find(function(f){return f.id===id;});
+  if(!fence) return;
+  if(selectedFenceId!==id){
+    selectedFenceId=id;
+    renderFenceList();
+    highlightFence(id);
+  }
+  var rules=fence.ruleConfig||[];
+  var aChecked=rules.indexOf('车辆越界报警')!==-1?'checked':'';
+  var rChecked=rules.indexOf('已停用车辆自动移除')!==-1?'checked':'';
+  var pChecked=fence.supportApply?'checked':'';
+  var isAllowed=(fence.fenceType||'允许通行区域')==='允许通行区域';
+  var typeBlock='';
+  if(isAllowed){
+    typeBlock+=
+      '<div class="ant-form-item"><div class="ant-form-label">限速配置</div><div class="ant-form-control"><div style="display:flex;align-items:center;gap:12px"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="editSpeedLimitEnabled" '+(fence.speedLimitEnabled?'checked':'')+' onchange="toggleEditSpeedLimit()"> 是否限速</label><input class="ant-input" id="editSpeedLimit" type="number" min="1" max="200" placeholder="限速值 (km/h)" style="flex:1;max-width:200px;'+(fence.speedLimitEnabled?'background:#fff;color:#000000d9;':'background:#f5f5f5;color:#00000040;')+'" '+(fence.speedLimitEnabled?'':'disabled')+' value="'+(fence.speedLimit||'')+'"></div><div class="text-xs text-[#00000073] mt-1">勾选后填写限速值，范围 1~200 km/h</div></div></div>';
+  }
+  typeBlock+=
+    '<div class="ant-form-item"><div class="ant-form-label">规则配置</div><div class="ant-form-control"><div class="checkbox-group"><label><input type="checkbox" id="editRuleAlarm" '+aChecked+'> 车辆越界报警</label><label><input type="checkbox" id="editRuleAutoRemove" '+rChecked+'> 已停用车辆自动移除</label>'+(isAllowed?'<label><input type="checkbox" id="editRuleApply" '+pChecked+'> 支持申请主体申请该区域</label>':'')+'</div></div></div>';
+  var isForbidden=!isAllowed;
+  var limitedBlock='';
+  if(isForbidden){
+    var lChecked=fence.limited?'checked':'';
+    var vStartVal=fence.validStart||'';
+    var vEndVal=fence.validEnd||'';
+    var datesDisabled=fence.limited?'':'disabled';
+    var datesBg=fence.limited?'background:#fff;color:#000000d9;':'background:#f5f5f5;color:#00000040;';
+    limitedBlock+=
+      '<div class="ant-form-item"><div class="ant-form-label">是否限期</div><div class="ant-form-control"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="editLimited" '+lChecked+' onchange="toggleEditLimited()"> 限期通行（勾选后设置有效期范围）</label><div class="text-xs text-[#00000073] mt-1">适用于重大活动期间等临时禁行场景，到期后自动失效</div></div></div>'+
+      '<div class="ant-form-item"><div class="ant-form-label">有效期范围</div><div class="ant-form-control" style="display:flex;gap:8px;align-items:center"><input class="ant-input" id="editValidStart" type="date" style="flex:1;'+datesBg+'" '+datesDisabled+' value="'+vStartVal+'"><span style="color:#00000073;font-size:13px">至</span><input class="ant-input" id="editValidEnd" type="date" style="flex:1;'+datesBg+'" '+datesDisabled+' value="'+vEndVal+'"></div></div>';
+  }
+  var controlNoteVal=(fence.controlNote||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  openModal('属性编辑 - '+fence.name,
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏名称</div><div class="ant-form-control"><input class="ant-input" id="editFenceName" value="'+fence.name+'"></div></div>'+
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>围栏类型</div><div class="ant-form-control"><select class="ant-input" id="editFenceType" style="cursor:pointer" onchange="toggleEditFenceFields()"><option value="允许通行区域"'+(fence.fenceType==='允许通行区域'?' selected':'')+'>允许通行区域</option><option value="禁止通行区域"'+(fence.fenceType==='禁止通行区域'?' selected':'')+'>禁止通行区域</option></select><div class="text-xs text-[#00000073] mt-1">允许通行区域可作为测试区域，禁止通行区域为物理禁区</div></div></div>'+
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>电子围栏状态</div><div class="ant-form-control"><select class="ant-input" id="editFenceStatus" style="cursor:pointer"><option value="待配置矢量"'+(fence.runStatus==='待配置矢量'?' selected':'')+'>待配置矢量</option><option value="开放"'+(fence.runStatus==='开放'?' selected':'')+'>开放</option><option value="暂停"'+(fence.runStatus==='暂停'?' selected':'')+'>暂停</option><option value="关闭"'+(fence.runStatus==='关闭'?' selected':'')+'>关闭</option></select><div class="text-xs text-[#00000073] mt-1">选择围栏的电子围栏状态</div></div></div>'+
+    '<div id="editFenceTypeOnly" style="display:'+(isAllowed?'block':'none')+'">'+typeBlock+'</div>'+
+    '<div id="editFenceLimitedBlock" style="display:'+(isForbidden?'block':'none')+'">'+limitedBlock+'</div>'+
+    '<div class="ant-form-item"><div class="ant-form-label">管控要求说明</div><div class="ant-form-control"><textarea class="ant-input" id="editControlNote" rows="3" placeholder="请输入该围栏的管控要求说明（非必填，最多500字）" maxlength="500" style="resize:vertical">'+controlNoteVal+'</textarea></div></div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="savePropertyEdit('+id+')">确认修改</button>'}
+  );
+}
+
+function toggleEditFenceFields(){
+  var type=document.getElementById('editFenceType').value;
+  var allowedBlock=document.getElementById('editFenceTypeOnly');
+  var limitedBlock=document.getElementById('editFenceLimitedBlock');
+  if(allowedBlock) allowedBlock.style.display=(type==='允许通行区域')?'block':'none';
+  if(limitedBlock) limitedBlock.style.display=(type==='禁止通行区域')?'block':'none';
+  // 切换类型时重置限期字段
+  if(type!=='禁止通行区域'){
+    var chk=document.getElementById('editLimited'); if(chk) chk.checked=false;
+    var s=document.getElementById('editValidStart'); if(s){s.value='';s.disabled=true;s.style.background='#f5f5f5';s.style.color='#00000040';}
+    var e=document.getElementById('editValidEnd'); if(e){e.value='';e.disabled=true;e.style.background='#f5f5f5';e.style.color='#00000040';}
+  }
+}
+
+function toggleEditSpeedLimit(){
+  var en=document.getElementById('editSpeedLimitEnabled').checked;
+  var inp=document.getElementById('editSpeedLimit');
+  if(!inp) return;
+  inp.disabled=!en;
+  if(en){inp.style.background='#fff';inp.style.color='#000000d9';}
+  else{inp.style.background='#f5f5f5';inp.style.color='#00000040';inp.value='';}
+}
+
+function toggleEditLimited(){
+  var en=document.getElementById('editLimited').checked;
+  var startInp=document.getElementById('editValidStart');
+  var endInp=document.getElementById('editValidEnd');
+  [startInp,endInp].forEach(function(inp){
+    if(!inp) return;
+    inp.disabled=!en;
+    if(en){inp.style.background='#fff';inp.style.color='#000000d9';}
+    else{inp.style.background='#f5f5f5';inp.style.color='#00000040';inp.value='';}
+  });
+}
+
+function savePropertyEdit(id){
+  var name=document.getElementById('editFenceName').value.trim();
+  if(!name){document.getElementById('editFenceName').style.borderColor='#ff4d4f';return;}
+  var fence=fenceData.find(function(f){return f.id===id;});
+  if(!fence) return;
+  var newFenceType=document.getElementById('editFenceType').value;
+  var isNewAllowed=newFenceType==='允许通行区域';
+  var speedLimitEnabled=false,speedLimit=null,supportApply=false;
+  var limited=false,validStart=null,validEnd=null;
+  var rules=[];
+  if(isNewAllowed){
+    speedLimitEnabled=document.getElementById('editSpeedLimitEnabled').checked;
+    if(speedLimitEnabled){
+      var sl=parseInt(document.getElementById('editSpeedLimit').value,10);
+      if(document.getElementById('editSpeedLimit').value.trim()===''||isNaN(sl)||sl<1||sl>200){
+        document.getElementById('editSpeedLimit').style.borderColor='#ff4d4f';
+        showToast('限速值需在 1~200 km/h 之间');
+        return;
+      }
+      speedLimit=sl;
+    }
+    supportApply=document.getElementById('editRuleApply').checked;
+    if(document.getElementById('editRuleAlarm').checked) rules.push('车辆越界报警');
+    if(document.getElementById('editRuleAutoRemove').checked) rules.push('已停用车辆自动移除');
+  }else{
+    limited=document.getElementById('editLimited').checked;
+    if(limited){
+      validStart=document.getElementById('editValidStart').value||null;
+      validEnd=document.getElementById('editValidEnd').value||null;
+      if(validStart&&validEnd&&validStart>validEnd){
+        showToast('有效期开始日期不能晚于结束日期');
+        return;
+      }
+    }
+    if(document.getElementById('editRuleAlarm').checked) rules.push('车辆越界报警');
+    if(document.getElementById('editRuleAutoRemove').checked) rules.push('已停用车辆自动移除');
+  }
+  var controlNote=document.getElementById('editControlNote').value.trim()||'';
+  fence.name=name;
+  fence.fenceType=newFenceType;
+  fence.runStatus=document.getElementById('editFenceStatus').value;
+  fence.speedLimitEnabled=speedLimitEnabled;
+  fence.speedLimit=speedLimit;
+  fence.supportApply=supportApply;
+  fence.ruleConfig=rules;
+  fence.limited=limited;
+  fence.validStart=validStart;
+  fence.validEnd=validEnd;
+  fence.controlNote=controlNote;
+  refreshFenceLayer(fence);
+  renderFenceList();
+  closeModal();
+  showToast('属性修改成功');
+  if(selectedFenceId===id) showDetailPanel(id);
+}
+
+// ========== 图形绘制/编辑 ==========
+
+function openGraphicEdit(id){
+  var fence=fenceData.find(function(f){return f.id===id;});
+  if(!fence) return;
+  // 修复：从列表点图形编辑时，确保该围栏列表态选中
+  if(selectedFenceId!==id){
+    selectedFenceId=id;
+    renderFenceList();
+  }
+  currentEditingFence=fence;
+  originalCoords=fence.coords?JSON.parse(JSON.stringify(fence.coords)):null;
+  hideDetailPanel();
+  if(fenceLayers[id]){fenceLayers[id].setStyle({opacity:0.3,fillOpacity:0.05});}
+  document.getElementById('mapToolbar').style.display='flex';
+  document.getElementById('drawingTip').classList.add('show');
+  document.getElementById('drawingFenceName').textContent=fence.name;
+  resetToolbarToDrawing();
+  if(fence.coords&&fence.coords.length>=3){
+    var bounds=L.latLngBounds(fence.coords.map(function(c){return [c[0],c[1]];}));
+    map.fitBounds(bounds,{padding:[40,40],maxZoom:15});
+  }
+  showToast('已进入图形绘制模式，请在地图上点击添加顶点');
+}
+
+function resetToolbarToDrawing(){
+  previewMode=false;
+  document.getElementById('btnDraw').style.display='flex';
+  document.getElementById('btnDraw').classList.add('active');
+  document.getElementById('btnDraw').innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5z"/></svg> 开始绘制多边形区域';
+  document.getElementById('btnDraw').style.pointerEvents='';
+  document.getElementById('btnDraw').style.opacity='';
+  document.getElementById('btnClear').style.display='flex';
+  document.getElementById('toolbarSep').style.display='none';
+  document.getElementById('btnSave').style.display='none';
+  document.getElementById('btnCancel').style.display='none';
+}
+
+function startDrawPolygon(){
+  if(drawingMode) return;
+  drawingMode=true;
+  drawingPoints=[];
+  drawingMarkers=[];
+  if(drawingPolygon){map.removeLayer(drawingPolygon);drawingPolygon=null;}
+  document.getElementById('btnDraw').innerHTML='绘制中...';
+  document.getElementById('btnDraw').style.pointerEvents='none';
+  document.getElementById('btnDraw').style.opacity='0.6';
+  map.getContainer().style.cursor='crosshair';
+  map.on('click',onMapClickForDraw);
+  map.on('dblclick',onMapDblClickForDraw);
+  showToast('请在地图上点击添加多边形顶点，双击结束绘制');
+}
+
+function onMapClickForDraw(e){
+  if(!drawingMode) return;
+  drawingPoints.push([e.latlng.lat,e.latlng.lng]);
+  var marker=L.circleMarker(e.latlng,{radius:4,color:'#1677ff',fillColor:'#1677ff',fillOpacity:1,weight:2}).addTo(map);
+  drawingMarkers.push(marker);
+  if(drawingPoints.length>=2){
+    if(drawingPolygon) map.removeLayer(drawingPolygon);
+    drawingPolygon=L.polygon(drawingPoints,{color:'#1677ff',weight:2,dashArray:'6,4',fillColor:'rgba(22,119,255,0.1)',fillOpacity:0.15}).addTo(map);
+  }
+}
+
+function onMapDblClickForDraw(e){
+  e.originalEvent.stopPropagation();
+  e.originalEvent.preventDefault();
+  enterPreviewMode();
+}
+
+function enterPreviewMode(){
+  if(drawingPoints.length<3){showToast('至少需要3个顶点才能构成多边形');return;}
+  drawingMode=false;
+  map.off('click',onMapClickForDraw);
+  map.off('dblclick',onMapDblClickForDraw);
+  map.getContainer().style.cursor='';
+  if(drawingPolygon){map.removeLayer(drawingPolygon);drawingPolygon=L.polygon(drawingPoints,{color:'#1677ff',weight:3,fillColor:'rgba(22,119,255,0.2)',fillOpacity:0.2}).addTo(map);}
+  previewMode=true;
+  document.getElementById('btnDraw').style.display='none';
+  document.getElementById('btnClear').style.display='none';
+  document.getElementById('toolbarSep').style.display='block';
+  document.getElementById('btnSave').style.display='flex';
+  document.getElementById('btnCancel').style.display='flex';
+  document.getElementById('drawingTip').querySelector('.tip-title').textContent='预览确认';
+  document.getElementById('drawingTip').querySelector('.tip-text').innerHTML='多边形区域已绘制完成，请确认：<br>• 点击<strong>保存</strong>确认围栏范围<br>• 点击<strong>取消</strong>放弃本次绘制';
+  showToast('绘制完成，请确认保存或取消');
+}
+
+function saveDrawing(){
+  if(!currentEditingFence) return;
+  currentEditingFence.coords=drawingPoints;
+  var latlngs=drawingPoints.map(function(p){return L.latLng(p[0],p[1]);});
+  var dist=0;
+  for(var i=0;i<latlngs.length-1;i++){dist+=latlngs[i].distanceTo(latlngs[i+1]);}
+  dist+=latlngs[latlngs.length-1].distanceTo(latlngs[0]);
+  currentEditingFence.length=(dist/1000).toFixed(1);
+  if(currentEditingFence.runStatus==='待配置矢量') currentEditingFence.runStatus='开放';
+  refreshFenceLayer(currentEditingFence);
+  renderFenceList();
+  var fenceId=currentEditingFence.id;
+  exitDrawingMode();
+  showToast('围栏图形保存成功');
+  selectFence(fenceId);
+}
+
+function cancelDrawing(){
+  if(currentEditingFence){
+    currentEditingFence.coords=originalCoords;
+    refreshFenceLayer(currentEditingFence);
+    renderFenceList();
+  }
+  var fenceId=currentEditingFence?currentEditingFence.id:null;
+  exitDrawingMode();
+  showToast('已取消绘制');
+  if(fenceId&&originalCoords) selectFence(fenceId);
+}
+
+function clearDrawing(){
+  if(drawingPoints.length===0) return;
+  if(!confirm('当前绘制内容将被清除，是否继续？')) return;
+  drawingPoints=[];
+  drawingMarkers.forEach(function(m){map.removeLayer(m);});
+  drawingMarkers=[];
+  if(drawingPolygon){map.removeLayer(drawingPolygon);drawingPolygon=null;}
+  showToast('绘制内容已清除');
+}
+
+function exitDrawingMode(){
+  drawingMode=false;
+  previewMode=false;
+  map.off('click',onMapClickForDraw);
+  map.off('dblclick',onMapDblClickForDraw);
+  map.getContainer().style.cursor='';
+  drawingMarkers.forEach(function(m){map.removeLayer(m);});
+  drawingMarkers=[];
+  if(drawingPolygon){map.removeLayer(drawingPolygon);drawingPolygon=null;}
+  drawingPoints=[];
+  currentEditingFence=null;
+  originalCoords=null;
+  document.getElementById('mapToolbar').style.display='none';
+  document.getElementById('drawingTip').classList.remove('show');
+  document.getElementById('drawingTip').querySelector('.tip-title').textContent='图形绘制模式';
+  document.getElementById('drawingTip').querySelector('.tip-text').innerHTML='正在为电子围栏：<span class="tip-fence-name" id="drawingFenceName"></span> 进行图形绘制操作。<br>提示：在地图上依次点击各个顶点，完成多边形区域的绘制后双击结束，然后点击"保存"确认。';
+  resetFenceStyles();
+}
+
+// ========== 删除 ==========
+
+function deleteFence(id){
+  var fence=fenceData.find(function(f){return f.id===id;});
+  if(!fence) return;
+  openModal('确认删除',
+    '<div style="text-align:center;padding:16px 0"><div style="font-size:40px;color:#faad14;margin-bottom:12px">&#9888;</div><div style="font-size:16px;color:#000000d9;font-weight:500;margin-bottom:8px">确定要删除该围栏吗？</div><div style="font-size:14px;color:#00000073">围栏名称：'+fence.name+'<br>删除后不可恢复。</div></div>',
+    {width:420,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="confirmDelete('+id+')">确定删除</button>'}
+  );
+}
+
+function confirmDelete(id){
+  var idx=fenceData.findIndex(function(f){return f.id===id;});
+  if(idx!==-1){
+    if(fenceLayers[id]){map.removeLayer(fenceLayers[id]);delete fenceLayers[id];}
+    fenceData.splice(idx,1);
+    if(selectedFenceId===id) deselectFence();
+    renderFenceList();
+  }
+  closeModal();
+  showToast('围栏已删除');
+}
+
+// ========== Toast ==========
+
+function showToast(msg){
+  var existing=document.querySelector('.toast-msg');
+  if(existing) existing.remove();
+  var toast=document.createElement('div');
+  toast.className='toast-msg';
+  toast.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#fff;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);padding:10px 24px;font-size:14px;color:#000000d9;z-index:9999;white-space:nowrap;border:1px solid #f0f0f0;display:flex;align-items:center;gap:8px';
+  toast.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="#52c41a"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'+msg;
+  document.body.appendChild(toast);
+  setTimeout(function(){toast.style.transition='opacity .3s';toast.style.opacity='0';setTimeout(function(){toast.remove();},300);},2500);
+}
+
+renderFenceList();
+setTimeout(initMap,200);
+
+// 自测用：URL hash 触发选中态（#select-1=选中第1个 / #edit-prop-1=属性编辑弹窗 / #edit-graphic-1=图形绘制模式）
+(function(){
+  var h=location.hash;
+  if(!h) return;
+  if(h==='#select-1') setTimeout(function(){ selectFence(fenceData[0].id); },300);
+  else if(h==='#edit-prop-1') setTimeout(function(){ openPropertyEditModal(fenceData[0].id); },300);
+  else if(h==='#edit-graphic-1') setTimeout(function(){ openGraphicEdit(fenceData[0].id); },300);
+})();
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

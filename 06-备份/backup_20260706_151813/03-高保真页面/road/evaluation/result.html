@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>评估结果管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    .gauge-box{width:120px;height:120px;margin:0 auto}
+    .radar-box{height:260px}
+    .trend-box{height:220px}
+    .progress-bar-wrap{height:10px;background:#f0f0f0;border-radius:5px;overflow:hidden}
+    .progress-bar-fill{height:100%;border-radius:5px;transition:all .3s}
+    .detail-tabs{display:flex;gap:0;border-bottom:1px solid #f0f0f0;margin-bottom:14px;flex-wrap:wrap}
+    .detail-tab{padding:8px 16px;cursor:pointer;font-size:12px;font-weight:500;color:#666;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+    .detail-tab:hover{color:#1677ff}
+    .detail-tab.active{color:#1677ff;border-bottom-color:#1677ff}
+    .detail-tab-content{display:none}
+    .detail-tab-content.active{display:block}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>评估结果管理</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openManualEvalConfirm()">+ 手动发起评估</button><button class="ant-btn" onclick="handleExport()">导出Excel</button></div></div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item"><label>道路名称</label><input class="ant-input" placeholder="模糊搜索" id="filterRoad"></div>
+          <div class="filter-item"><label>所属区域</label><select class="ant-input" id="filterDistrict"><option>全部</option><option>樊城区</option><option>襄城区</option><option>高新区</option><option>襄州区</option><option>南漳县</option><option>谷城县</option></select></div>
+          <div class="filter-item"><label>建议开放等级</label><select class="ant-input" id="filterOpenLevel"><option>全部</option><option>完全开放</option><option>条件开放</option><option>限制开放</option><option>禁止开放</option></select></div>
+          <div class="filter-item"><label>风险等级</label><select class="ant-input" id="filterRisk"><option>全部</option><option>低</option><option>中</option><option>高</option></select></div>
+          <div class="filter-item"><label>复杂度等级</label><select class="ant-input" id="filterComplexity"><option>全部</option><option>低</option><option>中</option><option>高</option></select></div>
+          <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="refreshList()">查询</button><button class="ant-btn" onclick="resetFilters()">重置</button></div>
+        </div>
+      </div>
+      <div class="ant-table-wrapper">
+        <div style="overflow-x:auto">
+          <table class="ant-table">
+            <thead><tr><th><input type="checkbox" class="ant-checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th><th>道路编号</th><th>道路名称</th><th>所属区域</th><th>复杂度等级</th><th>风险等级</th><th>最佳适配场景</th><th>建议开放等级</th><th>综合得分</th><th>触发方式</th><th>评估时间</th><th>操作</th></tr></thead>
+            <tbody id="listBody"></tbody>
+          </table>
+        </div>
+        <div id="paginationBar"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 无自定义弹窗HTML，使用 common.js 动态弹窗 -->
+
+<script src="../../components/pagination-component.js"></script>
+<script>
+const PAGE_ID='eval-result';
+
+// ==================== 道路评估数据 ====================
+const districts = ['樊城区', '襄城区', '高新区', '襄州区', '南漳县', '谷城县'];
+const riskLevels = ['低', '中', '高'];
+const complexityLevels = ['低', '中', '高'];
+const scenes = ['城区道路', '园区道路', '环卫作业道路', '物流配送道路', '公交运营'];
+const triggerTypes = ['自动触发', '手动触发'];
+const configVersions = ['V3.3', 'V3.2', 'V3.1'];
+
+function randomItem(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+const roadNames = ['长虹路', '檀溪路', '航空路', '人民路', '建设路', '金源路', '中原路', '春园路', '前进路', '大庆东路', '汉江路', '襄阳大道', '环城南路', '邓城大道', '航天路', '胜利路', '解放路', '琵琶山路', '卧龙大道', '钻石大道'];
+
+// 交付文档默认权重：复杂度0.33, 风险0.34, 场景适配0.33
+const W_COMPLEXITY = 0.33;
+const W_RISK = 0.34;
+const W_SCENE = 0.33;
+
+// 各子模型内部权重（交付文档默认值）
+const CL_WEIGHTS = [0.25, 0.25, 0.20, 0.15, 0.15]; // 车道复杂度, 交叉口密度, 混合交通比例, 坡度/曲率, 信号灯完整度
+const RK_WEIGHTS = [0.35, 0.35, 0.20, 0.10]; // 事故频率, 事故严重度, 交通事件频率, 流量修正系数
+
+// 道路基础属性（模拟道路建档数据）
+const roadBaseAttrs = roadNames.map(function(name, i) {
+  return {
+    laneCount: [2,3,4,5,6][Math.floor(Math.random()*5)], // 车道数
+    hasMixedTraffic: Math.random() > 0.5, // 机非混行
+    lightingLevel: [1,2,3][Math.floor(Math.random()*3)], // 照明等级1-3
+    maxSlope: [3,5,7,10][Math.floor(Math.random()*4)], // 最大坡度%
+    laneWidth: [2.8,3.0,3.2,3.5][Math.floor(Math.random()*4)], // 最小车道宽度m
+    signalCoverage: [72,85,92,100][Math.floor(Math.random()*4)], // 交通信号覆盖率%
+    poorSightRatio: [3,8,12][Math.floor(Math.random()*3)], // 视距严重不足路段占比%
+    hasMissingData: i < 3 // 前3条道路部分数据缺失
+  };
+});
+
+function calcComplexitySubScores(attrs) {
+  // 车道复杂度 - 分类指标
+  var laneScore = attrs.laneCount <= 2 ? 90 : attrs.laneCount <= 4 ? 60 : 20;
+  // 交叉口密度 - 模拟连续值
+  var crossDensity = 1 + Math.random() * 6;
+  var crossScore = crossDensity >= 5 ? Math.min(100, 90 + (crossDensity-5)*2)
+    : crossDensity >= 2 ? 40 + (crossDensity-2)*16.67
+    : 20 + crossDensity * 10;
+  // 混合交通比例 - 分类指标
+  var mixedScore = attrs.hasMixedTraffic ? 90 : 20;
+  // 坡度/曲率 - 连续值
+  var slopeScore = attrs.maxSlope >= 8 ? Math.min(100, 90 + (attrs.maxSlope-8)*1.25)
+    : attrs.maxSlope >= 4 ? 40 + (attrs.maxSlope-4)*12.5
+    : 20 + attrs.maxSlope * 5;
+  // 信号灯完整度 - 模拟覆盖率
+  var signalCov = 0.3 + Math.random() * 0.7;
+  var signalScore = (1 - signalCov) * 100;
+  return [laneScore, crossScore, mixedScore, slopeScore, signalScore];
+}
+
+function calcRiskSubScores() {
+  // 事故频率 - 模拟时间衰减后事故数
+  var nDecayed = Math.random() * 8;
+  var freqScore = nDecayed >= 5 ? Math.min(100, 90 + (nDecayed-5)*2)
+    : nDecayed >= 2 ? 40 + (nDecayed-2)*16.67
+    : 20 + nDecayed * 10;
+  // 事故严重度 - 分类
+  var severityLevels = ['高', '中', '低'];
+  var sevLevel = randomItem(severityLevels);
+  var sevScore = sevLevel === '高' ? 90 : sevLevel === '中' ? 60 : 20;
+  // 交通事件频率 - 分类
+  var eventLevels = ['频发', '偶发', '极少'];
+  var evtLevel = randomItem(eventLevels);
+  var evtScore = evtLevel === '频发' ? 90 : evtLevel === '偶发' ? 60 : 20;
+  // 流量修正系数 - 分类
+  var flowLevels = ['高', '中', '低'];
+  var flowLevel = randomItem(flowLevels);
+  var flowScore = flowLevel === '高' ? 90 : flowLevel === '中' ? 60 : 20;
+  return [freqScore, sevScore, evtScore, flowScore];
+}
+
+const evalData = roadNames.map((name, i) => {
+  const id = 'RD-' + String(i+1).padStart(3, '0');
+  const district = randomItem(districts);
+  const attrs = roadBaseAttrs[i];
+  const missingFields = attrs.hasMissingData ? ['信号灯覆盖率'] : [];
+
+  // 复杂度子指标得分
+  var clSubScores = calcComplexitySubScores(attrs);
+  if (attrs.hasMissingData) clSubScores[4] = 60; // 数据缺失按60分
+  var clScore = Math.round(clSubScores.reduce(function(s, v, j) { return s + v * CL_WEIGHTS[j]; }, 0) * 10) / 10;
+  var complexity = clScore >= 70 ? '高' : clScore >= 40 ? '中' : '低';
+
+  // 风险子指标得分
+  var rkSubScores = calcRiskSubScores();
+  var rlScore = Math.round(rkSubScores.reduce(function(s, v, j) { return s + v * RK_WEIGHTS[j]; }, 0) * 10) / 10;
+  var risk = rlScore >= 70 ? '高' : rlScore >= 40 ? '中' : '低';
+
+  // 场景适配各场景得分
+  const sceneFits = scenes.map(function(sn) {
+    var dims = [0, 0, 0, 0]; // 车道数, 机非混行, 照明等级, 最大坡度
+    var reqs = { '城区道路': [4, false, 2, 8], '园区道路': [2, true, 1, 12], '环卫作业道路': [2, true, 1, 10], '物流配送道路': [2, false, 2, 8], '公交运营': [4, false, 3, 6] };
+    var req = reqs[sn];
+    dims[0] = attrs.laneCount >= req[0] ? 25 : 0;
+    dims[1] = attrs.hasMixedTraffic ? (req[1] ? 25 : 0) : 25;
+    dims[2] = attrs.lightingLevel >= req[2] ? 25 : 0;
+    dims[3] = attrs.maxSlope <= req[3] ? 25 : 0;
+    var total = dims[0] + dims[1] + dims[2] + dims[3];
+    var fit = total >= 60 ? '适用' : '不适用';
+    return { name: sn, fit: fit, score: total, threshold: 60, dims: dims };
+  });
+
+  // 最佳适配场景
+  var applicableScenes = sceneFits.filter(function(s) { return s.fit === '适用'; });
+  var bestScore = applicableScenes.length > 0 ? Math.max.apply(null, applicableScenes.map(function(s) { return s.score; })) : 0;
+  var bestScene = applicableScenes.length > 0 ? applicableScenes.filter(function(s) { return s.score === bestScore; }).map(function(s) { return s.name; }).join('、') : '无';
+
+  // 综合得分 = (100 - 复杂度指数) × 复杂度权重 + (100 - 风险指数) × 风险权重 + 场景适配度得分 × 场景适配权重
+  var bestSceneScore = bestScore;
+  var rawScore = (100 - clScore) * W_COMPLEXITY + (100 - rlScore) * W_RISK + bestSceneScore * W_SCENE;
+  var score = Math.min(100, Math.max(0, rawScore)).toFixed(1);
+
+  // 综合得分映射开放等级
+  var mappedLevel = score >= 85 ? '完全开放' : score >= 70 ? '条件开放' : score >= 50 ? '限制开放' : '禁止开放';
+
+  // 硬性准入条件前置拦截
+  var accessChecks = [
+    {name:'最小车道宽度', threshold:'≥ 3.0 m', actual: attrs.laneWidth.toFixed(1) + ' m', passed: attrs.laneWidth >= 3.0, missing: false},
+    {name:'最大坡度', threshold:'≤ 6%', actual: attrs.maxSlope + '%', passed: attrs.maxSlope <= 6, missing: false},
+    {name:'交通信号覆盖率', threshold:'≥ 80%', actual: attrs.hasMissingData ? '数据缺失' : attrs.signalCoverage + '%', passed: attrs.hasMissingData ? true : attrs.signalCoverage >= 80, missing: attrs.hasMissingData},
+    {name:'视距严重不足路段占比', threshold:'< 10%', actual: attrs.poorSightRatio + '%', passed: attrs.poorSightRatio < 10, missing: false}
+  ];
+  var failedAccessItems = accessChecks.filter(function(c) { return !c.passed; });
+  var accessPassed = failedAccessItems.length === 0;
+
+  // 融合规则匹配（模拟交付文档规则）
+  var rules = [];
+  var matchedRule = null;
+  // 规则1: 道路类型=高速公路/城市快速路 → 禁止开放（模拟：前2条道路为快速路）
+  if (accessPassed && i < 2) {
+    rules.push({name:'高速/快速路禁止', cond:'道路类型 = 高速公路/城市快速路', action:'禁止开放', priority: 1, source: '政策法规'});
+    matchedRule = rules[0];
+  }
+  if (!matchedRule) {
+    // 规则2: 风险等级=高 → 禁止开放
+    if (accessPassed && risk === '高') {
+      rules.push({name:'高风险限制', cond:'风险等级 = 高', action:'禁止开放', priority: 6, source: '子模型组合'});
+      matchedRule = rules[0];
+    }
+  }
+  if (!matchedRule) {
+    // 规则3: 复杂度=高 AND 风险=高 → 限制开放
+    if (accessPassed && complexity === '高' && risk === '高') {
+      rules.push({name:'高复杂度高风险降级', cond:'复杂度 = 高 AND 风险 = 高', action:'限制开放', priority: 7, source: '子模型组合'});
+      matchedRule = rules[0];
+    }
+  }
+  // 未命中融合规则 → 综合得分映射
+  if (accessPassed && !matchedRule) {
+    rules.push({name:'综合得分映射', cond:'未命中任何融合规则，按综合得分映射', action:mappedLevel, priority: '-', source: '兜底规则'});
+  }
+  var decisionSource = accessPassed ? (matchedRule ? '融合规则' : '综合得分映射') : '准入条件拦截';
+  if (!accessPassed) {
+    rules.push({name:'硬性准入拦截', cond: failedAccessItems.map(function(c) { return c.name + c.threshold + '，实际' + c.actual; }).join('；'), action:'禁止开放', priority:'准入前置', source:'最低安全准入条件'});
+  }
+  var openLevel = accessPassed ? (matchedRule ? matchedRule.action : mappedLevel) : '禁止开放';
+
+  // 业务规则映射
+  var mappingTable = {
+    '完全开放': { autoLevel: 'L2/L3/L4', testTypes: '载人、载货、环卫、物流', limitTime: '无限制', control: '无特殊要求' },
+    '条件开放': { autoLevel: 'L3/L4', testTypes: '载货、环卫、物流', limitTime: '06:00-22:00', control: '需额外提交安全评估' },
+    '限制开放': { autoLevel: 'L4', testTypes: '环卫、物流', limitTime: '09:00-17:00', control: '需安全员全程监控' },
+    '禁止开放': { autoLevel: '—', testTypes: '—', limitTime: '—', control: '禁止任何测试活动' }
+  };
+  var mapping = mappingTable[openLevel];
+
+  // 触发方式：自动触发 / 手动触发
+  var trigger = triggerTypes[i % triggerTypes.length];
+  var configVersion = configVersions[i % configVersions.length];
+  var month = 5 - Math.floor(i / 7);
+  var day = Math.floor(Math.random() * 28) + 1;
+  var hour = trigger === '自动触发' ? '02:00' : (10 + Math.floor(Math.random() * 8)) + ':' + String(Math.floor(Math.random() * 60)).padStart(2, '0');
+  var time = '2026-0' + month + '-' + String(day).padStart(2, '0') + ' ' + hour;
+
+  return {
+    id: id, name: name, district: district,
+    complexity: complexity, risk: risk,
+    bestScene: bestScene, openLevel: openLevel,
+    score: score, time: time, trigger: trigger, configVersion: configVersion,
+    clScore: clScore, rlScore: rlScore,
+    clSubScores: clSubScores, clWeights: CL_WEIGHTS,
+    rkSubScores: rkSubScores, rkWeights: RK_WEIGHTS,
+    sceneFits: sceneFits, rules: rules,
+    autoLevel: mapping.autoLevel, testTypes: mapping.testTypes,
+    limitTime: mapping.limitTime, control: mapping.control,
+    missingFields: missingFields,
+    accessPassed: accessPassed,
+    accessChecks: accessChecks,
+    failedAccessItems: failedAccessItems,
+    decisionSource: decisionSource,
+    roadType: i < 2 ? '城市快速路' : (i < 4 ? '主干道' : '次干道'),
+    laneCount: attrs.laneCount,
+    laneWidth: attrs.laneWidth,
+    hasMixedTraffic: attrs.hasMixedTraffic,
+    lightingLevel: attrs.lightingLevel,
+    maxSlope: attrs.maxSlope,
+    signalCoverage: attrs.signalCoverage,
+    poorSightRatio: attrs.poorSightRatio,
+    hasMissingData: attrs.hasMissingData
+  };
+});
+
+// 评估记录数据（按 PRD 6.5.4 字段定义）
+// 字段：trigger 评估方式 / time 评估时间 / configVersion 配置版本 / score 综合得分 / level 建议开放等级 /
+//      complexity 复杂度指数 / risk 风险指数 / bestScene 最佳场景 / sceneScore 场景适配得分 /
+//      accessPassed 命中硬性准入条件 / rulesDesc 命中融合规则
+const historyVersions = [
+  {trigger:'自动触发', time:'2026-05-08 02:00', configVersion:'V3.3', score:72.5, level:'条件开放',
+    complexity:72, risk:68, bestScene:'城区道路', sceneScore:78, accessPassed:true,
+    rulesDesc:'高风险限制(优先级6)→禁止开放'},
+  {trigger:'自动触发', time:'2026-04-01 02:00', configVersion:'V3.2', score:78.2, level:'完全开放',
+    complexity:65, risk:55, bestScene:'城区道路、园区道路', sceneScore:82, accessPassed:true,
+    rulesDesc:'综合得分映射→完全开放'},
+  {trigger:'手动触发', time:'2026-03-01 02:00', configVersion:'V3.1', score:75.0, level:'条件开放',
+    complexity:70, risk:60, bestScene:'物流配送道路', sceneScore:76, accessPassed:false,
+    rulesDesc:'准入拦截(信号灯覆盖率缺失)→禁止开放'}
+];
+
+// ==================== 状态 ====================
+var pager = null;
+var chartInstances = {};
+
+// ==================== 工具 ====================
+function levelTag(lv) {
+  const map = {'高':'ant-tag-error','中':'ant-tag-warning','低':'ant-tag-success','完全开放':'ant-tag-success','条件开放':'ant-tag-warning','限制开放':'ant-tag-error','禁止开放':'ant-tag-default'};
+  return '<span class="ant-tag '+ (map[lv]||'ant-tag-processing') +'">'+lv+'</span>';
+}
+
+function initChart(id) {
+  const dom = document.getElementById(id);
+  if (!dom) return null;
+  if (chartInstances[id]) chartInstances[id].dispose();
+  const c = echarts.init(dom);
+  chartInstances[id] = c;
+  return c;
+}
+
+function resizeAll() { Object.values(chartInstances).forEach(c => { if (c && !c.isDisposed()) c.resize(); }); }
+
+// ==================== 列表渲染 ====================
+function renderList() {
+  var filtered = getFilteredData();
+  var total = filtered.length;
+  var page = pager ? pager.getCurrentPage() : 1;
+  var size = pager ? pager.getPageSize() : 10;
+  var totalPages = Math.ceil(total / size) || 1;
+  if (page > totalPages) page = totalPages || 1;
+  var start = (page - 1) * size;
+  var end = Math.min(start + size, total);
+  var pageData = filtered.slice(start, end);
+
+  if (pager) pager.setTotal(total);
+
+  var html = '';
+  if (pageData.length === 0) {
+    html = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#999;">暂无匹配评估结果</td></tr>';
+  }
+  pageData.forEach(function(r) {
+    html += '<tr><td><input type="checkbox" class="ant-checkbox row-checkbox" data-id="'+r.id+'"></td><td>'+r.id+'</td><td><strong>'+r.name+'</strong></td><td>'+r.district+'</td>' +
+      '<td>'+levelTag(r.complexity)+'</td><td>'+levelTag(r.risk)+'</td><td>'+r.bestScene+'</td>' +
+      '<td>'+levelTag(r.openLevel)+'</td><td><strong style="color:'+(r.score>=85?'#52c41a':r.score>=70?'#fa8c16':r.score>=50?'#1677ff':'#ff4d4f')+'">'+r.score+'</strong></td>' +
+      '<td>'+r.trigger+'</td><td>'+r.time+'</td>' +
+      '<td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal(\''+r.id+'\')">详情</button>' +
+      '<button class="ant-btn-link" onclick="openEvalRecordModal(\''+r.id+'\')">评估记录</button>' +
+      '<button class="ant-btn-link" onclick="openReEvalConfirm(\''+r.id+'\')">重新评估</button></td></tr>';
+  });
+  document.getElementById('listBody').innerHTML = html;
+}
+
+function getFilteredData() {
+  const road = (document.getElementById('filterRoad').value||'').trim().toLowerCase();
+  const district = document.getElementById('filterDistrict').value;
+  const openLevel = document.getElementById('filterOpenLevel').value;
+  const risk = document.getElementById('filterRisk').value;
+  const complexity = document.getElementById('filterComplexity').value;
+  return evalData.filter(r => {
+    if (road && !r.name.toLowerCase().includes(road)) return false;
+    if (district !== '全部' && r.district !== district) return false;
+    if (openLevel !== '全部' && r.openLevel !== openLevel) return false;
+    if (risk !== '全部' && r.risk !== risk) return false;
+    if (complexity !== '全部' && r.complexity !== complexity) return false;
+    return true;
+  });
+}
+
+window.refreshList = function() { if (pager) pager.reset(); else renderList(); showToast('列表已刷新'); };
+window.resetFilters = function() {
+  document.getElementById('filterRoad').value='';
+  ['filterDistrict','filterOpenLevel','filterRisk','filterComplexity'].forEach(function(id) {
+    var el=document.getElementById(id); if(el) el.value='全部';
+  });
+  if (pager) pager.reset(); else renderList();
+};
+
+window.toggleSelectAll = function(checkbox) {
+  document.querySelectorAll('.row-checkbox').forEach(function(cb) { cb.checked = checkbox.checked; });
+};
+
+window.handleExport = function() {
+  var selected = Array.prototype.slice.call(document.querySelectorAll('.row-checkbox:checked')).map(function(cb) { return cb.getAttribute('data-id'); });
+  var count = selected.length || getFilteredData().length;
+  var scope = selected.length ? '已选评估结果' : '当前筛选结果';
+  showToast('已导出' + scope + ' ' + count + ' 条，包含判定依据');
+};
+
+window.openManualEvalConfirm = function() {
+  openModal('手动发起评估确认',
+    '<div class="text-sm text-[#000000d9] leading-[22px]">' +
+      '<p>本次将对<strong>全量道路（含已关闭道路）</strong>发起评估，并绑定当前生效配置版本生成结果记录。</p>' +
+      '<p class="mt-2 text-[#00000073]">提交后系统将创建评估任务，完成后自动刷新评估结果与日志。</p>' +
+    '</div>',
+    { footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal();showToast(\'已提交全量道路评估任务，任务状态：执行中\')">确认发起</button>' });
+};
+
+window.openReEvalConfirm = function(id) {
+  var r = evalData.find(function(d) { return d.id === id; });
+  openModal('重新评估确认',
+    '<div class="text-sm text-[#000000d9] leading-[22px]">' +
+      '<p>是否对 <strong>' + (r ? r.name + '（' + r.id + '）' : id) + '</strong> 发起单条道路重新评估？</p>' +
+      '<p class="mt-2 text-[#00000073]">重新评估将记录当前配置版本，并生成新的评估日志。</p>' +
+    '</div>',
+    { footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal();showToast(\'已提交单条道路重新评估任务\')">确认重新评估</button>' });
+};
+
+// ==================== 详情弹窗（标签页 + 图表） ====================
+window.openDetailModal = function(code) {
+  const r = evalData.find(d => d.id === code) || evalData[0];
+  let html = '<div class="detail-tabs" id="detailTabs">';
+  ['评估总览', '复杂度分析', '风险分析', '场景适配', '决策追溯'].forEach((t,i) => {
+    html += '<button class="detail-tab'+(i===0?' active':'')+'" data-tab="tab'+i+'">'+t+'</button>';
+  });
+  html += '</div>';
+
+  // 准入条件检查结果
+  var accessRows = (r.accessChecks || []).map(function(c) {
+    var status = c.missing ? '数据缺失，视为满足' : (c.passed ? '满足' : '不满足');
+    var color = c.passed ? '#52c41a' : '#ff4d4f';
+    return '<div>' + c.name + ' ' + c.threshold + '：<span style="color:' + color + '">' + status + '（实际' + c.actual + '）</span></div>';
+  }).join('');
+  var accessHtml = '<div class="mb-3 p-3 rounded border ' + (r.accessPassed ? 'bg-[#f6ffed] border-[#b7eb8f]' : 'bg-[#fff2f0] border-[#ffccc7]') + '">' +
+    '<p class="text-sm font-semibold" style="color:' + (r.accessPassed ? '#52c41a' : '#ff4d4f') + '">准入条件检查：' + (r.accessPassed ? '通过' : '未通过，直接判定为禁止开放') + '</p>' +
+    '<div class="grid grid-cols-2 gap-1 mt-1 text-xs text-[#00000073]">' + accessRows + '</div></div>';
+
+  // 综合得分公式展示
+  var cScore = (100 - r.clScore) * W_COMPLEXITY;
+  var rkScore = (100 - r.rlScore) * W_RISK;
+  var scScore = (r.sceneFits.filter(function(s){return s.fit==='适用';}).reduce(function(a,b){return a.score>=b.score?a:b;},{score:0}).score || 0) * W_SCENE;
+  var scoreFormula = '综合得分 = (100 - ' + r.clScore + ') × ' + W_COMPLEXITY + ' + (100 - ' + r.rlScore + ') × ' + W_RISK + ' + ' + (scScore/W_SCENE).toFixed(0) + ' × ' + W_SCENE + ' = ' + r.score;
+
+  // 数据缺失说明
+  var missingHtml = '';
+  if (r.hasMissingData) {
+    missingHtml = '<div class="mb-3 p-3 bg-[#fffbe6] rounded border border-[#ffe58f]"><p class="text-sm font-semibold text-[#fa8c16]">数据缺失说明</p>' +
+      '<p class="text-xs text-[#00000073] mt-1">信号灯覆盖率数据缺失，该指标按 60 分计算。标注：「指标数据缺失，采用默认中分」</p></div>';
+  }
+
+  // Tab0 - 评估总览
+  html += '<div class="detail-tab-content active" id="tab0">' +
+    accessHtml + missingHtml +
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">建议开放等级</div><div class="ant-descriptions-value">' + levelTag(r.openLevel) + '</div><div class="ant-descriptions-label">综合得分</div><div class="ant-descriptions-value" style="color:' + (r.score >= 85 ? '#52c41a' : r.score >= 70 ? '#fa8c16' : r.score >= 50 ? '#1677ff' : '#ff4d4f') + ';font-size:18px;font-weight:700">' + r.score + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">配置版本</div><div class="ant-descriptions-value">' + r.configVersion + '</div><div class="ant-descriptions-label">判定来源</div><div class="ant-descriptions-value">' + r.decisionSource + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">综合得分公式</div><div class="ant-descriptions-value" style="font-size:12px;color:#00000073" colspan="3">' + scoreFormula + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">复杂度得分</div><div class="ant-descriptions-value">' + r.clScore + ' (' + levelTag(r.complexity) + ')</div><div class="ant-descriptions-label">转换后得分</div><div class="ant-descriptions-value">' + (100 - r.clScore).toFixed(1) + ' × ' + W_COMPLEXITY + ' = ' + cScore.toFixed(1) + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">风险得分</div><div class="ant-descriptions-value">' + r.rlScore + ' (' + levelTag(r.risk) + ')</div><div class="ant-descriptions-label">转换后得分</div><div class="ant-descriptions-value">' + (100 - r.rlScore).toFixed(1) + ' × ' + W_RISK + ' = ' + rkScore.toFixed(1) + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">场景适配得分</div><div class="ant-descriptions-value">' + (scScore/W_SCENE).toFixed(0) + '</div><div class="ant-descriptions-label">转换后得分</div><div class="ant-descriptions-value">' + (scScore/W_SCENE).toFixed(0) + ' × ' + W_SCENE + ' = ' + scScore.toFixed(1) + '</div></div>' +
+      '<div class="ant-descriptions-row mt-2"><div class="ant-descriptions-label">适用自动驾驶等级</div><div class="ant-descriptions-value">' + r.autoLevel + '</div><div class="ant-descriptions-label">允许测试类型</div><div class="ant-descriptions-value">' + r.testTypes + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">限制时段</div><div class="ant-descriptions-value">' + r.limitTime + '</div><div class="ant-descriptions-label">管控说明</div><div class="ant-descriptions-value">' + r.control + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">评估时间</div><div class="ant-descriptions-value">' + r.time + '</div><div class="ant-descriptions-label">触发方式</div><div class="ant-descriptions-value">' + r.trigger + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">限制条件来源</div><div class="ant-descriptions-value">' + (r.decisionSource === '准入条件拦截' ? '硬性准入条件：' + r.failedAccessItems.map(function(c){return c.name + '实际' + c.actual;}).join('；') : (r.rules[0] && r.rules[0].source !== '兜底规则' ? '融合规则' + r.rules[0].priority + '：' + r.rules[0].cond : '综合得分映射')) + '</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
+    '</div></div>';
+
+  // Tab1 - 复杂度分析
+  var clNames = ['车道复杂度', '交叉口密度', '混合交通比例', '坡度/曲率', '信号灯完整度'];
+  html += '<div class="detail-tab-content" id="tab1">' +
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">复杂度指数</div><div class="ant-descriptions-value"><strong>' + r.clScore + '</strong> ' + levelTag(r.complexity) + '</div><div class="ant-descriptions-label">计算方式</div><div class="ant-descriptions-value" style="font-size:12px;color:#00000073">Σ（指标标准化得分 × 指标权重）</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + clNames[0] + '</div><div class="ant-descriptions-value">得分: ' + r.clSubScores[0] + ' / 权重: ' + CL_WEIGHTS[0].toFixed(2) + '</div><div class="ant-descriptions-label">' + clNames[1] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.clSubScores[1]) + ' / 权重: ' + CL_WEIGHTS[1].toFixed(2) + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + clNames[2] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.clSubScores[2]) + ' / 权重: ' + CL_WEIGHTS[2].toFixed(2) + '</div><div class="ant-descriptions-label">' + clNames[3] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.clSubScores[3]) + ' / 权重: ' + CL_WEIGHTS[3].toFixed(2) + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + clNames[4] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.clSubScores[4]) + ' / 权重: ' + CL_WEIGHTS[4].toFixed(2) + (r.hasMissingData ? ' <span class="ant-tag ant-tag-warning">数据缺失-默认60分</span>' : '') + '</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
+    '</div></div>';
+
+  // Tab2 - 风险分析
+  var rkNames = ['事故频率', '事故严重度', '交通事件频率', '流量修正系数'];
+  html += '<div class="detail-tab-content" id="tab2">' +
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">风险指数</div><div class="ant-descriptions-value"><strong>' + r.rlScore + '</strong> ' + levelTag(r.risk) + '</div><div class="ant-descriptions-label">计算方式</div><div class="ant-descriptions-value" style="font-size:12px;color:#00000073">Σ（指标标准化得分 × 指标权重）</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + rkNames[0] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[0]) + ' / 权重: ' + RK_WEIGHTS[0].toFixed(2) + '</div><div class="ant-descriptions-label">' + rkNames[1] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[1]) + ' / 权重: ' + RK_WEIGHTS[1].toFixed(2) + '</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + rkNames[2] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[2]) + ' / 权重: ' + RK_WEIGHTS[2].toFixed(2) + '</div><div class="ant-descriptions-label">' + rkNames[3] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[3]) + ' / 权重: ' + RK_WEIGHTS[3].toFixed(2) + '</div></div>' +
+      '<div class="mt-3 p-3 bg-[#fafafa] rounded-lg"><p class="text-sm"><strong>事故时间衰减说明：</strong></p>' +
+        '<p class="text-xs text-[#00000073] mt-1">采用近24个月历史数据，事故频率计算引入时间衰减加权：近6个月=1.0、6-12个月=0.7、12-24个月=0.4、>24个月=0.2。越近期的事故对风险得分影响越大。</p>' +
+      '</div>' +
+    '</div></div>';
+
+  // Tab3 - 场景适配
+  html += '<div class="detail-tab-content" id="tab3"><div style="overflow-x:auto"><table class="ant-table"><thead><tr><th>场景名称</th><th>车道数</th><th>机非混行</th><th>照明等级</th><th>最大坡度</th><th>适配度得分</th><th>适配状态</th></tr></thead><tbody>';
+  (r.sceneFits || []).forEach(function(s) {
+    var dims = s.dims || [0,0,0,0];
+    html += '<tr><td><strong>' + s.name + '</strong></td>' +
+      '<td>' + dims[0] + '</td><td>' + dims[1] + '</td><td>' + dims[2] + '</td><td>' + dims[3] + '</td>' +
+      '<td><strong>' + s.score + '</strong></td>' +
+      '<td>' + (s.fit === '适用' ? '<span class="ant-tag ant-tag-success">适用</span>' : '<span class="ant-tag ant-tag-error">不适用</span>') + '</td></tr>';
+  });
+  html += '</tbody></table></div><p class="mt-3"><strong>最佳适配场景：</strong>' + r.bestScene + '（取所有场景中场景适配度得分最高且状态为适用的场景' + (r.bestScene === '无' ? '，当前无适用场景' : '') + '）</p></div>';
+
+  // Tab4 - 决策追溯
+  html += '<div class="detail-tab-content" id="tab4"><div style="overflow-x:auto"><table class="ant-table"><thead><tr><th>规则名称</th><th>条件描述</th><th>动作</th><th>优先级</th><th>规则来源</th></tr></thead><tbody>';
+  (r.rules || []).forEach(function(ru) {
+    html += '<tr><td>' + ru.name + '</td><td>' + ru.cond + '</td><td>' + ru.action + '</td><td>' + ru.priority + '</td><td>' + (ru.source || '—') + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div class="mt-3 p-3 bg-[#fafafa] rounded-lg"><p class="text-sm text-[#00000073]">判定路径说明：按优先级从高到低依次匹配融合规则，首次命中即输出结果。若未命中任何融合规则，则按综合得分映射开放等级。</p></div>';
+  html += '</div>';
+
+  openModal('评估详情 - '+r.name+' ('+r.id+')', html, { wide: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>' });
+
+  setTimeout(function() {
+    document.querySelectorAll('#detailTabs .detail-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('#detailTabs .detail-tab').forEach(function(t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        document.querySelectorAll('.detail-tab-content').forEach(function(c) { c.classList.remove('active'); });
+        document.getElementById(this.dataset.tab).classList.add('active');
+      });
+    });
+  }, 50);
+};
+
+// ==================== 评估记录对比（按 PRD 6.5.4） ====================
+// 评估记录列表字段：评估方式、评估时间、配置版本、综合得分、建议开放等级、操作（A/B radio）
+// 默认按评估时间倒序排列，默认选中前两行
+window.openEvalRecordModal = function(code) {
+  var r = evalData.find(function(d) { return d.id === code; }) || evalData[0];
+  var triggerTag = function(t) {
+    return t === '手动触发'
+      ? '<span class="ant-tag ant-tag-success">' + t + '</span>'
+      : '<span class="ant-tag ant-tag-processing">' + t + '</span>';
+  };
+  var html = '<p class="mb-3"><b>道路：</b>' + r.name + ' (' + r.id + ')</p>' +
+    '<p class="text-sm text-[#00000073] mb-2">每行提供 A、B 两个 radio，请选择两条不同记录后点击"对比差异"</p>' +
+    '<div style="overflow-x:auto"><table class="ant-table"><thead><tr>' +
+    '<th style="text-align:left">评估方式</th>' +
+    '<th style="text-align:center">评估时间</th>' +
+    '<th style="text-align:center">配置版本</th>' +
+    '<th style="text-align:right">综合得分</th>' +
+    '<th style="text-align:left">建议开放等级</th>' +
+    '<th style="text-align:center">操作</th>' +
+    '</tr></thead><tbody>';
+  // 按评估时间倒序排列
+  var sorted = historyVersions.slice().sort(function(a, b) {
+    return new Date(b.time.replace(/-/g, '/')) - new Date(a.time.replace(/-/g, '/'));
+  });
+  sorted.forEach(function(v, i) {
+    var rowNo = i + 1;
+    html += '<tr>' +
+      '<td style="text-align:left">' + triggerTag(v.trigger) + '</td>' +
+      '<td style="text-align:center">' + v.time + '</td>' +
+      '<td style="text-align:center">' + v.configVersion + '</td>' +
+      '<td style="text-align:right"><strong style="color:' + (v.score >= 85 ? '#52c41a' : v.score >= 70 ? '#fa8c16' : v.score >= 50 ? '#1677ff' : '#ff4d4f') + '">' + v.score + '</strong></td>' +
+      '<td style="text-align:left">' + levelTag(v.level) + '</td>' +
+      '<td style="text-align:center">' +
+        '<label style="margin-right:12px;cursor:pointer"><input type="radio" name="histA" data-row="' + rowNo + '" ' + (i === 0 ? 'checked' : '') + '> A</label>' +
+        '<label style="cursor:pointer"><input type="radio" name="histB" data-row="' + rowNo + '" ' + (i === 1 ? 'checked' : '') + '> B</label>' +
+      '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table></div>' +
+    '<div class="mt-3 flex justify-end items-center gap-2">' +
+      '<span class="text-xs text-[#00000073]" id="diffHint">已选 A=' + (sorted[0] ? sorted[0].time : '-') + '、B=' + (sorted[1] ? sorted[1].time : '-') + '</span>' +
+      '<button class="ant-btn ant-btn-primary" onclick="showDiff(\'' + r.id + '\')">对比差异</button>' +
+    '</div>';
+  openModal('评估记录对比 - ' + r.name, html, { wide: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>' });
+
+  // 联动更新底部"已选 A/B"提示
+  setTimeout(function() {
+    var updateHint = function() {
+      var aSel = document.querySelector('input[name="histA"]:checked');
+      var bSel = document.querySelector('input[name="histB"]:checked');
+      var hint = document.getElementById('diffHint');
+      if (!hint) return;
+      var aIdx = aSel ? parseInt(aSel.getAttribute('data-row'), 10) - 1 : -1;
+      var bIdx = bSel ? parseInt(bSel.getAttribute('data-row'), 10) - 1 : -1;
+      var aTime = aIdx >= 0 ? sorted[aIdx].time : '-';
+      var bTime = bIdx >= 0 ? sorted[bIdx].time : '-';
+      hint.textContent = '已选 A=' + aTime + '、B=' + bTime + (aIdx === bIdx && aIdx >= 0 ? '（注意：A 与 B 选择了同一行）' : '');
+    };
+    document.querySelectorAll('input[name="histA"], input[name="histB"]').forEach(function(rb) {
+      rb.addEventListener('change', updateHint);
+    });
+  }, 30);
+};
+
+// 对比结果弹窗（按 PRD 6.5.4：表头 指标/版本1评估时间/版本2评估时间/变化，8 项对比指标）
+window.showDiff = function(code) {
+  var radiosA = document.querySelectorAll('input[name="histA"]');
+  var radiosB = document.querySelectorAll('input[name="histB"]');
+  var idxA = -1, idxB = -1;
+  radiosA.forEach(function(r, i) { if (r.checked) idxA = i; });
+  radiosB.forEach(function(r, i) { if (r.checked) idxB = i; });
+  if (idxA < 0 || idxB < 0) return;
+  if (idxA === idxB) { showToast('请选择两个不同的评估记录'); return; }
+  // 按当前列表排序顺序取值（A/B 选中的是排序后的第 N 行）
+  var sorted = historyVersions.slice().sort(function(a, b) {
+    return new Date(b.time.replace(/-/g, '/')) - new Date(a.time.replace(/-/g, '/'));
+  });
+  var va = sorted[idxA], vb = sorted[idxB];
+
+  // 辅助：差异方向（↑/↓/→）
+  function arrow(delta) {
+    if (delta > 0) return '↑';
+    if (delta < 0) return '↓';
+    return '→';
+  }
+  // 辅助：差异颜色（综合得分/场景适配得分 = 高更好→绿；复杂度/风险指数 = 低更好→绿）
+  function numColor(delta, higherIsBetter) {
+    if (delta === 0) return '#00000073';
+    var improving = higherIsBetter ? delta > 0 : delta < 0;
+    return improving ? '#52c41a' : '#ff4d4f';
+  }
+
+  // 命中硬性准入条件
+  var accessRow = '<tr><td>命中硬性准入条件</td><td>' + (va.accessPassed ? '命中' : '未命中') + '</td><td>' + (vb.accessPassed ? '命中' : '未命中') + '</td><td>' + (va.accessPassed === vb.accessPassed ? '无变化' : '<span style="color:#1677ff;font-weight:600">' + (va.accessPassed ? '命中 → 未命中' : '未命中 → 命中') + '</span>') + '</td></tr>';
+  // 综合得分
+  var scoreDelta = vb.score - va.score;
+  var scoreRow = '<tr><td>综合得分</td><td>' + va.score + '</td><td>' + vb.score + '</td><td style="color:' + numColor(scoreDelta, true) + ';font-weight:600">' + arrow(scoreDelta) + ' ' + Math.abs(scoreDelta).toFixed(1) + '</td></tr>';
+  // 配置版本
+  var configRow = '<tr><td>配置版本</td><td>' + va.configVersion + '</td><td>' + vb.configVersion + '</td><td>' + (va.configVersion === vb.configVersion ? '无变化' : '<span style="color:#1677ff;font-weight:600">' + va.configVersion + ' → ' + vb.configVersion + '</span>') + '</td></tr>';
+  // 复杂度指数（得分）
+  var cDelta = vb.complexity - va.complexity;
+  var cRow = '<tr><td>复杂度指数（得分）</td><td>' + va.complexity + '</td><td>' + vb.complexity + '</td><td style="color:' + numColor(cDelta, false) + ';font-weight:600">' + arrow(cDelta) + ' ' + Math.abs(cDelta) + '</td></tr>';
+  // 风险指数（得分）
+  var rDelta = vb.risk - va.risk;
+  var rRow = '<tr><td>风险指数（得分）</td><td>' + va.risk + '</td><td>' + vb.risk + '</td><td style="color:' + numColor(rDelta, false) + ';font-weight:600">' + arrow(rDelta) + ' ' + Math.abs(rDelta) + '</td></tr>';
+  // 最佳场景（得分）
+  var sDelta = vb.sceneScore - va.sceneScore;
+  var sRow = '<tr><td>最佳场景（得分）</td><td>' + va.bestScene + '（' + va.sceneScore + '）</td><td>' + vb.bestScene + '（' + vb.sceneScore + '）</td><td style="color:' + numColor(sDelta, true) + ';font-weight:600">' + arrow(sDelta) + ' ' + Math.abs(sDelta) + '</td></tr>';
+  // 建议开放等级
+  var lvRow = '<tr><td>建议开放等级</td><td>' + levelTag(va.level) + '</td><td>' + levelTag(vb.level) + '</td><td>' + (va.level === vb.level ? '无变化' : '<span style="color:#ff4d4f;font-weight:600">' + va.level + ' → ' + vb.level + '</span>') + '</td></tr>';
+  // 命中融合规则
+  var ruleRow = '<tr><td>命中融合规则</td><td>' + va.rulesDesc + '</td><td>' + vb.rulesDesc + '</td><td>' + (va.rulesDesc === vb.rulesDesc ? '无变化' : '<span style="color:#1677ff;font-weight:600">规则变化</span>') + '</td></tr>';
+
+  var diffHtml = '<p class="mb-3 text-sm text-[#00000073]">道路：' + (evalData.find(function(d) { return d.id === code; }) || {}).name + ' (' + code + ')</p>' +
+    '<div style="overflow-x:auto"><table class="ant-table"><thead><tr>' +
+    '<th style="text-align:left">指标</th>' +
+    '<th style="text-align:center">版本1评估时间<br><span class="text-xs text-[#00000073]">' + va.time + '</span></th>' +
+    '<th style="text-align:center">版本2评估时间<br><span class="text-xs text-[#00000073]">' + vb.time + '</span></th>' +
+    '<th style="text-align:left">变化</th>' +
+    '</tr></thead><tbody>' +
+    accessRow + scoreRow + configRow + cRow + rRow + sRow + lvRow + ruleRow +
+    '</tbody></table></div>' +
+    '<div class="mt-3 p-3 bg-[#fafafa] rounded-lg text-xs text-[#00000073]">' +
+      '<p><strong>颜色说明：</strong>综合得分与场景适配得分以数值升高为优；复杂度指数、风险指数以数值降低为优；其余指标按字面变化标识。</p>' +
+    '</div>';
+  openModal('评估记录对比结果 - ' + va.time + ' vs ' + vb.time, diffHtml, { wide: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>' });
+};
+
+// ==================== Toast ====================
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:#fff;padding:12px 20px;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,0.1);font-size:13px;border-left:3px solid #1677ff;';
+  t.textContent = '✅ ' + msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; t.style.transition='0.3s'; setTimeout(function(){t.remove();},300); }, 2000);
+}
+
+// ==================== 初始化分页组件 ====================
+pager = new Pagination({
+  container: 'paginationBar',
+  pageSize: 10,
+  pageSizeOptions: [10, 20, 50, 100],
+  onPageChange: function(page, size) {
+    renderList();
+  }
+});
+
+// ==================== 初始 ====================
+renderList();
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

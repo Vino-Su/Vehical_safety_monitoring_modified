@@ -69,8 +69,7 @@
             { key: 'road-test', label: '道路测试准入申请', path: 'monitor/access-apply/road-test.html', roles: ['admin', 'enterprise'] },
             { key: 'demo-apply', label: '示范应用准入申请', path: 'monitor/access-apply/demo-apply.html', roles: ['admin', 'enterprise'] },
             { key: 'demo-operate', label: '商业化试点准入申请', path: 'monitor/access-apply/demo-operate.html', roles: ['admin', 'enterprise'] },
-            { key: 'apply-records', label: '业务申请记录', path: 'monitor/access-apply/apply-records.html', roles: ['admin', 'enterprise'] },
-            { key: 'report-submission', label: '报告提交管理', path: 'monitor/access-apply/report-submission.html', roles: ['admin', 'enterprise'] }
+            { key: 'business', label: '业务申请管理', path: 'monitor/access-apply/business.html', roles: ['admin', 'enterprise'] }
           ]
         },
         {
@@ -85,12 +84,10 @@
         },
         {
           key: 'approve-config-group',
-          label: '自定义配置',
+          label: '审批配置',
           roles: ['admin'],
           children: [
-            { key: 'approval-config', label: '测试示范审批配置', path: 'monitor/approve-config/approval-config.html', roles: ['admin'] },
-            { key: 'approve-config', label: '材料目录配置', path: 'monitor/approve-config/config.html', roles: ['admin'] },
-            { key: 'abnormal-rule-config', label: '异常事件规则配置', path: 'monitor/approve-config/abnormal-rule-config.html', roles: ['admin'] }
+            { key: 'approve-config', label: '审批配置', path: 'monitor/approve-config/config.html', roles: ['admin'] }
           ]
         },
         {
@@ -495,7 +492,7 @@
       '.ant-modal-close:hover{color:#000000d9}',
       '.ant-modal-body{padding:24px;overflow-y:auto;flex:1}',
       '.ant-modal-footer{padding:12px 24px;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:8px}',
-      '.ant-modal.fullscreen-mode{position:fixed!important;top:64px!important;left:224px!important;right:0!important;bottom:0!important;width:calc(100vw - 224px)!important;max-width:calc(100vw - 224px)!important;height:calc(100vh - 64px)!important;max-height:calc(100vh - 64px)!important;border-radius:0!important;margin:0!important}',
+      '.ant-modal.fullscreen-mode{position:fixed!important;top:60px!important;left:224px!important;right:0!important;bottom:0!important;width:calc(100vw - 224px)!important;max-width:calc(100vw - 224px)!important;height:calc(100vh - 60px)!important;max-height:calc(100vh - 60px)!important;border-radius:0!important;margin:0!important}',
       '.ant-modal.fullscreen-mode .ant-modal-header{padding:12px 24px}',
       '.ant-modal.fullscreen-mode .ant-modal-body{padding:24px 32px}',
       '#modal-mask.fs-mode{left:224px!important;right:0!important;width:calc(100vw - 224px)!important;background:rgba(0,0,0,.25)!important}',
@@ -656,10 +653,6 @@
     if (modal.classList.contains('fullscreen-mode')) {
       // 退出全屏
       modal.classList.remove('fullscreen-mode');
-      if (modal.dataset.prevWidth) modal.style.setProperty('width', modal.dataset.prevWidth, modal.dataset.prevWidthPriority || '');
-      if (modal.dataset.prevMaxWidth) modal.style.setProperty('max-width', modal.dataset.prevMaxWidth, modal.dataset.prevMaxWidthPriority || '');
-      if (modal.dataset.prevHeight) modal.style.setProperty('height', modal.dataset.prevHeight, modal.dataset.prevHeightPriority || '');
-      if (modal.dataset.prevMaxHeight) modal.style.setProperty('max-height', modal.dataset.prevMaxHeight, modal.dataset.prevMaxHeightPriority || '');
       if (mask) mask.classList.remove('fs-mode');
       if (btn) {
         btn.title = '全屏';
@@ -668,18 +661,6 @@
       }
     } else {
       // 进入全屏（仅占 main 区域，避开 sidebar 与 topnav）
-      modal.dataset.prevWidth = modal.style.getPropertyValue('width') || '';
-      modal.dataset.prevWidthPriority = modal.style.getPropertyPriority('width') || '';
-      modal.dataset.prevMaxWidth = modal.style.getPropertyValue('max-width') || '';
-      modal.dataset.prevMaxWidthPriority = modal.style.getPropertyPriority('max-width') || '';
-      modal.dataset.prevHeight = modal.style.getPropertyValue('height') || '';
-      modal.dataset.prevHeightPriority = modal.style.getPropertyPriority('height') || '';
-      modal.dataset.prevMaxHeight = modal.style.getPropertyValue('max-height') || '';
-      modal.dataset.prevMaxHeightPriority = modal.style.getPropertyPriority('max-height') || '';
-      modal.style.removeProperty('width');
-      modal.style.removeProperty('max-width');
-      modal.style.removeProperty('height');
-      modal.style.removeProperty('max-height');
       modal.classList.add('fullscreen-mode');
       if (mask) mask.classList.add('fs-mode');
       if (btn) {
@@ -901,8 +882,7 @@
     '事故类型': ['全部','追尾事故','侧面碰撞','正面碰撞','刮擦事故','单车事故','翻车事故'],
     '当前审批节点': ['全部','第三方初审','市工作专班审核','专班审核确认','专家评审','专题会审议','待上传牌照'],
     '审核状态': ['全部','待审核','审核中','已通过','已退回'],
-    '终止类型': ['全部','车辆与声明不符','重大安全风险','严重违法','交通事故','号牌到期/撤销','道路关闭'],
-    '终止状态': ['全部','受理中','已办结'],
+    '终止类型': ['全部','主动终止','强制终止','到期终止'],
     '触发方式': ['全部','自动','手动'],
     '配置版本': ['全部','V3.3','V3.2','V3.1'],
     '报告类型': ['全部','月度报告','季度报告','年度报告','专项报告'],

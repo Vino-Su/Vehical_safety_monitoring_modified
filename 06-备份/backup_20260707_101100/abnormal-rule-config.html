@@ -9,6 +9,8 @@
   <style>
     .page-title-block{display:flex;flex-direction:column;gap:4px}
     .filter-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .advanced-filter{display:none;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0}
+    .advanced-filter.show{display:block}
     .rule-code{white-space:nowrap}
     .rule-sub{font-size:12px;color:#00000073;line-height:18px;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .rule-muted td{color:#00000073!important;background:#fafafa}
@@ -133,10 +135,18 @@
           <div class="filter-item"><label>事件分类</label><select id="filterCategory" class="ant-input" style="width:120px"><option>全部</option><option>预警</option><option>告警</option></select></div>
           <div class="filter-item"><label>事件类型</label><select id="filterType" class="ant-input" style="width:190px"><option>全部</option><option>车辆运行异常预警</option><option>车辆碰撞事件预警</option><option>车载终端异常预警</option><option>临牌有效期告警</option><option>电子围栏越界告警</option><option>测试时段合规性告警</option><option>安全员到岗状态告警</option></select></div>
           <div class="filter-item"><label>规则状态</label><select id="filterStatus" class="ant-input" style="width:120px"><option>全部</option><option>启用</option><option>停用</option></select></div>
-          <div class="filter-item"><label>适用车辆类型</label><select id="filterVehicleType" class="ant-input" style="width:180px"><option>全部</option><option>乘用车</option><option>商用车</option><option>专用作业车</option><option>功能型低速无人车</option><option>其他</option></select></div>
           <div class="filter-actions">
             <button class="ant-btn ant-btn-primary" onclick="queryRules()">查询</button>
             <button class="ant-btn" onclick="resetFilters()">重置</button>
+            <button class="ant-btn" id="expandFilterBtn" onclick="toggleAdvancedFilter()">展开</button>
+          </div>
+        </div>
+        <div class="advanced-filter" id="advancedFilter">
+          <div class="filter-row">
+            <div class="filter-item"><label>适用车辆类型</label><select id="filterVehicleType" class="ant-input" style="width:180px"><option>全部</option><option>乘用车</option><option>商用车</option><option>专用作业车</option><option>功能型低速无人车</option><option>其他</option></select></div>
+            <div class="filter-item"><label>适用范围</label><select id="filterScope" class="ant-input" style="width:140px"><option>全部</option><option>道路</option><option>电子围栏</option><option>企业</option><option>车辆</option><option>全局</option></select></div>
+            <div class="filter-item"><label>是否关键规则</label><select id="filterCritical" class="ant-input" style="width:140px"><option>全部</option><option>是</option><option>否</option></select></div>
+            <div class="filter-item"><label>当前版本</label><input id="filterVersion" class="ant-input" placeholder="如 V1.3" style="width:120px"></div>
           </div>
         </div>
       </div>
@@ -162,8 +172,8 @@
                 <th>事件分类</th>
                 <th>事件类型</th>
                 <th>规则子类型</th>
-                <th>适用车辆类型</th>
-                <th>适用业务类型</th>
+                <th>适用对象</th>
+                <th>适用范围</th>
                 <th>状态</th>
                 <th>当前版本</th>
                 <th>更新时间</th>
@@ -205,23 +215,23 @@ function initPager(){
 }
 
 var rules=[
-  {code:'ARC-EW01-001',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速剧烈突变',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.2',updateTime:'2026-07-01 09:30:20',critical:false,today:6,seven:42,optimize:false,core:'车辆自动驾驶运行过程中，在统计窗口内速度变化超过阈值，且达到持续或重复次数后触发预警。'},
-  {code:'ARC-EW01-002',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'加速度剧烈突变',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.1',updateTime:'2026-06-28 15:12:06',critical:false,today:4,seven:31,optimize:false,core:'纵向或横向加速度在持续时间内超过配置阈值时触发预警，用于识别急加速、急减速和急转向风险。'},
-  {code:'ARC-EW01-003',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'超时停靠',object:'功能型低速无人车、商用车',vehicleTypes:['功能型低速无人车','商用车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.4',updateTime:'2026-07-06 10:26:48',critical:false,today:18,seven:126,optimize:true,core:'车辆处于低速或静止状态，位移低于阈值并超过不同场景停靠时长后触发预警；计划停靠、充电站、装卸点等可豁免。'},
-  {code:'ARC-EW01-004',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速超限',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.3',updateTime:'2026-07-03 16:05:32',critical:true,today:12,seven:98,optimize:true,core:'车辆实时速度超过道路或围栏限速，并超出配置容差且持续达到阈值时触发预警。'},
-  {code:'ARC-EW01-005',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'倒车预警',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'停用',version:'V1.0',updateTime:'2026-06-20 11:42:15',critical:false,today:0,seven:0,optimize:false,core:'车辆处于倒挡或倒车运动状态且持续达到阈值时触发预警，作业区内可按配置豁免。'},
-  {code:'ARC-EW02-001',name:'车辆碰撞事件预警规则',category:'预警',type:'车辆碰撞事件预警',subtype:'碰撞预警',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.2',updateTime:'2026-07-04 12:18:08',critical:true,today:1,seven:8,optimize:false,core:'碰撞检测模型输出置信度高于阈值时触发预警，并按严重程度映射方案标记事件风险。'},
-  {code:'ARC-EW03-001',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'数据中断',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.5',updateTime:'2026-07-05 09:18:42',critical:true,today:9,seven:78,optimize:true,core:'车辆终端连续未上报或连续丢包次数达到阈值时触发预警，恢复上报后进入恢复判定。'},
-  {code:'ARC-EW03-002',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'传感器故障',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.3',updateTime:'2026-07-02 17:11:29',critical:true,today:7,seven:54,optimize:false,core:'关键传感器状态异常持续达到阈值或连续异常采样次数达到阈值时触发预警。'},
-  {code:'ARC-EW03-003',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'其他',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试',status:'停用',version:'V1.0',updateTime:'2026-06-18 14:22:35',critical:false,today:0,seven:3,optimize:false,core:'车载终端上报其他未归类异常码时按平台模板生成预警，需结合设备字典维护。'},
-  {code:'ARC-ALT04-001',name:'临牌有效期告警规则',category:'告警',type:'临牌有效期告警',subtype:'临牌过期上路',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试',status:'启用',version:'V1.1',updateTime:'2026-07-01 18:02:11',critical:true,today:2,seven:14,optimize:false,core:'车辆临牌状态为已过期且仍处于上路运行状态时触发告警，宽限时间可配置。'},
-  {code:'ARC-ALT05-001',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'允许通行区域越界',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.3',updateTime:'2026-07-06 09:42:33',critical:true,today:10,seven:70,optimize:true,core:'车辆驶出已授权允许通行区域，超过越界缓冲距离并持续达到阈值后触发告警。'},
-  {code:'ARC-ALT05-002',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'禁行区域闯入',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.2',updateTime:'2026-07-06 09:43:05',critical:true,today:5,seven:26,optimize:false,core:'车辆进入禁行区域，超过闯入缓冲距离并持续达到阈值后触发告警；同车同刻优先级最高。'},
-  {code:'ARC-ALT05-003',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'区域外激活自动驾驶',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.1',updateTime:'2026-07-06 09:45:58',critical:true,today:3,seven:20,optimize:false,core:'车辆不在任何授权区域内且自动驾驶处于激活状态，持续达到阈值后触发告警。'},
-  {code:'ARC-ALT06-001',name:'测试时段合规性告警规则',category:'告警',type:'测试时段合规性告警',subtype:'非规定时段测试',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试',status:'启用',version:'V1.2',updateTime:'2026-07-02 10:15:41',critical:true,today:4,seven:28,optimize:false,core:'车辆在准入申请、道路或区域配置允许时段之外运行时触发告警，可配置宽限时间。'},
-  {code:'ARC-ALT06-002',name:'测试时段合规性告警规则',category:'告警',type:'测试时段合规性告警',subtype:'高峰时段运行',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'业务类型',scopeText:'示范应用、商业化试点',status:'启用',version:'V1.1',updateTime:'2026-07-02 10:16:25',critical:true,today:6,seven:36,optimize:false,core:'车辆在配置的高峰时段和管控范围内运行时触发告警，可按车辆类型和宽限时间配置。'},
-  {code:'ARC-ALT07-001',name:'安全员到岗状态告警规则',category:'告警',type:'安全员到岗状态告警',subtype:'安全员未到岗',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.4',updateTime:'2026-07-04 08:35:16',critical:true,today:5,seven:32,optimize:false,core:'车辆开始测试或运营任务后，安全员未按排班到岗或心跳超时达到阈值时触发告警。'},
-  {code:'ARC-ALT07-002',name:'安全员到岗状态告警规则',category:'告警',type:'安全员到岗状态告警',subtype:'安全员异常离岗',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.2',updateTime:'2026-07-04 08:37:24',critical:true,today:4,seven:29,optimize:false,core:'任务执行期间安全员离岗持续达到阈值时触发告警，安全员重新在线并持续达到恢复判定时长后恢复。'}
+  {code:'ARC-EW01-001',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速剧烈突变',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'全局',scopeText:'全局生效',status:'启用',version:'V1.2',updateTime:'2026-07-01 09:30:20',critical:false,today:6,seven:42,optimize:false,core:'车辆自动驾驶运行过程中，在统计窗口内速度变化超过阈值，且达到持续或重复次数后触发预警。'},
+  {code:'ARC-EW01-002',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'加速度剧烈突变',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'全局',scopeText:'全局生效',status:'启用',version:'V1.1',updateTime:'2026-06-28 15:12:06',critical:false,today:4,seven:31,optimize:false,core:'纵向或横向加速度在持续时间内超过配置阈值时触发预警，用于识别急加速、急减速和急转向风险。'},
+  {code:'ARC-EW01-003',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'超时停靠',object:'功能型低速无人车、商用车',vehicleTypes:['功能型低速无人车','商用车'],scope:'道路',scopeText:'开放道路、园区道路、重点点位',status:'启用',version:'V1.4',updateTime:'2026-07-06 10:26:48',critical:false,today:18,seven:126,optimize:true,core:'车辆处于低速或静止状态，位移低于阈值并超过不同场景停靠时长后触发预警；计划停靠、充电站、装卸点等可豁免。'},
+  {code:'ARC-EW01-004',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速超限',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'道路',scopeText:'道路限速、围栏限速',status:'启用',version:'V1.3',updateTime:'2026-07-03 16:05:32',critical:true,today:12,seven:98,optimize:true,core:'车辆实时速度超过道路或围栏限速，并超出配置容差且持续达到阈值时触发预警。'},
+  {code:'ARC-EW01-005',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'倒车预警',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'车辆',scopeText:'园区配送、环卫作业车辆',status:'停用',version:'V1.0',updateTime:'2026-06-20 11:42:15',critical:false,today:0,seven:0,optimize:false,core:'车辆处于倒挡或倒车运动状态且持续达到阈值时触发预警，作业区内可按配置豁免。'},
+  {code:'ARC-EW02-001',name:'车辆碰撞事件预警规则',category:'预警',type:'车辆碰撞事件预警',subtype:'碰撞预警',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'全局',scopeText:'全局生效',status:'启用',version:'V1.2',updateTime:'2026-07-04 12:18:08',critical:true,today:1,seven:8,optimize:false,core:'碰撞检测模型输出置信度高于阈值时触发预警，并按严重程度映射方案标记事件风险。'},
+  {code:'ARC-EW03-001',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'数据中断',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'车辆',scopeText:'全部接入车辆',status:'启用',version:'V1.5',updateTime:'2026-07-05 09:18:42',critical:true,today:9,seven:78,optimize:true,core:'车辆终端连续未上报或连续丢包次数达到阈值时触发预警，恢复上报后进入恢复判定。'},
+  {code:'ARC-EW03-002',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'传感器故障',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'车辆',scopeText:'全部关键设备',status:'启用',version:'V1.3',updateTime:'2026-07-02 17:11:29',critical:true,today:7,seven:54,optimize:false,core:'关键传感器状态异常持续达到阈值或连续异常采样次数达到阈值时触发预警。'},
+  {code:'ARC-EW03-003',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'其他',object:'全部车辆类型',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'车辆',scopeText:'扩展终端异常',status:'停用',version:'V1.0',updateTime:'2026-06-18 14:22:35',critical:false,today:0,seven:3,optimize:false,core:'车载终端上报其他未归类异常码时按平台模板生成预警，需结合设备字典维护。'},
+  {code:'ARC-ALT04-001',name:'临牌有效期告警规则',category:'告警',type:'临牌有效期告警',subtype:'临牌过期上路',object:'临牌车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'车辆',scopeText:'临牌有效期校验车辆',status:'启用',version:'V1.1',updateTime:'2026-07-01 18:02:11',critical:true,today:2,seven:14,optimize:false,core:'车辆临牌状态为已过期且仍处于上路运行状态时触发告警，宽限时间可配置。'},
+  {code:'ARC-ALT05-001',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'允许通行区域越界',object:'全部授权车辆',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'电子围栏',scopeText:'允许通行区域围栏',status:'启用',version:'V1.3',updateTime:'2026-07-06 09:42:33',critical:true,today:10,seven:70,optimize:true,core:'车辆驶出已授权允许通行区域，超过越界缓冲距离并持续达到阈值后触发告警。'},
+  {code:'ARC-ALT05-002',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'禁行区域闯入',object:'全部授权车辆',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'电子围栏',scopeText:'禁行区域围栏',status:'启用',version:'V1.2',updateTime:'2026-07-06 09:43:05',critical:true,today:5,seven:26,optimize:false,core:'车辆进入禁行区域，超过闯入缓冲距离并持续达到阈值后触发告警；同车同刻优先级最高。'},
+  {code:'ARC-ALT05-003',name:'电子围栏越界告警规则',category:'告警',type:'电子围栏越界告警',subtype:'区域外激活自动驾驶',object:'自动驾驶启用车辆',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'电子围栏',scopeText:'授权道路、允许围栏、转场路段',status:'启用',version:'V1.1',updateTime:'2026-07-06 09:45:58',critical:true,today:3,seven:20,optimize:false,core:'车辆不在任何授权区域内且自动驾驶处于激活状态，持续达到阈值后触发告警。'},
+  {code:'ARC-ALT06-001',name:'测试时段合规性告警规则',category:'告警',type:'测试时段合规性告警',subtype:'非规定时段测试',object:'道路测试、示范应用车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'道路',scopeText:'准入申请授权时段',status:'启用',version:'V1.2',updateTime:'2026-07-02 10:15:41',critical:true,today:4,seven:28,optimize:false,core:'车辆在准入申请、道路或区域配置允许时段之外运行时触发告警，可配置宽限时间。'},
+  {code:'ARC-ALT06-002',name:'测试时段合规性告警规则',category:'告警',type:'测试时段合规性告警',subtype:'高峰时段运行',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'道路',scopeText:'早晚高峰管控路段',status:'启用',version:'V1.1',updateTime:'2026-07-02 10:16:25',critical:true,today:6,seven:36,optimize:false,core:'车辆在配置的高峰时段和管控范围内运行时触发告警，可按车辆类型和宽限时间配置。'},
+  {code:'ARC-ALT07-001',name:'安全员到岗状态告警规则',category:'告警',type:'安全员到岗状态告警',subtype:'安全员未到岗',object:'需安全员车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'企业',scopeText:'安全员排班覆盖企业',status:'启用',version:'V1.4',updateTime:'2026-07-04 08:35:16',critical:true,today:5,seven:32,optimize:false,core:'车辆开始测试或运营任务后，安全员未按排班到岗或心跳超时达到阈值时触发告警。'},
+  {code:'ARC-ALT07-002',name:'安全员到岗状态告警规则',category:'告警',type:'安全员到岗状态告警',subtype:'安全员异常离岗',object:'需安全员车辆',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'企业',scopeText:'安全员在线状态',status:'启用',version:'V1.2',updateTime:'2026-07-04 08:37:24',critical:true,today:4,seven:29,optimize:false,core:'任务执行期间安全员离岗持续达到阈值时触发告警，安全员重新在线并持续达到恢复判定时长后恢复。'}
 ];
 
 var roadResourceData=[
@@ -464,12 +474,18 @@ function getFilteredRules(){
   var type=document.getElementById('filterType').value;
   var status=document.getElementById('filterStatus').value;
   var vehicleType=document.getElementById('filterVehicleType').value;
+  var scope=document.getElementById('filterScope').value;
+  var critical=document.getElementById('filterCritical').value;
+  var version=document.getElementById('filterVersion').value.trim();
   return rules.filter(function(rule){
     if(keyword && rule.code.indexOf(keyword)===-1 && rule.type.indexOf(keyword)===-1 && rule.subtype.indexOf(keyword)===-1) return false;
     if(category!=='全部' && rule.category!==category) return false;
     if(type!=='全部' && rule.type!==type) return false;
     if(status!=='全部' && rule.status!==status) return false;
     if(vehicleType!=='全部' && rule.vehicleTypes.indexOf(vehicleType)===-1) return false;
+    if(scope!=='全部' && rule.scope!==scope) return false;
+    if(critical!=='全部' && (rule.critical?'是':'否')!==critical) return false;
+    if(version && rule.version!==version) return false;
     return true;
   });
 }
@@ -490,7 +506,7 @@ function renderRules(){
       '<td>'+rule.type+'</td>'+
       '<td><span class="risk-dot '+(rule.critical?'high':'normal')+'"></span>'+rule.subtype+'</td>'+
       '<td><div class="rule-sub" title="'+rule.object+'">'+rule.object+'</div></td>'+
-      '<td><div class="rule-sub" title="'+rule.scopeText+'">'+rule.scopeText+'</div></td>'+
+      '<td><div class="rule-sub" title="'+rule.scopeText+'">'+rule.scope+' / '+rule.scopeText+'</div></td>'+
       '<td>'+statusTag(rule.status)+'</td>'+
       '<td>'+rule.version+'</td>'+
       '<td>'+rule.updateTime+'</td>'+
@@ -514,11 +530,23 @@ function queryRules(){
 }
 
 function resetFilters(){
-  document.getElementById('filterKeyword').value='';
-  ['filterCategory','filterType','filterStatus','filterVehicleType'].forEach(function(id){document.getElementById(id).value='全部';});
+  ['filterKeyword','filterVersion'].forEach(function(id){document.getElementById(id).value='';});
+  ['filterCategory','filterType','filterStatus','filterVehicleType','filterScope','filterCritical'].forEach(function(id){document.getElementById(id).value='全部';});
   currentPage=1;
+  var advanced=document.getElementById('advancedFilter');
+  var btn=document.getElementById('expandFilterBtn');
+  if(advanced) advanced.classList.remove('show');
+  if(btn) btn.textContent='展开';
   renderRules();
   showToast('已重置筛选条件');
+}
+
+function toggleAdvancedFilter(){
+  var advanced=document.getElementById('advancedFilter');
+  var btn=document.getElementById('expandFilterBtn');
+  if(!advanced) return;
+  advanced.classList.toggle('show');
+  if(btn) btn.textContent=advanced.classList.contains('show')?'收起':'展开';
 }
 
 function toggleRuleStatus(code){
