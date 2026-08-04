@@ -1456,7 +1456,7 @@ function renderVehicleTable(page){
       '<td style="font-size:12px">'+statusHtml+'</td>'+
       '<td>'+alarmHtml+'</td>'+
       '<td style="font-size:12px">'+v.lastTime+'</td>'+
-      '<td><div class="flex gap-1"><button class="ant-btn-link" style="font-size:11px" onclick="event.stopPropagation();focusVehicle(\''+v.id+'\')">定位</button><button class="ant-btn-link" style="font-size:11px" onclick="event.stopPropagation();showTrajectory(\''+v.id+'\')">轨迹</button><button class="ant-btn-link" style="font-size:11px" onclick="event.stopPropagation();openVideoPlayer(\''+v.id+'\')">视频</button><button class="ant-btn-link" style="font-size:11px" onclick="event.stopPropagation();openVehicleDetail(\''+v.id+'\')">详情</button></div></td>'+
+      '<td><div class="flex gap-1"><button class="ant-btn-link" style="font-size:11px" onclick="event.stopPropagation();focusVehicle(\''+v.id+'\')">定位</button><button class="ant-btn-link" style="font-size:11px" onclick="event.stopPropagation();showTrajectory(\''+v.id+'\')">轨迹</button><button class="ant-btn-link" style="font-size:11px" onclick="event.stopPropagation();openVideoPlayer(\''+v.id+'\')">视频</button></div></td>'+
     '</tr>';
   }).join('');
   }
@@ -1584,37 +1584,6 @@ function openFenceModal(){
       }).join('')+
     '</div>',
     {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">保存配置</button>'});
-}
-
-function openVehicleDetail(vid){
-  var v=vehicleData.find(function(d){return d.id===vid});
-  if(!v)v=vehicleData[0];
-  var isOffline=v.status==='offline';
-  var hasAlarm=v.status==='alarm';
-  var modeTag=v.mode==='auto'?'<span class="ant-tag ant-tag-processing">自动驾驶</span>':'<span class="ant-tag ant-tag-success">人工驾驶</span>';
-  var statusTag=v.status==='online'?'<span class="ant-tag ant-tag-success">在线</span>':v.status==='alarm'?'<span class="ant-tag" style="color:#fa8c16;background:#fff7e6;border-color:#ffd591">异常中</span>':'<span class="ant-tag ant-tag-default">离线</span>';
-  var alarmHtml='';
-  if(hasAlarm&&v.alarmList){
-    alarmHtml='<div style="margin-top:12px;padding:10px;background:#fff7e6;border:1px solid #ffd591;border-radius:6px"><span style="color:#fa8c16;font-weight:600;font-size:13px">当前存在异常事件</span><div style="margin-top:6px;font-size:12px;color:#00000073">'+getWarningEvents().filter(function(w){return w.vehicleId===v.id}).map(function(w){return '<div>'+getEventCategoryTag(w.category,true)+' '+w.type+'：'+w.desc+'</div>'}).join('')+'</div></div>';
-  }
-  openModal('车辆运行状态详细信息 - '+v.plate,
-    '<div class="ant-descriptions">'+
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号码</div><div class="ant-descriptions-value">'+v.plate+'</div><div class="ant-descriptions-label">VIN</div><div class="ant-descriptions-value" style="font-family:monospace;font-size:12px">'+v.vin+'</div></div>'+
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+v.company+'</div><div class="ant-descriptions-label">自动驾驶等级</div><div class="ant-descriptions-value">'+v.level+'</div></div>'+
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">驾驶模式</div><div class="ant-descriptions-value">'+modeTag+'</div><div class="ant-descriptions-label">在线状态</div><div class="ant-descriptions-value">'+statusTag+'</div></div>'+
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">当前速度</div><div class="ant-descriptions-value">'+v.speed+' km/h</div><div class="ant-descriptions-label">航向角</div><div class="ant-descriptions-value">'+v.heading+'°</div></div>'+
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">当前挡位</div><div class="ant-descriptions-value">'+v.gear+'</div><div class="ant-descriptions-label">最后上报时间</div><div class="ant-descriptions-value">'+v.lastTime+'</div></div>'+
-    '</div>'+alarmHtml+
-    '<div style="margin-top:16px;padding:12px;background:#f5f5f5;border-radius:8px">'+
-      '<div class="flex items-center justify-between">'+
-        '<div><h4 style="font-size:13px;font-weight:600;color:#000000d9">快速操作入口</h4><p style="font-size:11px;color:#00000073;margin-top:2px">点击下方按钮可快速跳转到对应功能页面</p></div>'+
-        '<div class="flex gap-2">'+
-          '<button class="ant-btn ant-btn-sm" onclick="closeModal();openVideoPlayer(\''+v.plate+'\')">查看实时视频</button>'+
-          '<button class="ant-btn ant-btn-sm" onclick="closeModal();openVideoHistory(\''+v.plate+'\')">查看历史录像</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>',
-    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button><button class="ant-btn" onclick="closeModal();showTrajectory(\''+v.id+'\')">查看历史轨迹</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">查看车辆运行监控页面</button>'});
 }
 
 function openVideoPlayer(vid){

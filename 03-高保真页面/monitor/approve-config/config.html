@@ -711,7 +711,6 @@ function applyPublishVersion(){
 /* ============ 目录版本管理 Tab ============ */
 var selectedVersionType=null;
 var selectedVersionCat='道路测试';
-var versionFilter={status:'全部'};
 function switchVersionCatTab(el,cat){
   selectedVersionCat=cat;
   document.querySelectorAll('#panel-version .cat-tabs .cat-tab').forEach(function(t){t.classList.remove('active');});
@@ -731,7 +730,7 @@ function renderVersionTypeTree(){
   }).join(''):'<div class="empty-row" style="padding:30px 0">该大类下暂无类型</div>';
 }
 function selectVersionType(code){
-  selectedVersionType=code;versionFilter.status='全部';
+  selectedVersionType=code;
   renderVersionTypeTree();renderVersionPanel();
 }
 function renderVersionPanel(){
@@ -744,24 +743,27 @@ function renderVersionPanel(){
   var draftItems=catalogData[code].draft;
   var rows=[];
   if(draftItems){rows.push({version:'草稿',status:'草稿',materials:draftItems,publishTime:'-',operator:'-',changeSummary:'编辑中的草稿版本'});}
-  versions.forEach(function(v){if(versionFilter.status==='全部'||v.status===versionFilter.status)rows.push(v);});
+  versions.forEach(function(v){rows.push(v);});
   var body='<div class="catalog-panel-head">'+
     '<div class="title-wrap"><h4>'+t.name+' - 目录版本</h4><span class="field-help" style="margin-top:0">已发布+历史版本数：'+versions.length+(draftItems?'，另有草稿 1':'')+'</span></div>'+
-    '<div class="actions"><label style="font-size:13px;color:#00000073">版本状态 </label>'+
-      '<select id="ver_status" class="ant-input" style="width:130px" onchange="changeVersionFilter()">'+
-        ['全部','草稿','已发布','历史版本'].map(function(s){return '<option'+(versionFilter.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select>'+
-      '<button class="ant-btn" onclick="resetVersionFilter()">重置</button>'+
-    '</div></div>';
+    '</div>';
   body+='<div class="cfg-table-container"><table class="ant-table">'+
-    '<colgroup><col style="width:120px"><col style="width:120px"><col style="width:90px"><col style="width:140px"><col style="width:100px"><col></colgroup>'+
-    '<thead><tr><th>目录版本号</th><th>版本状态</th><th>材料数量</th><th>发布时间</th><th>操作人</th><th>操作</th></tr></thead><tbody>';
+    '<colgroup><col style="width:80px"><col style="width:80px"><col style="width:55px"><col style="width:180px"><col style="width:110px"><col style="min-width:215px"></colgroup>'+
+    '<thead><tr>'+
+      '<th class="col-code">目录版本号</th>'+
+      '<th class="col-status">版本状态</th>'+
+      '<th class="col-num">材料数量（项）</th>'+
+      '<th class="col-code">发布时间</th>'+
+      '<th>操作人</th>'+
+      '<th class="col-action">操作</th>'+
+    '</tr></thead><tbody>';
   if(rows.length){
     rows.forEach(function(v){
       var isDraft=v.status==='草稿';
       body+='<tr>'+
         '<td class="col-code">'+v.version+'</td>'+
-        '<td>'+versionStatusTag(v.status)+'</td>'+
-        '<td>'+(v.materials?v.materials.length:0)+'</td>'+
+        '<td class="col-status">'+versionStatusTag(v.status)+'</td>'+
+        '<td class="col-num">'+(v.materials?v.materials.length:0)+'</td>'+
         '<td class="col-code">'+v.publishTime+'</td>'+
         '<td>'+v.operator+'</td>'+
         '<td class="col-action">'+
@@ -776,12 +778,6 @@ function renderVersionPanel(){
   body+='</tbody></table></div>';
   document.getElementById('versionPanel').innerHTML=body;
 }
-function changeVersionFilter(){
-  versionFilter.status=document.getElementById('ver_status').value;
-  renderVersionPanel();
-}
-function resetVersionFilter(){versionFilter.status='全部';renderVersionPanel();showToast('已重置筛选条件');}
-
 function viewVersionDetail(code,ver){
   ensureCatalog(code);
   var v=catalogData[code].versions.find(function(x){return x.version===ver;});if(!v)return;
@@ -864,10 +860,10 @@ function compareVersions(code,baseVer){
       '<div class="p-3 bg-[#e6f4ff] rounded"><span class="text-xs text-[#00000073]">对比版本</span><br><span class="font-medium text-[#1677ff]">'+targetVer+'</span> ('+v2.publishTime+')</div>'+
     '</div>'+
     '<div class="cfg-table-container"><table class="ant-table diff-table">'+
-    '<colgroup><col style="width:160px"><col style="width:200px"><col><col><col style="width:140px"><col style="width:140px"><col style="width:180px"></colgroup>'+
-    '<thead><tr><th>材料代码</th><th>材料名称</th><th>'+baseVer+' 属性</th><th>'+targetVer+' 属性</th><th>'+baseVer+' 格式</th><th>'+targetVer+' 格式</th><th>变化</th></tr></thead><tbody>'+
+    '<colgroup><col style="width:160px"><col style="width:200px"><col style="width:150px"><col style="width:150px"><col style="width:120px"><col style="width:120px"><col style="width:180px"></colgroup>'+
+    '<thead><tr><th class="col-code">材料代码</th><th>材料名称</th><th>'+baseVer+' 属性</th><th>'+targetVer+' 属性</th><th>'+baseVer+' 格式</th><th>'+targetVer+' 格式</th><th class="col-status">变化</th></tr></thead><tbody>'+
     rowsHtml+'</tbody></table></div>'+summary;
-  openModal('目录版本对比 ('+baseVer+' vs '+targetVer+')',body,{width:960,maskClosable:false,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+  openModal('目录版本对比 ('+baseVer+' vs '+targetVer+')',body,{width:1200,maskClosable:false,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
 }
 function copyAsNewVersion(code,ver){
   ensureCatalog(code);
