@@ -131,7 +131,7 @@ function buildOps(d){
 }
 function buildRow(d,tabKey){
   var ops=buildOps(d);
-  return '<tr><td>'+d.id+'</td><td>'+d.summary+'</td><td>'+typeTag(d)+'</td><td>'+d.org+'</td><td>'+d.creator+'</td><td>'+d.audience+'</td><td>'+statusTag(d)+'</td><td>'+d.time+'</td><td style="min-width:132px;white-space:nowrap"><div class="flex gap-1 whitespace-nowrap">'+ops+'</div></td></tr>';
+  return '<tr><td>'+d.id+'</td><td>'+d.summary+'</td><td>'+typeTag(d)+'</td><td>'+d.org+'</td><td>'+d.creator+'</td><td>'+d.audience+'</td><td>'+statusTag(d)+'</td><td>'+d.time+'</td><td class="flex gap-1">'+ops+'</td></tr>';
 }
 function getCurrentUser(){
   var m=window.location.search.match(/[?&]role=([a-z]+)/);

@@ -348,67 +348,6 @@
     '</div>';
   }
 
-  function renderSidebarMenuIcon(item, hasChildren) {
-    var icon = item && item.icon;
-    if (!icon && hasChildren) {
-      icon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2zm10 14H4V8h16v10z"/></svg>';
-    }
-    if (!icon) {
-      icon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
-    }
-    return '<span class="menu-icon">' + icon + '</span>';
-  }
-
-  function isSidebarCollapsed() {
-    return localStorage.getItem('platform_sidebar_collapsed') === 'true';
-  }
-
-  function renderSidebarCollapseControl(collapsed) {
-    var label = collapsed ? '展开侧栏' : '收起侧栏';
-    return '<div class="sidebar-collapse-control">' +
-      '<button type="button" class="sidebar-collapse-toggle" id="sidebarCollapseToggle" title="' + label + '" aria-label="' + label + '" aria-expanded="' + (!collapsed) + '" onclick="toggleSidebar()">' +
-        '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>' +
-      '</button>' +
-    '</div>';
-  }
-
-  function updateSidebarCollapseState(collapsed) {
-    var sidebar = document.getElementById('sidebar');
-    if (!sidebar) return;
-    sidebar.classList.toggle('sidebar-collapsed', collapsed);
-    localStorage.setItem('platform_sidebar_collapsed', collapsed ? 'true' : 'false');
-
-    var toggle = document.getElementById('sidebarCollapseToggle');
-    if (toggle) {
-      var label = collapsed ? '展开侧栏' : '收起侧栏';
-      toggle.setAttribute('title', label);
-      toggle.setAttribute('aria-label', label);
-      toggle.setAttribute('aria-expanded', String(!collapsed));
-    }
-  }
-
-  function toggleSidebar() {
-    var sidebar = document.getElementById('sidebar');
-    if (!sidebar) return;
-    updateSidebarCollapseState(!sidebar.classList.contains('sidebar-collapsed'));
-  }
-
-  function renderUserMenu(cfg) {
-    return '<div class="user-menu" id="userMenu">' +
-      '<button type="button" class="user-info" aria-haspopup="menu" aria-expanded="false">' +
-        '<span class="avatar">' + cfg.avatar + '</span>' +
-        '<span class="user-name">' + cfg.userDisplay + '</span>' +
-        '<svg class="user-menu-arrow" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="m7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>' +
-      '</button>' +
-      '<div class="user-dropdown" role="menu" style="display:none">' +
-        '<button type="button" class="user-menu-option" role="menuitem" data-user-action="logout" title="原型占位，不执行登录状态变更">' +
-          '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M10 17v-2h4V9h-4V7l-5 5 5 5zm9-14H9a2 2 0 0 0-2 2v3h2V5h10v14H9v-3H7v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/></svg>' +
-          '<span>退出登录</span>' +
-        '</button>' +
-      '</div>' +
-    '</div>';
-  }
-
   function renderSidebarHTML(data, basePath, activeKey, level) {
     level = level || 1;
     var html = '';
@@ -421,8 +360,10 @@
       if (hasChildren) {
         var expandClass = expanded ? ' expanded' : '';
         html += '<div class="menu-group' + expandClass + '" data-key="' + item.key + '">';
-        html += '<div class="menu-item level-' + level + (expanded ? ' menu-item-expanded' : '') + '" data-key="' + item.key + '" title="' + item.label + '" aria-expanded="' + expanded + '">';
-        html += renderSidebarMenuIcon(item, true);
+        html += '<div class="menu-item level-' + level + (expanded ? ' menu-item-expanded' : '') + '" data-key="' + item.key + '">';
+        if (level === 1 && item.icon) {
+          html += '<span class="menu-icon">' + item.icon + '</span>';
+        }
         html += '<span class="menu-text">' + item.label + '</span>';
         html += '<span class="menu-arrow"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></span>';
         html += '</div>';
@@ -432,8 +373,10 @@
         html += '</div>';
       } else {
         var activeClass = isActive ? ' menu-item-active' : '';
-        html += '<a class="menu-item level-' + level + activeClass + '" href="' + basePath + item.path + '" data-key="' + item.key + '" title="' + item.label + '">';
-        html += renderSidebarMenuIcon(item, false);
+        html += '<a class="menu-item level-' + level + activeClass + '" href="' + basePath + item.path + '" data-key="' + item.key + '">';
+        if (level === 1 && item.icon) {
+          html += '<span class="menu-icon">' + item.icon + '</span>';
+        }
         html += '<span class="menu-text">' + item.label + '</span>';
         html += '</a>';
       }
@@ -492,10 +435,27 @@
   function renderHomeSidebar(basePath) {
     return '<nav class="sidebar-menu sidebar-home-menu">' +
       '<a class="menu-item level-1 menu-item-active" href="' + basePath + 'layout.html">' +
-        renderSidebarMenuIcon(null, false) +
         '<span class="menu-text">工作台</span>' +
       '</a>' +
     '</nav>';
+  }
+
+  function renderBreadcrumb(activeKey) {
+    if (activeKey === 'home') {
+      return '<nav class="flex items-center text-sm"><span class="text-[#000000d9]">首页</span></nav>';
+    }
+    var info = findPageInfo(activeKey, MENU_DATA);
+    if (!info) return '';
+    var html = '<nav class="flex items-center text-sm">';
+    html += '<a href="' + getBasePath() + 'layout.html" class="text-[#00000073] hover:text-[#1677ff]">首页</a>';
+    for (var i = 0; i < info.parents.length; i++) {
+      html += '<span class="mx-2 text-[#00000040]">/</span>';
+      html += '<span class="text-[#00000073]">' + info.parents[i].label + '</span>';
+    }
+    html += '<span class="mx-2 text-[#00000040]">/</span>';
+    html += '<span class="text-[#000000d9]">' + info.item.label + '</span>';
+    html += '</nav>';
+    return html;
   }
 
   function injectStyles() {
@@ -504,36 +464,25 @@
       'html,body{height:100%;font-family:"PingFang SC","Microsoft YaHei","SF UI Text",Arial,DIN,sans-serif}',
       '#app{display:flex!important;flex-direction:column!important;height:100vh!important;overflow:hidden!important}',
       '#admin-body{display:flex!important;flex:1!important;min-height:0!important;overflow:hidden!important}',
-      '#sidebar{width:224px!important;min-width:224px!important;max-width:224px!important;height:auto!important;background:#001529!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;flex-shrink:0!important;transition:width .2s ease,min-width .2s ease,max-width .2s ease}',
-      '#sidebar.sidebar-collapsed{width:72px!important;min-width:72px!important;max-width:72px!important}',
-      '.sidebar-menu{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0}',
+      '#sidebar{width:224px!important;min-width:224px!important;max-width:224px!important;height:auto!important;background:#fff!important;border-right:1px solid #f0f0f0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;flex-shrink:0!important}',
+      '.sidebar-menu{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 4px}',
       '.sidebar-menu::-webkit-scrollbar{width:4px}',
-      '.sidebar-menu::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}',
-      '.menu-item{display:flex;align-items:center;padding:0 16px;height:40px;line-height:40px;color:rgba(255,255,255,.65);cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.menu-item:hover{color:#fff;background:rgba(255,255,255,.08)}',
-      '.menu-item.level-1{padding-left:24px;font-size:14px}',
-      '.menu-item.level-2{padding-left:48px;font-size:14px}',
-      '.menu-item.level-3{padding-left:72px;font-size:14px}',
-      '.menu-item-active{color:#fff!important;background:#1677ff!important}',
+      '.sidebar-menu::-webkit-scrollbar-thumb{background:#d9d9d9;border-radius:2px}',
+      '.menu-item{display:flex;align-items:center;padding:0 16px;height:40px;line-height:40px;color:#000000d9;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:6px;margin:2px 4px}',
+      '.menu-item:hover{color:#1677ff;background:#f5f5f5}',
+      '.menu-item.level-1{padding-left:16px;font-size:14px;font-weight:600}',
+      '.menu-item.level-2{padding-left:32px;font-size:14px;font-weight:400}',
+      '.menu-item.level-3{padding-left:48px;font-size:14px}',
+      '.menu-item-active{color:#1677ff!important;background:#e6f4ff!important;font-weight:600!important}',
       '.menu-icon{margin-right:8px;display:inline-flex;align-items:center;flex-shrink:0}',
       '.menu-text{flex:1;overflow:hidden;text-overflow:ellipsis}',
       '.menu-arrow{margin-left:auto;transition:transform .2s;display:inline-flex;align-items:center;flex-shrink:0}',
       '.menu-item-expanded .menu-arrow{transform:rotate(180deg)}',
       '.menu-submenu{overflow:hidden;transition:max-height .2s ease}',
-      '.sidebar-collapse-control{height:48px;min-height:48px;padding:8px 12px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center}',
-      '.sidebar-collapse-toggle{width:100%;height:32px;border:0;background:transparent;color:rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;transition:all .2s}',
-      '.sidebar-collapse-toggle:hover{color:#fff;background:rgba(255,255,255,.08)}',
-      '.sidebar-collapse-toggle svg{transition:transform .2s}',
-      '#sidebar.sidebar-collapsed .sidebar-collapse-control{padding:8px 12px}',
-      '#sidebar.sidebar-collapsed .sidebar-collapse-toggle svg{transform:rotate(180deg)}',
-      '#sidebar.sidebar-collapsed .sidebar-menu{padding:8px 0}',
-      '#sidebar.sidebar-collapsed .menu-item{width:48px;margin:2px auto;padding:0;justify-content:center;border-radius:4px}',
-      '#sidebar.sidebar-collapsed .menu-icon{margin-right:0}',
-      '#sidebar.sidebar-collapsed .menu-text,#sidebar.sidebar-collapsed .menu-arrow{display:none}',
-      '#sidebar.sidebar-collapsed .menu-submenu{display:none!important}',
       '#topnav{height:64px!important;min-height:64px!important;max-height:64px!important;background:#fff!important;border-bottom:1px solid #f0f0f0!important;display:flex!important;align-items:stretch!important;justify-content:space-between!important;padding:0!important;flex-shrink:0!important;box-shadow:0 1px 3px rgba(0,0,0,.02)!important}',
       '.topnav-left{display:flex;align-items:stretch;min-width:0;flex:1}',
-      '.topnav-brand{width:224px;min-width:224px;padding:0 20px;display:flex;align-items:center;font-size:16px;font-weight:600;color:#000000d9;white-space:nowrap;text-decoration:none;border-right:1px solid #f0f0f0}',
+      '.topnav-brand{width:224px;min-width:224px;padding:0 20px;display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;color:#000000d9;white-space:nowrap;text-decoration:none;border-right:1px solid #f0f0f0}',
+      '.topnav-brand svg{color:#1677ff;flex-shrink:0}',
       '.top-module-nav{display:flex;align-items:stretch;min-width:0;overflow-x:auto}',
       '.top-module-nav::-webkit-scrollbar{display:none}',
       '.top-module{height:64px;display:inline-flex;align-items:center;gap:8px;padding:0 20px;color:#000000d9;text-decoration:none;font-size:15px;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}',
@@ -543,16 +492,8 @@
       '.topnav-right{display:flex;align-items:center;gap:16px}',
       '.topnav-right .notification{position:relative;cursor:pointer;color:#00000073}',
       '.topnav-right .notification .badge{position:absolute;top:-4px;right:-4px;background:#ff4d4f;color:#fff;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:8px;padding:0 4px}',
-      '.user-menu{position:relative;display:flex;align-items:center}',
-      '.topnav-right .user-info{display:flex;align-items:center;gap:8px;cursor:pointer;color:#000000d9;border:0;background:transparent;padding:4px;border-radius:4px;font:inherit}',
-      '.topnav-right .user-info:hover{background:#f5f5f5}',
+      '.topnav-right .user-info{display:flex;align-items:center;gap:8px;cursor:pointer;color:#000000d9}',
       '.topnav-right .avatar{width:28px;height:28px;border-radius:50%;background:#1677ff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500}',
-      '.user-name{white-space:nowrap}',
-      '.user-menu-arrow{color:#00000073;transition:transform .2s}',
-      '.user-menu.open .user-menu-arrow{transform:rotate(180deg)}',
-      '.user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:128px;padding:4px;background:#fff;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12);z-index:100}',
-      '.user-menu-option{width:100%;height:32px;padding:0 8px;border:0;background:transparent;color:#000000d9;font:inherit;font-size:14px;display:flex;align-items:center;gap:8px;text-align:left;border-radius:4px;cursor:pointer}',
-      '.user-menu-option:hover{color:#ff4d4f;background:#fff2f0}',
       // 角色切换组件
       '.role-switcher{position:relative;display:inline-flex;align-items:center;cursor:pointer;user-select:none}',
       '.role-current{display:inline-flex;align-items:center;height:28px;padding:0 10px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;color:#000000d9;background:#fff;gap:4px;white-space:nowrap;transition:all .2s}',
@@ -703,42 +644,12 @@
       if (isExpanded) {
         group.classList.remove('expanded');
         menuItem.classList.remove('menu-item-expanded');
-        menuItem.setAttribute('aria-expanded', 'false');
         submenu.style.display = 'none';
       } else {
         group.classList.add('expanded');
         menuItem.classList.add('menu-item-expanded');
-        menuItem.setAttribute('aria-expanded', 'true');
         submenu.style.display = 'block';
       }
-    });
-  }
-
-  function initUserMenuEvents() {
-    var userMenu = document.getElementById('userMenu');
-    if (!userMenu) return;
-    var trigger = userMenu.querySelector('.user-info');
-    var dropdown = userMenu.querySelector('.user-dropdown');
-    if (!trigger || !dropdown) return;
-
-    trigger.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var isOpen = dropdown.style.display === 'block';
-      dropdown.style.display = isOpen ? 'none' : 'block';
-      userMenu.classList.toggle('open', !isOpen);
-      trigger.setAttribute('aria-expanded', String(!isOpen));
-    });
-    dropdown.addEventListener('click', function (e) {
-      if (!e.target.closest('[data-user-action="logout"]')) return;
-      // 原型仅保留退出入口，不改变当前会话或角色状态。
-      dropdown.style.display = 'none';
-      userMenu.classList.remove('open');
-      trigger.setAttribute('aria-expanded', 'false');
-    });
-    document.addEventListener('click', function () {
-      dropdown.style.display = 'none';
-      userMenu.classList.remove('open');
-      trigger.setAttribute('aria-expanded', 'false');
     });
   }
 
@@ -1004,12 +915,10 @@
     // 侧边栏
     var sidebar = document.getElementById('sidebar');
     if (sidebar) {
-      var sidebarCollapsed = isSidebarCollapsed();
-      sidebar.className = sidebarCollapsed ? 'sidebar-collapsed' : '';
-      sidebar.style.cssText = 'width:224px;min-width:224px;max-width:224px;height:auto;background:#001529;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0';
-      sidebar.innerHTML = (activeModule
+      sidebar.style.cssText = 'width:224px;min-width:224px;max-width:224px;height:auto;background:#fff;border-right:1px solid #f0f0f0;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0';
+      sidebar.innerHTML = activeModule
         ? '<nav class="sidebar-menu">' + renderSidebarHTML(activeModule.children || [], basePath, PAGE_ID) + '</nav>'
-        : renderHomeSidebar(basePath)) + renderSidebarCollapseControl(sidebarCollapsed);
+        : renderHomeSidebar(basePath);
     }
 
     // 顶栏
@@ -1019,6 +928,7 @@
       topnav.innerHTML =
         '<div class="topnav-left">' +
           '<a class="topnav-brand" href="' + basePath + 'layout.html" aria-label="返回工作台">' +
+            '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2a8 8 0 110 16 8 8 0 010-16zm-1 3v5.59L7.7 15.88l1.4 1.4L13 13.41V7h-2z"/></svg>' +
             '<span>智能网联汽车安全监测平台</span>' +
           '</a>' +
           '<nav class="top-module-nav" aria-label="一级模块导航">' + renderGlobalNavigation(filteredMenu, basePath, activeModuleKey) + '</nav>' +
@@ -1026,12 +936,11 @@
         '<div class="topnav-right" style="padding:0 24px">' +
           '<span class="notification"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg><span class="badge">3</span></span>' +
           renderRoleSwitcher() +
-          renderUserMenu(cfg) +
+          '<span class="user-info"><span class="avatar">' + cfg.avatar + '</span><span>' + cfg.userDisplay + '</span></span>' +
         '</div>';
     }
 
     initSidebarEvents();
-    initUserMenuEvents();
     initRoleSwitcherEvents();
   }
 
@@ -1149,7 +1058,7 @@
     '评估等级': ['全部','优秀','良好','一般','较差'],
     '生成方式': ['全部','自动生成','人工评估'],
     '信息类型': ['全部','公告公示','办事指南','测试示范报告'],
-    '发布状态': ['全部','草稿','待审核','已退回','已发布','已下架'],
+    '发布状态': ['全部','草稿','待审核','已发布','已下架'],
     '适用对象': ['全部','测试主体','第三方机构','社会公众','监管部门'],
     '报告周期': ['全部','月度','季度','年度'],
     '子类型': ['全部','系统公告','重要通知','政策发布','会议通知'],
@@ -1234,7 +1143,6 @@
   window.openModal = openModal;
   window.closeModal = closeModal;
   window.switchRole = switchRole;
-  window.toggleSidebar = toggleSidebar;
   window.toggleModalFullscreen = toggleModalFullscreen;
 
   if (document.readyState === 'loading') {

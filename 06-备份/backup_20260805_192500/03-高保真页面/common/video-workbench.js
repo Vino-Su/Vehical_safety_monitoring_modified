@@ -231,7 +231,6 @@ var VideoWorkbench=(function(){
     var st=instances[id];if(!st)return;
     var v=findVehicle(st.vehicleId);
     st.mode='playback';
-    st.playbackDate=(opts&&opts.playbackDate)||st.playbackDate;
     st.startTime=(opts&&opts.startTime)||st.startTime||'08:00';
     st.endTime=(opts&&opts.endTime)||st.endTime||'14:32';
     st.currentTime=(opts&&opts.currentTime)||st.currentTime||st.startTime;

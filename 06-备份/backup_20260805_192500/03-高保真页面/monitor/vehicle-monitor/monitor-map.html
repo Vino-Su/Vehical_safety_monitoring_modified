@@ -138,14 +138,6 @@
     .vehicle-plate-label{position:absolute;left:50%;top:34px;transform:translateX(-50%);height:18px;line-height:18px;padding:0 6px;border-radius:9px;background:#fff;border:1px solid #d9d9d9;color:#000000d9;font-size:10px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.12);pointer-events:none}
     .fallback-map-layer{position:absolute;inset:0;z-index:12;pointer-events:none}
     .fallback-map-layer .fallback-vehicle-point{position:absolute;transform:translate(-50%,-50%);pointer-events:auto}
-    .event-replay-card{position:absolute;top:16px;left:16px;z-index:755;width:264px;border:1px solid #ffd591;border-radius:8px;background:rgba(255,255,255,.98);box-shadow:0 6px 18px rgba(0,0,0,.14);padding:12px 14px;color:#000000d9}
-    .event-replay-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-    .event-replay-title{font-size:13px;font-weight:600;line-height:20px}
-    .event-replay-close{width:20px;height:20px;border:0;background:transparent;color:#00000040;cursor:pointer;font-size:17px;line-height:18px;padding:0}
-    .event-replay-close:hover{color:#000000d9}
-    .event-replay-type{font-size:13px;font-weight:600;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .event-replay-line{font-size:12px;color:#00000073;line-height:19px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .event-replay-window{margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0;font-size:12px;color:#000000d9;line-height:19px}
     #legendPanel{transition:bottom .25s ease;max-height:calc(100% - 72px);overflow:auto}
     .trajectory-panel{position:absolute;left:12px;right:12px;bottom:58px;z-index:785;background:rgba(255,255,255,.98);border:1px solid #e8e8e8;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);backdrop-filter:blur(4px);transition:bottom .25s ease}
     .traj-shell{padding:8px 10px;display:flex;flex-direction:column;gap:7px}
@@ -241,7 +233,6 @@
             <div class="map-card">
               <div id="mapContainer" class="w-full h-full"></div>
               <div id="fallbackVehicleLayer" class="fallback-map-layer"></div>
-              <div id="eventReplayCard" class="event-replay-card" style="display:none"></div>
               <div class="map-toolbar">
                 <button class="map-tool-btn" onclick="toggleLayerPanel()" title="图层控制" aria-label="图层控制">
                   <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/><path d="m3 18 9 5 9-5"/></svg>
@@ -1062,7 +1053,6 @@ function showVehicleInfo(v){
         '<div class="iw-alarm-row">'+w.location+'</div>'+
         '<div class="iw-alarm-row">触发规则：'+w.rule+'</div>'+
         '<div class="iw-alarm-row">状态：'+w.status+'</div>'+
-        '<div style="margin-top:6px"><button class="ant-btn ant-btn-sm" data-warning-replay-id="'+w.id+'">查看回放</button></div>'+
       '</div>';
     }).join('')+'</div>';
   }
@@ -1186,115 +1176,39 @@ function buildTrajectoryData(v,timeFrom,timeTo){
   return pts;
 }
 
-function showTrajectory(vid,opts){
-  opts=opts||{};
+function showTrajectory(vid){
   var v=vehicleData.find(function(d){return d.id===vid});
   if(!v)return;
-  var now=new Date();
-  var playbackDate=opts.playbackDate||now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  var startTime=opts.startTime||'08:00';
-  var endTime=opts.endTime||'14:32';
   clearTrajectoryLayers();
-  var points=buildTrajectoryData(v,startTime,endTime);
-  var currentIndex=0;
-  if(opts.currentTime){
-    var currentDiff=Infinity;
-    for(var i=0;i<points.length;i++){
-      var pointDiff=Math.abs(timeToMinutes(points[i].timeStr)-timeToMinutes(opts.currentTime));
-      if(pointDiff<currentDiff){currentDiff=pointDiff;currentIndex=i}
-    }
-  }
-  trajectoryState={vid:vid,points:points,currentIndex:currentIndex,currentTime:points[currentIndex].timeStr,playing:false,speed:1,timer:null,startTime:points[0].timeStr,endTime:points[points.length-1].timeStr,playbackDate:playbackDate,movedMarker:null,passedLine:null};
+  var points=buildTrajectoryData(v,'08:00','14:32');
+  trajectoryState={vid:vid,points:points,currentIndex:0,currentTime:points[0].timeStr,playing:false,speed:1,timer:null,startTime:points[0].timeStr,endTime:points[points.length-1].timeStr,movedMarker:null,passedLine:null};
   createTrajectoryLayers(v,points);
   openTrajectoryPanel(v);
-  if(currentIndex>0)seekTrajectory(currentIndex);
   // 进入轨迹回放：车辆列表收起让位，视频面板若已挂载则进入回放跟随态
   toggleVehicleDrawer(true);
   var vp=VideoWorkbench.getInstance('vwVideoPane');
   if(vp&&contextMode==='video'){
-    VideoWorkbench.selectVehicle('vwVideoPane',vid);
-    VideoWorkbench.enterPlayback('vwVideoPane',{timeSource:'external',playbackDate:playbackDate,startTime:points[0].timeStr,endTime:points[points.length-1].timeStr,currentTime:points[currentIndex].timeStr});
+    VideoWorkbench.enterPlayback('vwVideoPane',{timeSource:'external',startTime:points[0].timeStr,endTime:points[points.length-1].timeStr,currentTime:points[0].timeStr});
   }
 }
-
-function getWarningReplayWindow(w){
-  var eventStart=new Date(String(w.fullTime||'').replace(' ','T'));
-  if(isNaN(eventStart.getTime()))return null;
-  var replayStart=new Date(eventStart.getTime()-60000);
-  function pad(n){return String(n).padStart(2,'0')}
-  function dateText(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
-  function timeText(d){return pad(d.getHours())+':'+pad(d.getMinutes())}
-  return {playbackDate:dateText(replayStart),startTime:timeText(replayStart),endTime:timeText(eventStart),currentTime:timeText(eventStart)};
-}
-
-function showEventReplayCard(w,windowRange){
-  var card=document.getElementById('eventReplayCard');
-  if(!card)return;
-  card.innerHTML='<div class="event-replay-head"><div class="event-replay-title">异常事件回放</div><button class="event-replay-close" data-close-event-replay aria-label="关闭异常事件回放卡片">×</button></div>'+
-    '<div class="event-replay-type">'+getEventCategoryTag(w.category,true)+' '+w.type+'</div>'+
-    '<div class="event-replay-line">'+w.plate+' | '+w.company+'</div>'+
-    '<div class="event-replay-line">发生时间：'+w.fullTime+'</div>'+
-    '<div class="event-replay-line">'+w.location+'</div>'+
-    '<div class="event-replay-window">回放范围：'+windowRange.startTime+' - '+windowRange.endTime+'</div>';
-  card.style.display='';
-}
-
-function closeEventReplayCard(){
-  var card=document.getElementById('eventReplayCard');
-  if(card)card.style.display='none';
-}
-
-function replayWarningEvent(id){
-  var w=getWarningEvents().find(function(event){return event.id===id});
-  if(!w)return;
-  var windowRange=getWarningReplayWindow(w);
-  if(!windowRange){showToast('异常事件时间无效，无法打开回放');return}
-  var v=vehicleData.find(function(vehicle){return vehicle.id===w.vehicleId});
-  if(!v){showToast('未找到异常事件关联车辆');return}
-  closeInfoWindow();
-  selectedVehicleId=v.id;
-  highlightSelectedVehicle();
-  if(map)setMapView(v.lon,v.lat,16);
-  switchContextMode('video');
-  showTrajectory(v.id,windowRange);
-  showEventReplayCard(w,windowRange);
-  showToast('已打开'+v.plate+'的异常事件回放');
-}
-window.replayWarningEvent=replayWarningEvent;
-window.closeEventReplayCard=closeEventReplayCard;
-document.addEventListener('click',function(event){
-  var replayButton=event.target.closest('[data-warning-replay-id]');
-  if(replayButton){
-    event.preventDefault();
-    event.stopPropagation();
-    replayWarningEvent(replayButton.getAttribute('data-warning-replay-id'));
-    return;
-  }
-  if(event.target.closest('[data-close-event-replay]')){
-    event.preventDefault();
-    event.stopPropagation();
-    closeEventReplayCard();
-  }
-},true);
 
 function openTrajectoryPanel(v){
   var p=trajectoryState.points[trajectoryState.currentIndex];
   var now=new Date();
-  var todayStr=trajectoryState.playbackDate||now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var todayStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   var html='<div class="traj-shell">'+
     '<div class="traj-top">'+
       '<div class="traj-query">'+
         '<div class="traj-query-group"><span class="traj-query-label">时间范围</span>'+
           '<input type="date" id="trajHistDate" value="'+todayStr+'" onchange="reloadTrajectoryHistory()" style="width:112px">'+
-          '<input type="time" id="trajHistTimeFrom" value="'+trajectoryState.startTime+'" onchange="reloadTrajectoryHistory()" style="width:82px">'+
+          '<input type="time" id="trajHistTimeFrom" value="08:00" onchange="reloadTrajectoryHistory()" style="width:82px">'+
           '<span class="traj-query-label">-</span>'+
-          '<input type="time" id="trajHistTimeTo" value="'+trajectoryState.endTime+'" onchange="reloadTrajectoryHistory()" style="width:82px">'+
+          '<input type="time" id="trajHistTimeTo" value="14:32" onchange="reloadTrajectoryHistory()" style="width:82px">'+
         '</div>'+
         '<div class="traj-query-group"><span class="traj-query-label">车辆</span>'+
           '<select id="trajHistVehicle" onchange="reloadTrajectoryHistory()" style="width:118px">'+vehicleData.map(function(d){return '<option value="'+d.id+'"'+(d.id===v.id?' selected':'')+'>'+d.plate+' ('+d.company+')</option>'}).join('')+'</select>'+
         '</div>'+
         '<button class="ant-btn ant-btn-sm ant-btn-primary" onclick="reloadTrajectoryHistory()" style="height:28px;font-size:12px;padding:0 14px">查询</button>'+
-        '<button class="ant-btn ant-btn-sm" onclick="openTrajectoryVideoReview()" style="height:28px;font-size:12px;padding:0 14px">视频回看</button>'+
       '</div>'+
       '<div class="traj-metrics">'+
         '<div class="traj-metric"><div class="traj-metric-label">当前时间</div><div id="trajCurTime" class="traj-metric-value">'+p.timeStr+'</div></div>'+
@@ -1342,33 +1256,11 @@ function reloadTrajectoryHistory(){
   clearTrajectoryLayers();
   var timeFrom=document.getElementById('trajHistTimeFrom')?document.getElementById('trajHistTimeFrom').value:'08:00';
   var timeTo=document.getElementById('trajHistTimeTo')?document.getElementById('trajHistTimeTo').value:'14:32';
-  var playbackDate=document.getElementById('trajHistDate')?document.getElementById('trajHistDate').value:trajectoryState.playbackDate;
   var points=buildTrajectoryData(v,timeFrom,timeTo);
-  trajectoryState.vid=vid;trajectoryState.points=points;trajectoryState.currentIndex=0;trajectoryState.currentTime=points[0].timeStr;trajectoryState.startTime=points[0].timeStr;trajectoryState.endTime=points[points.length-1].timeStr;trajectoryState.playbackDate=playbackDate;trajectoryState.playing=false;
+  trajectoryState.vid=vid;trajectoryState.points=points;trajectoryState.currentIndex=0;trajectoryState.playing=false;
   trajectoryState.movedMarker=null;trajectoryState.passedLine=null;
   createTrajectoryLayers(v,points);
   openTrajectoryPanel(v);
-}
-
-function openTrajectoryVideoReview(){
-  if(!trajectoryState.points||!trajectoryState.points.length){showToast('请先查询轨迹回放');return}
-  var v=vehicleData.find(function(d){return d.id===trajectoryState.vid});
-  if(!v){showToast('未找到当前轨迹车辆');return}
-  var dateInput=document.getElementById('trajHistDate');
-  var playbackDate=(dateInput&&dateInput.value)||trajectoryState.playbackDate;
-  trajectoryState.playbackDate=playbackDate;
-  selectedVehicleId=v.id;
-  switchContextMode('video');
-  VideoWorkbench.selectVehicle('vwVideoPane',v.id);
-  VideoWorkbench.enterPlayback('vwVideoPane',{
-    timeSource:'external',
-    playbackDate:playbackDate,
-    startTime:trajectoryState.startTime,
-    endTime:trajectoryState.endTime,
-    currentTime:trajectoryState.currentTime
-  });
-  TimeClock.set(trajectoryState.currentTime,'trajectory');
-  showToast('已打开'+v.plate+'的视频回看');
 }
 
 function closeTrajectoryPanel(){
@@ -1379,7 +1271,6 @@ function closeTrajectoryPanel(){
   // 关闭回放时，若视频面板处于回放态则切回实时，并恢复车辆列表展开
   var vp=VideoWorkbench.getInstance('vwVideoPane');
   if(vp&&vp.mode==='playback'&&vp.timeSource==='external'){VideoWorkbench.backToLive('vwVideoPane')}
-  closeEventReplayCard();
   toggleVehicleDrawer(false);
 }
 
