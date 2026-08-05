@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试示范审批配置 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .config-intro{display:flex;gap:16px;flex-wrap:wrap;padding:12px 16px;background:#e6f4ff;border:1px solid #91caff;border-radius:8px;margin-bottom:16px;font-size:13px;color:#0958d9;line-height:20px}
+    .config-intro .intro-item{display:flex;align-items:center;gap:6px}
+    .config-intro .intro-dot{width:6px;height:6px;border-radius:50%;background:#1677ff;flex-shrink:0}
+    .filter-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .cfg-table-container{overflow-x:auto}
+    .cfg-table-container table{min-width:100%;table-layout:fixed}
+    .cfg-desc{font-size:13px;color:#00000073;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cfg-muted td{color:#00000073!important;background:#fafafa}
+    .tag-list{display:flex;flex-wrap:wrap;gap:4px}
+    .tag-list .ant-tag{margin:0}
+    .tag-stop{color:#00000040!important;background:#f5f5f5!important;border-color:#d9d9d9!important}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .panel-head h4{font-size:14px;font-weight:600;color:#000000d9}
+    /* 表单 */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-grid .full{grid-column:1/-1}
+    .field-label{font-size:14px;color:#000000d9;margin-bottom:6px;line-height:20px}
+    .field-label .req{color:#ff4d4f;margin-right:4px}
+    .field-help{font-size:12px;color:#00000073;line-height:18px;margin-top:4px}
+    .field-error{font-size:12px;color:#ff4d4f;line-height:18px;margin-top:4px;display:none}
+    .field-error.show{display:block}
+    .ant-input.err,.ant-input.err:focus{border-color:#ff4d4f!important;box-shadow:0 0 0 2px rgba(255,77,79,.1)!important}
+    textarea.ant-input{height:auto!important;padding:6px 12px!important;line-height:20px;resize:vertical}
+    /* 多选枚举 */
+    .multi-enum-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .multi-enum-grid.err{border:1px solid #ffccc7;border-radius:6px;padding:8px}
+    .multi-enum-option{display:flex;align-items:center;gap:8px;min-height:34px;padding:7px 10px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;font-size:13px;color:#000000d9;line-height:18px;cursor:pointer;transition:all .2s}
+    .multi-enum-option:hover{border-color:#4096ff;background:#f0f7ff}
+    .multi-enum-option.selected{border-color:#91caff;background:#e6f4ff;color:#1677ff}
+    .multi-enum-option.disabled{cursor:not-allowed;background:#f5f5f5;color:#00000040;border-color:#d9d9d9}
+    .multi-enum-option.disabled:hover{border-color:#d9d9d9;background:#f5f5f5}
+    .multi-enum-option input{width:14px;height:14px;flex-shrink:0}
+    .multi-enum-option .stop-flag{font-size:11px;color:#00000040;margin-left:auto}
+    /* 开关 */
+    .cfg-switch{width:42px;height:22px;border:none;border-radius:11px;background:#d9d9d9;position:relative;cursor:pointer;transition:background .2s;padding:0;flex-shrink:0}
+    .cfg-switch span{position:absolute;width:18px;height:18px;top:2px;left:2px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s}
+    .cfg-switch.checked{background:#1677ff}
+    .cfg-switch.checked span{left:22px}
+    .inline-alert{display:flex;gap:8px;padding:10px 12px;border-radius:6px;font-size:13px;line-height:20px;margin-bottom:16px}
+    .inline-alert.info{background:#e6f4ff;color:#0958d9;border:1px solid #91caff}
+    .inline-alert.warn{background:#fffbe6;color:#ad6800;border:1px solid #ffe58f}
+    .confirm-body{font-size:14px;color:#000000d9;line-height:22px}
+    .confirm-tip{margin-top:12px;font-size:13px;color:#00000073;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;padding:10px 12px;line-height:20px}
+    .toast-msg{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;border:1px solid #f0f0f0;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);padding:10px 22px;font-size:14px;color:#000000d9;white-space:nowrap}
+    @media(max-width:1200px){.form-grid,.multi-enum-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>测试示范审批配置</h2></div>
+
+      <!-- Tab 页签区 -->
+      <div class="ant-tabs">
+        <span class="ant-tab" onclick="switchTab(this,'subject')">测试示范主体配置</span>
+        <span class="ant-tab" onclick="switchTab(this,'object')">测试示范对象配置</span>
+        <span class="ant-tab active" onclick="switchTab(this,'type')">测试示范类型配置</span>
+      </div>
+
+      <!-- ============ 主体配置 Tab ============ -->
+      <div id="panel-subject" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>主体名称/代码</label><input id="sub_kw" class="ant-input" placeholder="主体名称或代码" style="width:200px"></div>
+            <div class="filter-item"><label>主体状态</label><select id="sub_status" class="ant-input" style="width:120px"><option>全部</option><option>已启用</option><option>已停用</option></select></div>
+            <div class="filter-item"><label>更新时间</label><input id="sub_start" type="date" class="ant-input" style="width:150px"><span style="color:#00000073">-</span><input id="sub_end" type="date" class="ant-input" style="width:150px"></div>
+            <div class="filter-actions">
+              <button class="ant-btn ant-btn-primary" onclick="querySubject()">查询</button>
+              <button class="ant-btn" onclick="resetSubject()">重置</button>
+            </div>
+            <button class="ant-btn ant-btn-primary" style="margin-left:auto" onclick="openSubjectForm('add')">+ 新增主体</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cfg-table-container">
+            <table class="ant-table">
+              <colgroup><col style="width:160px"><col style="width:180px"><col><col style="width:90px"><col style="width:120px"><col style="width:180px"></colgroup>
+              <thead><tr><th>主体代码</th><th>主体名称</th><th>主体说明</th><th>状态</th><th>更新时间</th><th>操作</th></tr></thead>
+              <tbody id="subjectTbody"></tbody>
+            </table>
+          </div>
+          <div id="subjectPagination"></div>
+        </div>
+      </div>
+
+      <!-- ============ 对象配置 Tab ============ -->
+      <div id="panel-object" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>对象名称/代码</label><input id="obj_kw" class="ant-input" placeholder="对象名称或代码" style="width:200px"></div>
+            <div class="filter-item"><label>对象状态</label><select id="obj_status" class="ant-input" style="width:120px"><option>全部</option><option>已启用</option><option>已停用</option></select></div>
+            <div class="filter-item"><label>更新时间</label><input id="obj_start" type="date" class="ant-input" style="width:150px"><span style="color:#00000073">-</span><input id="obj_end" type="date" class="ant-input" style="width:150px"></div>
+            <div class="filter-actions">
+              <button class="ant-btn ant-btn-primary" onclick="queryObject()">查询</button>
+              <button class="ant-btn" onclick="resetObject()">重置</button>
+            </div>
+            <button class="ant-btn ant-btn-primary" style="margin-left:auto" onclick="openObjectForm('add')">+ 新增对象</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cfg-table-container">
+            <table class="ant-table">
+              <colgroup><col style="width:160px"><col style="width:180px"><col><col style="width:90px"><col style="width:120px"><col style="width:180px"></colgroup>
+              <thead><tr><th>对象代码</th><th>对象名称</th><th>对象说明</th><th>状态</th><th>更新时间</th><th>操作</th></tr></thead>
+              <tbody id="objectTbody"></tbody>
+            </table>
+          </div>
+          <div id="objectPagination"></div>
+        </div>
+      </div>
+
+      <!-- ============ 类型配置 Tab ============ -->
+      <div id="panel-type">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>类型名称/代码</label><input id="type_kw" class="ant-input" placeholder="类型名称或代码" style="width:190px"></div>
+            <div class="filter-item"><label>业务大类</label><select id="type_cat" class="ant-input" style="width:130px"><option>全部</option><option>道路测试</option><option>示范应用</option><option>商业化试点</option></select></div>
+            <div class="filter-item"><label>申请子类型</label><select id="type_sub" class="ant-input" style="width:160px"><option>全部</option><option>初次申请</option><option>延期申请</option><option>变更申请</option><option>新增相同配置车辆</option></select></div>
+            <div class="filter-item"><label>类型状态</label><select id="type_status" class="ant-input" style="width:120px"><option>全部</option><option>已启用</option><option>已停用</option></select></div>
+            <div class="filter-actions">
+              <button class="ant-btn ant-btn-primary" onclick="queryType()">查询</button>
+              <button class="ant-btn" onclick="resetType()">重置</button>
+            </div>
+            <button class="ant-btn ant-btn-primary" style="margin-left:auto" onclick="openTypeForm('add')">+ 新增类型</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cfg-table-container">
+            <table class="ant-table">
+              <colgroup>
+                <col style="width:170px"><col style="width:190px"><col style="width:100px"><col style="width:120px">
+                <col style="width:220px"><col style="width:220px"><col style="width:170px">
+                <col style="width:90px"><col style="width:130px"><col style="width:200px">
+              </colgroup>
+              <thead><tr>
+                <th>类型代码</th><th>类型名称</th><th>业务大类</th><th>申请子类型</th>
+                <th>适用主体</th><th>适用对象</th><th>关联材料目录</th>
+                <th>状态</th><th>更新时间</th><th>操作</th>
+              </tr></thead>
+              <tbody id="typeTbody"></tbody>
+            </table>
+          </div>
+          <div id="typePagination"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+var PAGE_ID='approval-config';
+var currentTab='type';
+
+/* ============ 枚举与联动数据源 ============ */
+var CATEGORIES=['道路测试','示范应用','商业化试点'];
+var SUBTYPES=['初次申请','延期申请','变更申请','新增相同配置车辆'];
+var DERIVED_SUBTYPES=['延期申请','变更申请','新增相同配置车辆'];
+
+// 关联材料目录（已发布且生效版本）
+var materialCatalogOptions=['道路测试材料目录 ML_V3','示范应用材料目录 ML_V4','商业化试点材料目录 ML_V2'];
+// 关联审批流程（已发布且生效版本），按业务大类归属
+var approvalFlowOptions=[
+  {name:'道路测试审批流程 V2.1',category:'道路测试'},
+  {name:'示范应用审批流程 V1.3',category:'示范应用'},
+  {name:'商业化试点审批流程 V1.0',category:'商业化试点'}
+];
+var catToCatalog={'道路测试':'道路测试材料目录 ML_V3','示范应用':'示范应用材料目录 ML_V4','商业化试点':'商业化试点材料目录 ML_V2'};
+var catToFlow={'道路测试':'道路测试审批流程 V2.1','示范应用':'示范应用审批流程 V1.3','商业化试点':'商业化试点审批流程 V1.0'};
+var catPrefix={'道路测试':'RT','示范应用':'DA','商业化试点':'CP'};
+
+/* ============ 示例数据 ============ */
+var subjectData=[
+  {code:'OEM',name:'整车制造企业',desc:'具有整车生产资质的汽车制造商，可发起道路测试、示范应用、商业化试点申请',status:'已启用',time:'2026-04-01'},
+  {code:'OPERATOR',name:'系统运营商',desc:'从事智能网联汽车出行或物流运营服务的运营商',status:'已启用',time:'2026-04-01'},
+  {code:'PARTS',name:'零部件制造商',desc:'自动驾驶系统、传感器等关键零部件生产企业',status:'已启用',time:'2026-04-03'},
+  {code:'INTERNET',name:'互联网服务商',desc:'提供自动驾驶算法、平台服务的互联网科技企业',status:'已启用',time:'2026-04-05'},
+  {code:'RESEARCH',name:'科研院所/高校',desc:'从事自动驾驶相关研究的科研机构与高等院校',status:'已启用',time:'2026-04-08'},
+  {code:'OTHER_SUBJECT',name:'其他',desc:'其他经认定可参与测试示范活动的主体类型',status:'已停用',time:'2026-04-10'}
+];
+
+var objectData=[
+  {code:'PASSENGER_CAR',name:'乘用车',desc:'9座及以下载客汽车（含轿车、SUV等）',status:'已启用',time:'2026-04-01'},
+  {code:'COMMERCIAL_CAR',name:'商用车',desc:'货运及客运商用车辆',status:'已启用',time:'2026-04-01'},
+  {code:'SPECIAL_CAR',name:'专业作业车',desc:'环卫、物流配送等专业作业车辆',status:'已启用',time:'2026-04-03'},
+  {code:'LOW_SPEED',name:'功能型低速无人车',desc:'园区配送、环卫等功能型低速无人车辆',status:'已启用',time:'2026-04-05'},
+  {code:'OTHER_OBJECT',name:'其他',desc:'其他经认定可纳入测试示范的车辆对象类型',status:'已停用',time:'2026-04-10'}
+];
+
+var typeData=buildTypeData();
+function buildTypeData(){
+  var rows=[];
+  var subMap={'初次申请':'INITIAL','延期申请':'RENEW','变更申请':'CHANGE','新增相同配置车辆':'ADD_VEHICLE'};
+  var presets={
+    '道路测试':{sub:['整车制造企业','系统运营商','零部件制造商'],obj:['乘用车','商用车','专业作业车']},
+    '示范应用':{sub:['整车制造企业','系统运营商','互联网服务商'],obj:['乘用车','商用车','功能型低速无人车']},
+    '商业化试点':{sub:['系统运营商','互联网服务商'],obj:['乘用车','功能型低速无人车']}
+  };
+  var t0='2026-04-15';
+  CATEGORIES.forEach(function(cat,ci){
+    SUBTYPES.forEach(function(sub,si){
+      var code=catPrefix[cat]+'_'+subMap[sub];
+      var applSub=presets[cat].sub.slice();
+      var applObj=presets[cat].obj.slice();
+      // 演示历史停用值：道路测试变更申请曾关联“其他”对象（现已停用），保留历史灰标
+      if(code==='RT_CHANGE'){applObj=applObj.concat(['其他']);}
+      rows.push({
+        code:code,
+        name:cat+sub,
+        category:cat,
+        subType:sub,
+        subjects:applSub,
+        objects:applObj,
+        materialCatalog:catToCatalog[cat],
+        allowEnterprise:true,
+        desc:cat+'业务下的'+sub+'流程，适用主体与对象按配置控制',
+        status:(code==='CP_RENEW')?'已停用':'已启用',
+        time:t0
+      });
+    });
+  });
+  return rows;
+}
+
+/* ============ 分页器 ============ */
+var subjectState={page:1,size:10,pager:null};
+var objectState={page:1,size:10,pager:null};
+var typeState={page:1,size:10,pager:null};
+
+function initPagers(){
+  if(typeof Pagination==='undefined')return;
+  subjectState.pager=new Pagination({container:'subjectPagination',pageSize:10,pageSizeOptions:[10,20,50,100],size:'medium',
+    onPageChange:function(p,s){subjectState.page=p;subjectState.size=s;renderSubject();}});
+  objectState.pager=new Pagination({container:'objectPagination',pageSize:10,pageSizeOptions:[10,20,50,100],size:'medium',
+    onPageChange:function(p,s){objectState.page=p;objectState.size=s;renderObject();}});
+  typeState.pager=new Pagination({container:'typePagination',pageSize:10,pageSizeOptions:[10,20,50,100],size:'medium',
+    onPageChange:function(p,s){typeState.page=p;typeState.size=s;renderType();}});
+}
+
+/* ============ Tab 切换 ============ */
+function switchTab(el,tab){
+  currentTab=tab;
+  document.querySelectorAll('.ant-tabs .ant-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('panel-subject').style.display=tab==='subject'?'':'none';
+  document.getElementById('panel-object').style.display=tab==='object'?'':'none';
+  document.getElementById('panel-type').style.display=tab==='type'?'':'none';
+}
+
+/* ============ 工具 ============ */
+function statusTag(status){
+  return status==='已启用'
+    ? '<span class="ant-tag ant-tag-success">已启用</span>'
+    : '<span class="ant-tag ant-tag-default">已停用</span>';
+}
+function isSubjectActive(name){var s=subjectData.find(function(x){return x.name===name;});return s?s.status==='已启用':true;}
+function isObjectActive(name){var o=objectData.find(function(x){return x.name===name;});return o?o.status==='已启用':true;}
+function tagsHTML(names,activeFn){
+  if(!names||!names.length)return '<span style="color:#00000040">-</span>';
+  return '<div class="tag-list">'+names.map(function(n){
+    var stop=!activeFn(n);
+    return '<span class="ant-tag ant-tag-processing'+(stop?' tag-stop':'')+'">'+n+(stop?'（停用）':'')+'</span>';
+  }).join('')+'</div>';
+}
+function inDateRange(time,start,end){
+  if(start&&time<start)return false;
+  if(end&&time>end)return false;
+  return true;
+}
+
+/* ============ 主体：查询/渲染 ============ */
+function getSubjectFiltered(){
+  var kw=document.getElementById('sub_kw').value.trim();
+  var st=document.getElementById('sub_status').value;
+  var start=document.getElementById('sub_start').value;
+  var end=document.getElementById('sub_end').value;
+  return subjectData.filter(function(d){
+    if(kw&&d.name.indexOf(kw)===-1&&d.code.indexOf(kw)===-1)return false;
+    if(st!=='全部'&&d.status!==st)return false;
+    if(!inDateRange(d.time,start,end))return false;
+    return true;
+  });
+}
+function renderSubject(){
+  var data=getSubjectFiltered();
+  var total=data.length;
+  var totalPages=Math.max(1,Math.ceil(total/subjectState.size));
+  if(subjectState.page>totalPages)subjectState.page=totalPages;
+  var start=(subjectState.page-1)*subjectState.size;
+  var rows=data.slice(start,start+subjectState.size);
+  document.getElementById('subjectTbody').innerHTML=rows.length?rows.map(function(d){
+    var muted=d.status==='已停用'?' class="cfg-muted"':'';
+    return '<tr'+muted+'>'+
+      '<td class="col-code">'+d.code+'</td>'+
+      '<td>'+d.name+'</td>'+
+      '<td><div class="cfg-desc" title="'+d.desc+'">'+d.desc+'</div></td>'+
+      '<td class="col-status">'+statusTag(d.status)+'</td>'+
+      '<td class="col-code">'+d.time+'</td>'+
+      '<td class="col-action">'+
+        '<button class="ant-btn-link" onclick="openSubjectForm(\'edit\',\''+d.code+'\')">编辑</button>'+
+        '<button class="ant-btn-link" onclick="confirmToggle(\'subject\',\''+d.code+'\')">'+(d.status==='已启用'?'停用':'启用')+'</button>'+
+        '<button class="ant-btn-link" style="color:#ff4d4f" onclick="confirmDelete(\'subject\',\''+d.code+'\')">删除</button>'+
+      '</td></tr>';
+  }).join(''):'<tr><td colspan="6" style="text-align:center;color:#00000040;padding:40px 0">暂无数据</td></tr>';
+  if(subjectState.pager)subjectState.pager.setTotal(total);
+}
+function querySubject(){subjectState.page=1;renderSubject();showToast('查询完成');}
+function resetSubject(){document.getElementById('sub_kw').value='';document.getElementById('sub_status').value='全部';document.getElementById('sub_start').value='';document.getElementById('sub_end').value='';subjectState.page=1;renderSubject();showToast('已重置筛选条件');}
+
+/* ============ 对象：查询/渲染 ============ */
+function getObjectFiltered(){
+  var kw=document.getElementById('obj_kw').value.trim();
+  var st=document.getElementById('obj_status').value;
+  var start=document.getElementById('obj_start').value;
+  var end=document.getElementById('obj_end').value;
+  return objectData.filter(function(d){
+    if(kw&&d.name.indexOf(kw)===-1&&d.code.indexOf(kw)===-1)return false;
+    if(st!=='全部'&&d.status!==st)return false;
+    if(!inDateRange(d.time,start,end))return false;
+    return true;
+  });
+}
+function renderObject(){
+  var data=getObjectFiltered();
+  var total=data.length;
+  var totalPages=Math.max(1,Math.ceil(total/objectState.size));
+  if(objectState.page>totalPages)objectState.page=totalPages;
+  var start=(objectState.page-1)*objectState.size;
+  var rows=data.slice(start,start+objectState.size);
+  document.getElementById('objectTbody').innerHTML=rows.length?rows.map(function(d){
+    var muted=d.status==='已停用'?' class="cfg-muted"':'';
+    return '<tr'+muted+'>'+
+      '<td class="col-code">'+d.code+'</td>'+
+      '<td>'+d.name+'</td>'+
+      '<td><div class="cfg-desc" title="'+d.desc+'">'+d.desc+'</div></td>'+
+      '<td class="col-status">'+statusTag(d.status)+'</td>'+
+      '<td class="col-code">'+d.time+'</td>'+
+      '<td class="col-action">'+
+        '<button class="ant-btn-link" onclick="openObjectForm(\'edit\',\''+d.code+'\')">编辑</button>'+
+        '<button class="ant-btn-link" onclick="confirmToggle(\'object\',\''+d.code+'\')">'+(d.status==='已启用'?'停用':'启用')+'</button>'+
+        '<button class="ant-btn-link" style="color:#ff4d4f" onclick="confirmDelete(\'object\',\''+d.code+'\')">删除</button>'+
+      '</td></tr>';
+  }).join(''):'<tr><td colspan="6" style="text-align:center;color:#00000040;padding:40px 0">暂无数据</td></tr>';
+  if(objectState.pager)objectState.pager.setTotal(total);
+}
+function queryObject(){objectState.page=1;renderObject();showToast('查询完成');}
+function resetObject(){document.getElementById('obj_kw').value='';document.getElementById('obj_status').value='全部';document.getElementById('obj_start').value='';document.getElementById('obj_end').value='';objectState.page=1;renderObject();showToast('已重置筛选条件');}
+
+/* ============ 类型：查询/渲染 ============ */
+function getTypeFiltered(){
+  var kw=document.getElementById('type_kw').value.trim();
+  var cat=document.getElementById('type_cat').value;
+  var sub=document.getElementById('type_sub').value;
+  var st=document.getElementById('type_status').value;
+  return typeData.filter(function(d){
+    if(kw&&d.name.indexOf(kw)===-1&&d.code.indexOf(kw)===-1)return false;
+    if(cat!=='全部'&&d.category!==cat)return false;
+    if(sub!=='全部'&&d.subType!==sub)return false;
+    if(st!=='全部'&&d.status!==st)return false;
+    return true;
+  });
+}
+function renderType(){
+  var data=getTypeFiltered();
+  var total=data.length;
+  var totalPages=Math.max(1,Math.ceil(total/typeState.size));
+  if(typeState.page>totalPages)typeState.page=totalPages;
+  var start=(typeState.page-1)*typeState.size;
+  var rows=data.slice(start,start+typeState.size);
+  document.getElementById('typeTbody').innerHTML=rows.length?rows.map(function(d){
+    var muted=d.status==='已停用'?' class="cfg-muted"':'';
+    return '<tr'+muted+'>'+
+      '<td class="col-code">'+d.code+'</td>'+
+      '<td>'+d.name+'</td>'+
+      '<td>'+d.category+'</td>'+
+      '<td>'+d.subType+'</td>'+
+      '<td>'+tagsHTML(d.subjects,isSubjectActive)+'</td>'+
+      '<td>'+tagsHTML(d.objects,isObjectActive)+'</td>'+
+      '<td><div class="cfg-desc" title="'+d.materialCatalog+'">'+d.materialCatalog+'</div></td>'+
+      '<td class="col-status">'+statusTag(d.status)+'</td>'+
+      '<td class="col-code">'+d.time+'</td>'+
+      '<td class="col-action">'+
+        '<button class="ant-btn-link" onclick="openTypeForm(\'edit\',\''+d.code+'\')">编辑</button>'+
+        '<button class="ant-btn-link" onclick="confirmToggle(\'type\',\''+d.code+'\')">'+(d.status==='已启用'?'停用':'启用')+'</button>'+
+        '<button class="ant-btn-link" style="color:#ff4d4f" onclick="confirmDelete(\'type\',\''+d.code+'\')">删除</button>'+
+      '</td></tr>';
+  }).join(''):'<tr><td colspan="10" style="text-align:center;color:#00000040;padding:40px 0">暂无数据</td></tr>';
+  if(typeState.pager)typeState.pager.setTotal(total);
+}
+function queryType(){typeState.page=1;renderType();showToast('查询完成');}
+function resetType(){document.getElementById('type_kw').value='';document.getElementById('type_cat').value='全部';document.getElementById('type_sub').value='全部';document.getElementById('type_status').value='全部';typeState.page=1;renderType();showToast('已重置筛选条件');}
+
+/* ============ 主体 新增/编辑 表单 ============ */
+function openSubjectForm(mode,code){
+  var item=mode==='edit'?subjectData.find(function(x){return x.code===code;}):null;
+  var body=
+    '<div class="form-grid">'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>主体代码</div>'+
+        '<input id="f_sub_code" class="ant-input" value="'+(item?item.code:'')+'" '+(mode==='edit'?'readonly style="background:#f5f5f5"':'')+' placeholder="限大写字母、数字、下划线，如 OEM">'+
+        '<div class="field-help">全局唯一，新增后不可修改</div><div class="field-error" id="err_sub_code"></div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>主体名称</div>'+
+        '<input id="f_sub_name" class="ant-input" value="'+(item?item.name:'')+'" maxlength="50" placeholder="如 整车制造企业">'+
+        '<div class="field-error" id="err_sub_name"></div></div>'+
+      '<div class="full"><div class="field-label">主体说明</div>'+
+        '<textarea id="f_sub_desc" class="ant-input" rows="3" maxlength="300" placeholder="说明该主体类型适用的企业范围（最长300字符）">'+(item?item.desc:'')+'</textarea></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>状态</div>'+
+        '<select id="f_sub_status" class="ant-input"><option'+(item&&item.status==='已停用'?'':' selected')+'>已启用</option><option'+(item&&item.status==='已停用'?' selected':'')+'>已停用</option></select>'+
+        '<div class="field-help">已启用：可用于企业登记、类型配置与准入申请筛选；已停用：未来新增业务不可选，历史数据保留</div></div>'+
+    '</div>';
+  openModal((mode==='add'?'新增主体':'编辑主体'),body,{width:640,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="saveSubject(\''+mode+'\',\''+(code||'')+'\')">保存</button>'});
+}
+function saveSubject(mode,code){
+  clearErrors(['err_sub_code','err_sub_name']);
+  var c=document.getElementById('f_sub_code').value.trim();
+  var n=document.getElementById('f_sub_name').value.trim();
+  var ok=true;
+  if(!c){setError('f_sub_code','err_sub_code','代码不可为空且必须全局唯一');ok=false;}
+  else if(!/^[A-Z0-9_]+$/.test(c)){setError('f_sub_code','err_sub_code','代码限大写字母、数字、下划线');ok=false;}
+  else if(mode==='add'&&subjectData.some(function(x){return x.code===c;})){setError('f_sub_code','err_sub_code','代码已存在，必须全局唯一');ok=false;}
+  var st=document.getElementById('f_sub_status').value;
+  if(!n){setError('f_sub_name','err_sub_name','名称不可为空');ok=false;}
+  else if(subjectData.some(function(x){return x.name===n&&x.status===st&&x.code!==code;})){setError('f_sub_name','err_sub_name','同状态下主体名称不可重复');ok=false;}
+  if(!ok)return;
+  var desc=document.getElementById('f_sub_desc').value.trim();
+  if(mode==='add'){subjectData.unshift({code:c,name:n,desc:desc,status:st,time:today()});}
+  else{var it=subjectData.find(function(x){return x.code===code;});if(it){it.name=n;it.desc=desc;it.status=st;it.time=today();}}
+  closeModal();renderSubject();showToast('保存成功');
+}
+
+/* ============ 对象 新增/编辑 表单 ============ */
+function openObjectForm(mode,code){
+  var item=mode==='edit'?objectData.find(function(x){return x.code===code;}):null;
+  var body=
+    '<div class="form-grid">'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>对象代码</div>'+
+        '<input id="f_obj_code" class="ant-input" value="'+(item?item.code:'')+'" '+(mode==='edit'?'readonly style="background:#f5f5f5"':'')+' placeholder="限大写字母、数字、下划线，如 PASSENGER_CAR">'+
+        '<div class="field-help">全局唯一，新增后不可修改</div><div class="field-error" id="err_obj_code"></div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>对象名称</div>'+
+        '<input id="f_obj_name" class="ant-input" value="'+(item?item.name:'')+'" maxlength="50" placeholder="如 乘用车">'+
+        '<div class="field-error" id="err_obj_name"></div></div>'+
+      '<div class="full"><div class="field-label">对象说明</div>'+
+        '<textarea id="f_obj_desc" class="ant-input" rows="3" maxlength="300" placeholder="说明该车辆对象类型的业务范围（最长300字符）">'+(item?item.desc:'')+'</textarea></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>状态</div>'+
+        '<select id="f_obj_status" class="ant-input"><option'+(item&&item.status==='已停用'?'':' selected')+'>已启用</option><option'+(item&&item.status==='已停用'?' selected':'')+'>已停用</option></select>'+
+        '<div class="field-help">已启用：可用于车辆登记、类型配置与准入申请筛选；已停用：未来新增业务不可选，历史数据保留</div></div>'+
+    '</div>';
+  openModal((mode==='add'?'新增对象':'编辑对象'),body,{width:640,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="saveObject(\''+mode+'\',\''+(code||'')+'\')">保存</button>'});
+}
+function saveObject(mode,code){
+  clearErrors(['err_obj_code','err_obj_name']);
+  var c=document.getElementById('f_obj_code').value.trim();
+  var n=document.getElementById('f_obj_name').value.trim();
+  var ok=true;
+  if(!c){setError('f_obj_code','err_obj_code','代码不可为空且必须全局唯一');ok=false;}
+  else if(!/^[A-Z0-9_]+$/.test(c)){setError('f_obj_code','err_obj_code','代码限大写字母、数字、下划线');ok=false;}
+  else if(mode==='add'&&objectData.some(function(x){return x.code===c;})){setError('f_obj_code','err_obj_code','代码已存在，必须全局唯一');ok=false;}
+  var st=document.getElementById('f_obj_status').value;
+  if(!n){setError('f_obj_name','err_obj_name','名称不可为空');ok=false;}
+  else if(objectData.some(function(x){return x.name===n&&x.status===st&&x.code!==code;})){setError('f_obj_name','err_obj_name','同状态下对象名称不可重复');ok=false;}
+  if(!ok)return;
+  var desc=document.getElementById('f_obj_desc').value.trim();
+  if(mode==='add'){objectData.unshift({code:c,name:n,desc:desc,status:st,time:today()});}
+  else{var it=objectData.find(function(x){return x.code===code;});if(it){it.name=n;it.desc=desc;it.status=st;it.time=today();}}
+  closeModal();renderObject();showToast('保存成功');
+}
+
+/* ============ 类型 新增/编辑 表单 ============ */
+function openTypeForm(mode,code){
+  var item=mode==='edit'?typeData.find(function(x){return x.code===code;}):null;
+  var cat=item?item.category:'道路测试';
+  var sub=item?item.subType:'初次申请';
+  var selSubjects=item?item.subjects.slice():[];
+  var selObjects=item?item.objects.slice():[];
+  var body=
+    '<div class="form-grid">'+
+      '<div><div class="field-label"><span class="req">*</span>类型代码</div>'+
+        '<input id="f_type_code" class="ant-input" value="'+(item?item.code:'')+'" '+(mode==='edit'?'readonly style="background:#f5f5f5"':'')+' placeholder="如 RT_INITIAL">'+
+        '<div class="field-help">全局唯一，新增后不可修改</div><div class="field-error" id="err_type_code"></div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>类型名称</div>'+
+        '<input id="f_type_name" class="ant-input" value="'+(item?item.name:'')+'" maxlength="80" placeholder="如 道路测试初次申请">'+
+        '<div class="field-error" id="err_type_name"></div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>业务大类</div>'+
+        '<select id="f_type_cat" class="ant-input" onchange="onCatChange()">'+CATEGORIES.map(function(c){return '<option'+(c===cat?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div>'+
+      '<div><div class="field-label"><span class="req">*</span>申请子类型</div>'+
+        '<select id="f_type_sub" class="ant-input" onchange="onSubChange()">'+SUBTYPES.map(function(s){return '<option'+(s===sub?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
+      '<div class="full" id="derivedTip" style="display:none"><div class="inline-alert warn" style="margin-bottom:0">该类型属于派生申请，准入申请发起时需关联原申请编号</div></div>'+
+      '<div class="full"><div class="field-label">类型说明</div>'+
+        '<textarea id="f_type_desc" class="ant-input" rows="2" maxlength="500" placeholder="描述该申请流程类型的适用场景（最长500字符）">'+(item?item.desc:'')+'</textarea></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>适用主体</div>'+
+        multiEnum('f_type_subjects',subjectData,selSubjects)+'<div class="field-help">数据来源：状态为已启用的测试示范主体，至少选择 1 项</div><div class="field-error" id="err_type_subjects"></div></div>'+
+      '<div class="full"><div class="field-label"><span class="req">*</span>适用对象</div>'+
+        multiEnum('f_type_objects',objectData,selObjects)+'<div class="field-help">数据来源：状态为已启用的测试示范对象，至少选择 1 项</div><div class="field-error" id="err_type_objects"></div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>关联材料目录</div>'+
+        '<select id="f_type_catalog" class="ant-input"><option value="">请选择</option>'+materialCatalogOptions.map(function(m){return '<option'+(item&&item.materialCatalog===m?' selected':'')+'>'+m+'</option>';}).join('')+'</select>'+
+        '<div class="field-error" id="err_type_catalog"></div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>是否允许企业端发起</div>'+
+        '<div style="display:flex;align-items:center;gap:10px;height:32px"><button type="button" id="f_type_allow" class="cfg-switch'+((!item||item.allowEnterprise)?' checked':'')+'" onclick="this.classList.toggle(\'checked\')"><span></span></button><span class="field-help" style="margin-top:0">关闭后企业端不展示该申请入口，管理端可保留查看</span></div></div>'+
+      '<div><div class="field-label"><span class="req">*</span>状态</div>'+
+        '<select id="f_type_status" class="ant-input"><option'+(item&&item.status==='已停用'?'':' selected')+'>已启用</option><option'+(item&&item.status==='已停用'?' selected':'')+'>已停用</option></select></div>'+
+    '</div>';
+  openModal((mode==='add'?'新增类型':'编辑类型'),body,{width:800,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="saveType(\''+mode+'\',\''+(code||'')+'\')">保存</button>',
+    onOpen:function(){onCatChange(true);onSubChange();}});
+}
+
+// 多选枚举（已停用项灰化：新增不可选；编辑时若历史已选中则保留灰标只读）
+function multiEnum(id,source,selected){
+  return '<div class="multi-enum-grid" id="'+id+'">'+source.map(function(o){
+    var checked=selected.indexOf(o.name)>-1;
+    var stopped=o.status==='已停用';
+    if(stopped&&!checked){
+      return '<label class="multi-enum-option disabled"><input type="checkbox" value="'+o.name+'" disabled><span>'+o.name+'</span><span class="stop-flag">已停用</span></label>';
+    }
+    if(stopped&&checked){
+      return '<label class="multi-enum-option disabled selected"><input type="checkbox" value="'+o.name+'" checked disabled><span>'+o.name+'</span><span class="stop-flag">历史停用值</span></label>';
+    }
+    return '<label class="multi-enum-option'+(checked?' selected':'')+'"><input type="checkbox" value="'+o.name+'" '+(checked?'checked':'')+' onchange="syncEnum(this)"><span>'+o.name+'</span></label>';
+  }).join('')+'</div>';
+}
+function syncEnum(input){var op=input.closest('.multi-enum-option');if(op)op.classList.toggle('selected',input.checked);}
+function getEnumValues(id){
+  var vals=[];document.querySelectorAll('#'+id+' input[type="checkbox"]').forEach(function(c){if(c.checked)vals.push(c.value);});return vals;
+}
+
+// 业务大类联动：类型名建议 + 材料目录默认
+function onCatChange(init){
+  var cat=document.getElementById('f_type_cat').value;
+  var sub=document.getElementById('f_type_sub').value;
+  var nameInput=document.getElementById('f_type_name');
+  if(nameInput){nameInput.placeholder='建议：'+cat+sub;}
+  // 材料目录默认（仅在非初始化联动时自动带出，初始化编辑保留原值）
+  if(!init){
+    var catalogSel=document.getElementById('f_type_catalog');
+    if(catalogSel)catalogSel.value=catToCatalog[cat];
+  }
+}
+function onSubChange(){
+  var sub=document.getElementById('f_type_sub').value;
+  var cat=document.getElementById('f_type_cat').value;
+  var nameInput=document.getElementById('f_type_name');
+  if(nameInput)nameInput.placeholder='建议：'+cat+sub;
+  var tip=document.getElementById('derivedTip');
+  if(tip)tip.style.display=DERIVED_SUBTYPES.indexOf(sub)>-1?'':'none';
+}
+function saveType(mode,code){
+  clearErrors(['err_type_code','err_type_name','err_type_subjects','err_type_objects','err_type_catalog']);
+  var c=document.getElementById('f_type_code').value.trim();
+  var n=document.getElementById('f_type_name').value.trim();
+  var cat=document.getElementById('f_type_cat').value;
+  var sub=document.getElementById('f_type_sub').value;
+  var subjects=getEnumValues('f_type_subjects');
+  var objects=getEnumValues('f_type_objects');
+  var catalog=document.getElementById('f_type_catalog').value;
+  var ok=true;
+  if(!c){setError('f_type_code','err_type_code','代码不可为空且必须全局唯一');ok=false;}
+  else if(!/^[A-Z0-9_]+$/.test(c)){setError('f_type_code','err_type_code','代码限大写字母、数字、下划线');ok=false;}
+  else if(mode==='add'&&typeData.some(function(x){return x.code===c;})){setError('f_type_code','err_type_code','代码已存在，必须全局唯一');ok=false;}
+  if(!n){setError('f_type_name','err_type_name','名称不可为空');ok=false;}
+  else if(typeData.some(function(x){return x.name===n&&x.category===cat&&x.subType===sub&&x.code!==code;})){setError('f_type_name','err_type_name','同业务大类+申请子类型下名称不可重复');ok=false;}
+  if(!subjects.length){setEnumError('f_type_subjects','err_type_subjects','请至少选择一个适用主体');ok=false;}
+  if(!objects.length){setEnumError('f_type_objects','err_type_objects','请至少选择一个适用对象');ok=false;}
+  if(!catalog){setError('f_type_catalog','err_type_catalog','请关联材料目录后保存');ok=false;}
+  if(!ok)return;
+  var allow=document.getElementById('f_type_allow').classList.contains('checked');
+  var st=document.getElementById('f_type_status').value;
+  var desc=document.getElementById('f_type_desc').value.trim();
+  if(mode==='add'){
+    typeData.unshift({code:c,name:n,category:cat,subType:sub,subjects:subjects,objects:objects,materialCatalog:catalog,allowEnterprise:allow,desc:desc,status:st,time:today()});
+  }else{
+    var it=typeData.find(function(x){return x.code===code;});
+    if(it){it.name=n;it.category=cat;it.subType=sub;it.subjects=subjects;it.objects=objects;it.materialCatalog=catalog;it.allowEnterprise=allow;it.desc=desc;it.status=st;it.time=today();}
+  }
+  closeModal();renderType();showToast('保存成功');
+}
+
+/* ============ 启用/停用 二次确认 ============ */
+function confirmToggle(kind,code){
+  var arr=kind==='subject'?subjectData:kind==='object'?objectData:typeData;
+  var it=arr.find(function(x){return x.code===code;});
+  if(!it)return;
+  var target=it.status==='已启用'?'停用':'启用';
+  var extraTip=kind==='type'&&target==='停用'?'停用后企业端不再展示该类型申请入口。':'';
+  var body='<div class="confirm-body">确认将“<b>'+it.name+'</b>”'+target+'吗？</div>'+
+    '<div class="confirm-tip">该操作仅影响未来新增业务和字段变更可选项，不影响历史记录。'+extraTip+'</div>';
+  openModal('确认状态变更',body,{width:440,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="applyToggle(\''+kind+'\',\''+code+'\')">确定</button>'});
+}
+function applyToggle(kind,code){
+  var arr=kind==='subject'?subjectData:kind==='object'?objectData:typeData;
+  var it=arr.find(function(x){return x.code===code;});
+  if(it){it.status=it.status==='已启用'?'已停用':'已启用';it.time=today();}
+  closeModal();
+  if(kind==='subject')renderSubject();else if(kind==='object')renderObject();else renderType();
+  showToast('状态已更新');
+}
+
+/* ============ 删除 二次确认 ============ */
+function confirmDelete(kind,code){
+  var arr=kind==='subject'?subjectData:kind==='object'?objectData:typeData;
+  var it=arr.find(function(x){return x.code===code;});
+  if(!it)return;
+  var body='<div class="confirm-body">确认删除该配置项“<b>'+it.name+'</b>”吗？</div>'+
+    '<div class="confirm-tip">删除后未来新增业务将无法引用该配置，历史企业、车辆、申请记录不受影响（逻辑删除）。</div>';
+  openModal('确认删除',body,{width:440,maskClosable:false,
+    footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="applyDelete(\''+kind+'\',\''+code+'\')">确定</button>'});
+}
+function applyDelete(kind,code){
+  if(kind==='subject'){subjectData=subjectData.filter(function(x){return x.code!==code;});closeModal();renderSubject();}
+  else if(kind==='object'){objectData=objectData.filter(function(x){return x.code!==code;});closeModal();renderObject();}
+  else{typeData=typeData.filter(function(x){return x.code!==code;});closeModal();renderType();}
+  showToast('删除成功');
+}
+
+/* ============ 通用工具 ============ */
+function setError(inputId,errId,msg){var i=document.getElementById(inputId);if(i)i.classList.add('err');var e=document.getElementById(errId);if(e){e.textContent=msg;e.classList.add('show');}}
+function setEnumError(gridId,errId,msg){var g=document.getElementById(gridId);if(g)g.classList.add('err');var e=document.getElementById(errId);if(e){e.textContent=msg;e.classList.add('show');}}
+function clearErrors(ids){ids.forEach(function(id){var e=document.getElementById(id);if(e){e.classList.remove('show');e.textContent='';}});
+  document.querySelectorAll('.ant-input.err').forEach(function(i){i.classList.remove('err');});
+  document.querySelectorAll('.multi-enum-grid.err').forEach(function(g){g.classList.remove('err');});}
+function today(){var d=new Date();var p=function(n){return n<10?'0'+n:''+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function showToast(msg){var ex=document.querySelector('.toast-msg');if(ex)ex.remove();var t=document.createElement('div');t.className='toast-msg';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(function(){if(t.parentNode)t.remove();},300);},2000);}
+
+document.addEventListener('DOMContentLoaded',function(){
+  initPagers();
+  renderSubject();
+  renderObject();
+  renderType();
+});
+</script>
+<script src="../../common.js"></script>
+<script src="../../components/pagination-component.js"></script>
+</body>
+</html>

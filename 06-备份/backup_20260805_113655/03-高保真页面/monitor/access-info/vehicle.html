@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>车辆信息管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>车辆信息管理</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openAddModal()">+ 新增车辆信息</button><button class="ant-btn">导出</button></div></div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:200px"></div>
+          <div class="filter-item"><label>所属企业</label><div class="ant-select" style="width:160px">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="filter-item"><label>车辆种类</label><div class="ant-select" style="width:160px">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div>
+          <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
+        </div>
+      </div>
+      <div class="ant-table-wrapper">
+        <div style="overflow-x:auto">
+          <table class="ant-table">
+            <thead><tr><th style="width:40px"><input type="checkbox" class="ant-checkbox"></th><th style="width:160px">VIN码</th><th style="width:180px">生产企业</th><th style="width:120px">所属企业</th><th style="width:120px">车辆种类</th><th style="width:120px">车辆型号</th><th style="width:100px">自动驾驶级别</th><th style="width:120px">临牌号（最新）</th><th style="width:160px">登记时间</th><th style="width:120px">操作</th></tr></thead>
+            <tbody>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td style="font-family:monospace">LSVAU2180N2012345</td><td>A公司</td><td>A公司</td><td>乘用车</td><td>Model 3</td><td>L3</td><td>鄂F·D12345</td><td>2026-03-20 10:30</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td style="font-family:monospace">LSVAU2180N2012346</td><td>A公司</td><td>A公司</td><td>乘用车</td><td>Model Y</td><td>L3</td><td>鄂F·D12346</td><td>2026-03-20 11:00</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td style="font-family:monospace">LSVAU2180N2012347</td><td>B公司</td><td>E公司</td><td>乘用车</td><td>ES6</td><td>L4</td><td>鄂F·D12347</td><td>2026-03-25 09:15</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td style="font-family:monospace">LSVAU2180N2012348</td><td>C公司</td><td>D公司</td><td>乘用车</td><td>阿尔法T</td><td>L3</td><td>鄂F·D12348</td><td>2026-04-01 14:20</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td style="font-family:monospace">LSVAU2180N2012349</td><td>D公司</td><td>A公司</td><td>功能型低速无人车</td><td>T5</td><td>L4</td><td>鄂F·D12349</td><td>2026-04-05 16:45</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">详情</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm text-[#00000073]">共5条</span>
+          <div class="ant-pagination"><span class="page-item">&lt;</span><span class="page-item active">1</span><span class="page-item">&gt;</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='vehicle';
+
+function formGroup(title, fields) {
+  return '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">' + title + '</h4>' + fields;
+}
+
+function formItem(label, content, required) {
+  return '<div class="ant-form-item"><div class="ant-form-label">' + (required ? '<span class="required">*</span>' : '') + label + '</div><div class="ant-form-control">' + content + '</div></div>';
+}
+
+function inputField(placeholder, type) {
+  return '<input class="ant-input" placeholder="' + placeholder + '"' + (type ? ' type="' + type + '"' : '') + '>';
+}
+
+function selectField(placeholder) {
+  return '<div class="ant-select" style="width:100%">' + placeholder + ' <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>';
+}
+
+function textareaField(placeholder) {
+  return '<textarea class="ant-input" style="height:80px;padding:8px 12px" placeholder="' + placeholder + '"></textarea>';
+}
+
+function openAddModal(title){
+  title = title || '新增车辆信息';
+  var body = '<div>';
+
+  body += formGroup('基本信息',
+    formItem('所属企业', selectField('请选择所属企业'), true) +
+    formItem('生产企业', inputField('请输入车辆生产制造商'), true) +
+    formItem('车辆识别代号（VIN，或唯一性编码）', inputField('请输入17位VIN码'), true) +
+    formItem('车辆型号', inputField('请输入车辆型号'), true) +
+    formItem('车辆种类', selectField('请选择车辆种类'), true) +
+    formItem('生产日期', '<input class="ant-input" type="date">', true) +
+    formItem('车辆颜色', inputField('请输入车辆颜色'), true) +
+    formItem('自动驾驶级别', selectField('请选择自动驾驶级别'), true) +
+    formItem('临牌号（最新）', inputField('系统自动获取最新临牌号'), false) +
+    formItem('登记时间', '<input class="ant-input" value="2026-06-10 10:30" disabled><div class="text-xs text-[#00000073] mt-1">系统自动生成，不可修改</div>', false)
+  );
+
+  body += formGroup('车辆参数',
+    formItem('整车整备质量(kg)', inputField('请输入整车整备质量', 'number'), true) +
+    formItem('轴荷(kg)', inputField('请输入轴荷', 'number'), true) +
+    formItem('最大设计总质量(kg)', inputField('请输入最大设计总质量', 'number'), true) +
+    formItem('额定载客人数', inputField('请输入额定载客人数', 'number'), true) +
+    formItem('发动机号', inputField('请输入发动机号（燃油/混动车辆填写）'), false)
+  );
+
+  body += formGroup('总成信息 — 动力系统',
+    formItem('动力型式', selectField('请选择动力型式'), true) +
+    formItem('动力生产企业', inputField('请输入动力生产企业'), false) +
+    formItem('发动机型号', inputField('请输入发动机型号（燃油/混动车辆填写）'), false) +
+    formItem('发动机生产企业', inputField('请输入发动机生产企业'), false) +
+    formItem('动力蓄电池型号', inputField('请输入动力蓄电池型号（电动/混动车辆填写）'), false) +
+    formItem('蓄电池生产企业', inputField('请输入蓄电池生产企业'), false) +
+    formItem('动力电机型号', inputField('请输入动力电机型号（电动/混动车辆填写）'), false) +
+    formItem('电机生产企业', inputField('请输入电机生产企业'), false) +
+    formItem('驱动型式', inputField('请输入驱动型式'), false) +
+    formItem('驱动生产企业', inputField('请输入驱动生产企业'), false) +
+    formItem('变速器型式', inputField('请输入变速器型式'), false) +
+    formItem('变速器生产企业', inputField('请输入变速器生产企业'), false)
+  );
+
+  body += formGroup('总成信息 — 转向系统',
+    formItem('转向系统型式', inputField('请输入转向系统型式'), false) +
+    formItem('转向生产企业', inputField('请输入转向生产企业'), false)
+  );
+
+  body += formGroup('总成信息 — 制动系统',
+    formItem('制动系统型式', inputField('请输入制动系统型式'), false) +
+    formItem('制动生产企业', inputField('请输入制动生产企业'), false) +
+    formItem('ESC型号', inputField('请输入ESC型号'), false) +
+    formItem('ESC生产企业', inputField('请输入ESC生产企业'), false)
+  );
+
+  body += formGroup('总成信息 — 感知系统',
+    formItem('环境感知系统型式', inputField('请输入环境感知系统型式，如：激光雷达+毫米波雷达+摄像头融合'), true) +
+    formItem('感知生产企业', inputField('请输入感知生产企业'), false)
+  );
+
+  body += formGroup('轮胎信息',
+    formItem('轮胎规格', inputField('请输入轮胎规格'), false) +
+    formItem('轮胎生产企业', inputField('请输入轮胎生产企业'), false)
+  );
+
+  body += formGroup('其他改装情况说明',
+    formItem('其他改装情况说明', textareaField('详细说明车辆改装情况以及传感器品牌、安装位置和数量等'), false)
+  );
+
+  body += formGroup('自动驾驶功能说明',
+    formItem('自动驾驶相应级别', selectField('请选择自动驾驶级别'), true) +
+    formItem('自主式智能驾驶功能描述', textareaField('请输入自主式智能驾驶功能描述'), false) +
+    formItem('网联式协同驾驶功能描述', textareaField('请输入网联式协同驾驶功能描述'), false)
+  );
+
+  body += '</div>';
+  openModal(title, body, {width:900});
+}
+
+function openDetailModal(){
+  openModal('车辆详情',
+    '<div class="ant-descriptions">' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">基本信息</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">A公司</div><div class="ant-descriptions-label">生产企业</div><div class="ant-descriptions-value">A公司</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆识别代号（VIN，或唯一性编码）</div><div class="ant-descriptions-value" style="font-family:monospace">LSVAU2180N2012345</div><div class="ant-descriptions-label">车辆型号</div><div class="ant-descriptions-value">Model 3</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆种类</div><div class="ant-descriptions-value">乘用车</div><div class="ant-descriptions-label">生产日期</div><div class="ant-descriptions-value">2025-10-15</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆颜色</div><div class="ant-descriptions-value">白色</div><div class="ant-descriptions-label">自动驾驶级别</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-processing">L3</span></div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">临牌号（最新）</div><div class="ant-descriptions-value">鄂F·D12345</div><div class="ant-descriptions-label">登记时间</div><div class="ant-descriptions-value">2026-03-20 10:30</div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">车辆参数</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">整车整备质量(kg)</div><div class="ant-descriptions-value">1,850</div><div class="ant-descriptions-label">轴荷(kg)</div><div class="ant-descriptions-value">950 / 900</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">最大设计总质量(kg)</div><div class="ant-descriptions-value">2,230</div><div class="ant-descriptions-label">额定载客人数</div><div class="ant-descriptions-value">5</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">发动机号</div><div class="ant-descriptions-value">—（纯电动）</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">总成信息 — 动力系统</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">动力型式</div><div class="ant-descriptions-value">纯电动</div><div class="ant-descriptions-label">动力生产企业</div><div class="ant-descriptions-value">A公司</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">发动机型号</div><div class="ant-descriptions-value">—（纯电动）</div><div class="ant-descriptions-label">发动机生产企业</div><div class="ant-descriptions-value">—</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">动力蓄电池型号</div><div class="ant-descriptions-value">LFP 60kWh</div><div class="ant-descriptions-label">蓄电池生产企业</div><div class="ant-descriptions-value">E公司</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">动力电机型号</div><div class="ant-descriptions-value">3D7永磁同步电机</div><div class="ant-descriptions-label">电机生产企业</div><div class="ant-descriptions-value">A公司</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">驱动型式</div><div class="ant-descriptions-value">后轮驱动</div><div class="ant-descriptions-label">驱动生产企业</div><div class="ant-descriptions-value">A公司</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">变速器型式</div><div class="ant-descriptions-value">单速减速器</div><div class="ant-descriptions-label">变速器生产企业</div><div class="ant-descriptions-value">A公司</div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">总成信息 — 转向系统</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">转向系统型式</div><div class="ant-descriptions-value">电动助力转向(EPS)</div><div class="ant-descriptions-label">转向生产企业</div><div class="ant-descriptions-value">F公司</div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">总成信息 — 制动系统</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">制动系统型式</div><div class="ant-descriptions-value">电子液压制动(EHB)</div><div class="ant-descriptions-label">制动生产企业</div><div class="ant-descriptions-value">G公司</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">ESC型号</div><div class="ant-descriptions-value">ESP 9.3</div><div class="ant-descriptions-label">ESC生产企业</div><div class="ant-descriptions-value">F公司</div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">总成信息 — 感知系统</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">环境感知系统型式</div><div class="ant-descriptions-value">激光雷达×2 + 毫米波雷达×4 + 高清摄像头×8</div><div class="ant-descriptions-label">感知生产企业</div><div class="ant-descriptions-value">H公司 / F公司</div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">轮胎信息</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">轮胎规格</div><div class="ant-descriptions-value">235/45 R18</div><div class="ant-descriptions-label">轮胎生产企业</div><div class="ant-descriptions-value">I公司</div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">其他改装情况说明</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">其他改装情况说明</div><div class="ant-descriptions-value">加装激光雷达×2（禾赛AT128，车顶前后各一）、毫米波雷达×4（博世MRR，前后保险杠各二）、高精定位模块（千寻位置FindCM Pro），改装后已通过第三方安全检验</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">自动驾驶功能说明</h4>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自动驾驶相应级别</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-processing">L3</span></div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自主式智能驾驶功能描述</div><div class="ant-descriptions-value">具备城市道路L3级自动驾驶能力，含交通信号灯识别、行人/非机动车避让、自主变道、匝道汇入、路口通行、自主泊车等功能</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">网联式协同驾驶功能描述</div><div class="ant-descriptions-value">支持V2X车路协同通信（PC5/Uu双模），可接收RSU信号灯相位信息、道路事件预警、施工区域提醒，实现绿波通行引导和协同变道</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
+    '</div>', {width:900, footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>
