@@ -7,18 +7,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <style>
-    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .page-header h2{font-size:20px;font-weight:600;color:#000000d9}
     .filter-bar{background:#fff;padding:16px 24px;border-radius:8px;margin-bottom:16px}
     .filter-row{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center}
     .filter-item{display:inline-flex;flex-direction:row;align-items:center;gap:8px}
     .filter-item label{font-size:14px;color:#000000d9;font-weight:normal;white-space:nowrap}
-    .filter-extra{display:none}
-    .filter-extra.expanded{display:flex}
-    .filter-toggle{display:inline-flex;align-items:center;gap:4px;font-size:14px;color:#1677ff;cursor:pointer;border:none;background:none;padding:0}
-    .filter-toggle:hover{color:#4096ff}
-    .filter-toggle svg{transition:transform .2s}
-    .filter-toggle.expanded svg{transform:rotate(180deg)}
     .ant-table-wrapper{background:#fff;border-radius:8px;overflow:hidden}
     .ant-table{width:100%;border-collapse:collapse}
     .ant-table thead th{background:#fafafa;padding:12px 16px;font-weight:600;font-size:14px;color:#000000d9;border-bottom:1px solid #f0f0f0}
@@ -61,33 +53,21 @@
   <div class="flex-1 flex flex-col overflow-hidden">
     <header id="topnav"></header>
     <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
-      <!-- 页面标题 + 导出按钮 -->
-      <div class="page-header">
-        <h2>交通违法信息</h2>
-        <div class="flex gap-2">
-          <button class="ant-btn admin-only" onclick="exportTable()">导出</button>
-        </div>
-      </div>
-
       <!-- 查询筛选区（可收起/展开） -->
-      <div class="filter-bar">
-        <div class="filter-row">
-          <!-- 第一行：始终显示 -->
-          <div class="filter-item"><label>违法记录编号</label><input class="ant-input" id="fCaseNo" placeholder="请输入违法记录编号" style="width:170px"></div>
-          <div class="filter-item"><label>违法时间</label><input class="ant-input" type="date" id="fTimeStart" style="width:130px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" id="fTimeEnd" style="width:130px"></div>
-          <div class="filter-item"><label>临牌号</label><input class="ant-input" id="fPlate" placeholder="请输入临牌号" style="width:130px"></div>
-          <div class="filter-item"><label>运营企业名称</label><input class="ant-input" id="fEnterprise" placeholder="请输入企业名称" style="width:170px"></div>
-          <div class="flex gap-2 items-end">
+      <div class="filter-bar" data-progressive-filter>
+        <div class="filter-row filter-primary" style="gap:8px !important">
+          <div class="filter-item"><label>违法记录编号</label><input class="ant-input" id="fCaseNo" placeholder="请输入违法记录编号" style="width:150px"></div>
+          <div class="filter-item"><label>违法时间</label><input class="ant-input" type="date" id="fTimeStart" style="width:112px"> <span style="color:#00000073">~</span> <input class="ant-input" type="date" id="fTimeEnd" style="width:112px"></div>
+          <div class="filter-item"><label>临牌号</label><input class="ant-input" id="fPlate" placeholder="请输入临牌号" style="width:120px"></div>
+          <div class="filter-actions">
             <button class="ant-btn ant-btn-primary" onclick="searchData()">查询</button>
             <button class="ant-btn" onclick="resetFilter()">重置</button>
+            <button class="ant-btn admin-only" onclick="exportTable()">导出</button>
           </div>
-          <button class="filter-toggle" id="filterToggle" onclick="toggleFilter()">
-            <span>展开</span>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
-          </button>
+          <button type="button" class="filter-more-toggle" onclick="toggleProgressiveFilter(this)" aria-expanded="false"><span class="filter-more-text">展开更多</span><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>
         </div>
-        <!-- 第二行：默认收起 -->
-        <div class="filter-row filter-extra" id="filterExtra" style="margin-top:16px">
+        <div class="filter-row filter-extra">
+          <div class="filter-item"><label>运营企业名称</label><input class="ant-input" id="fEnterprise" placeholder="请输入企业名称" style="width:170px"></div>
           <div class="filter-item"><label>车辆种类</label>
             <div class="ant-select" id="fVehicleType">全部 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>
           </div>
@@ -171,21 +151,6 @@ var currentFilteredData = [];
 var pager = null;
 
 /* ========== 筛选区收起/展开 ========== */
-function toggleFilter() {
-  var extra = document.getElementById('filterExtra');
-  var btn = document.getElementById('filterToggle');
-  var isExpanded = extra.classList.contains('expanded');
-  if (isExpanded) {
-    extra.classList.remove('expanded');
-    btn.classList.remove('expanded');
-    btn.querySelector('span').textContent = '展开';
-  } else {
-    extra.classList.add('expanded');
-    btn.classList.add('expanded');
-    btn.querySelector('span').textContent = '收起';
-  }
-}
-
 /* ========== 筛选逻辑 ========== */
 function getFilterConditions() {
   return {

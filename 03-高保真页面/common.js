@@ -298,6 +298,21 @@
     return depth > 0 ? '../'.repeat(depth) : './';
   }
 
+  function toggleProgressiveFilter(button) {
+    var filterBar = button && button.closest ? button.closest('.filter-bar') : null;
+    if (!filterBar) return;
+
+    var extra = filterBar.querySelector('.filter-extra');
+    var label = button.querySelector('.filter-more-text');
+    if (!extra || !label) return;
+
+    var expanded = !extra.classList.contains('is-expanded');
+    extra.classList.toggle('is-expanded', expanded);
+    button.classList.toggle('is-expanded', expanded);
+    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    label.textContent = expanded ? '收起' : '展开更多';
+  }
+
   function findPageInfo(key, data, parents) {
     parents = parents || [];
     var fallback = null;
@@ -628,8 +643,18 @@
       '.ant-form-control{width:100%}',
       '.filter-bar{background:#fff!important;padding:16px 24px!important;border-radius:8px!important;margin-bottom:16px!important}',
       '.filter-bar .filter-row{display:flex!important;flex-wrap:wrap!important;gap:20px 24px!important;align-items:center!important}',
+      '.filter-bar .filter-row.filter-primary{flex-wrap:nowrap!important;min-width:0}',
+      '.filter-bar[data-progressive-filter] .filter-row.filter-primary{gap:16px!important}',
+      '.filter-bar[data-progressive-filter] .filter-row.filter-primary .filter-item{flex-shrink:0}',
+      '.filter-bar .filter-row.filter-extra{display:none!important;width:100%;margin-top:16px;flex-wrap:wrap!important}',
+      '.filter-bar .filter-row.filter-extra.is-expanded{display:flex!important}',
       '.filter-bar .filter-item{display:inline-flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important}',
       '.filter-bar .filter-item label{font-size:14px!important;color:#000000d9!important;font-weight:normal!important;white-space:nowrap!important;min-width:auto!important}',
+      '.filter-bar .filter-actions{display:flex!important;align-items:center!important;gap:8px!important;margin-left:auto;flex-shrink:0}',
+      '.filter-more-toggle{height:32px;display:inline-flex;align-items:center;gap:4px;padding:0;border:none;background:transparent;color:#1677ff;font-size:14px;white-space:nowrap;cursor:pointer;flex-shrink:0}',
+      '.filter-more-toggle:hover{color:#4096ff}',
+      '.filter-more-toggle svg{transition:transform .2s}',
+      '.filter-more-toggle.is-expanded svg{transform:rotate(180deg)}',
       '.page-toolbar-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex-wrap:wrap!important;min-width:0!important}',
       '.filter-bar .filter-row>.page-toolbar-actions{margin-left:auto!important}',
       '.ant-tabs.tabs-with-toolbar>.page-toolbar-actions{margin-left:auto!important;padding-right:16px!important;flex-shrink:0!important}',
@@ -976,7 +1001,7 @@
       for (var j = 0; j < content.length; j++) actions.appendChild(content[j]);
 
       var target = findPageToolbarTarget(header);
-      if (target && target.type === 'filter') {
+      if (target && target.type === 'filter' && !target.element.hasAttribute('data-progressive-filter')) {
         var filterRow = target.element.querySelector('.filter-row') || target.element;
         filterRow.appendChild(actions);
         header.remove();
@@ -988,6 +1013,13 @@
         header.classList.add('page-action-toolbar');
         header.appendChild(actions);
       }
+    }
+
+    var progressiveInputs = main.querySelectorAll('.filter-bar[data-progressive-filter] .ant-input[style*="width"]');
+    for (var k = 0; k < progressiveInputs.length; k++) {
+      var input = progressiveInputs[k];
+      var specifiedWidth = input.style.width;
+      if (specifiedWidth) input.style.setProperty('width', specifiedWidth, 'important');
     }
   }
 
@@ -1236,6 +1268,7 @@
   window.switchRole = switchRole;
   window.toggleSidebar = toggleSidebar;
   window.toggleModalFullscreen = toggleModalFullscreen;
+  window.toggleProgressiveFilter = toggleProgressiveFilter;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

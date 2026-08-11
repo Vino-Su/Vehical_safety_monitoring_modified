@@ -59,21 +59,18 @@
   <div class="flex-1 flex flex-col overflow-hidden">
     <header id="topnav"></header>
     <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
-      <div class="page-header">
-        <h2>在线反馈管理<span class="selected-tip" id="selectedTip" style="display:none">已选 <span id="selectedCnt">0</span> 条</span></h2>
-        <div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="exportCurrentData()">导出</button></div>
-      </div>
-
       <!-- 筛选条件 -->
-      <div class="filter-bar mb-4">
-        <div class="filter-row">
-          <div class="filter-item"><label>反馈编号</label><input class="ant-input" id="q-id" placeholder="请输入反馈编号" style="width:160px"></div>
-          <div class="filter-item"><label>问题标题</label><input class="ant-input" id="q-title" placeholder="请输入问题标题关键词" style="width:200px"></div>
-          <div class="filter-item"><label>提交人</label><input class="ant-input" id="q-submitter" placeholder="请输入提交人" style="width:140px"></div>
+      <div class="filter-bar mb-4" data-progressive-filter>
+        <div class="filter-row filter-primary">
+          <div class="filter-item"><label>反馈编号</label><input class="ant-input" id="q-id" placeholder="请输入反馈编号" style="width:140px"></div>
+          <div class="filter-item"><label>问题标题</label><input class="ant-input" id="q-title" placeholder="请输入问题标题关键词" style="width:180px"></div>
+          <div class="filter-item"><label>提交人</label><input class="ant-input" id="q-submitter" placeholder="请输入提交人" style="width:120px"></div>
+          <div class="filter-actions"><button class="ant-btn ant-btn-primary" onclick="applyFilter()">查询</button><button class="ant-btn" onclick="resetFilter()">重置</button><button class="ant-btn ant-btn-primary" onclick="exportCurrentData()">导出</button></div>
+          <button type="button" class="filter-more-toggle" onclick="toggleProgressiveFilter(this)" aria-expanded="false"><span class="filter-more-text">展开更多</span><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>
+        </div>
+        <div class="filter-row filter-extra">
           <div class="filter-item"><label>所属企业</label><input class="ant-input" id="q-company" placeholder="请输入所属企业" style="width:160px"></div>
           <div class="filter-item"><label>提交时间</label><input class="ant-input" id="q-time-start" type="date" style="width:140px"><span>至</span><input class="ant-input" id="q-time-end" type="date" style="width:140px"></div>
-          <button class="ant-btn ant-btn-primary" onclick="applyFilter()">查询</button>
-          <button class="ant-btn" onclick="resetFilter()">重置</button>
         </div>
       </div>
 

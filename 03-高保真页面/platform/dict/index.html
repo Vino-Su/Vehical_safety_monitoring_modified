@@ -14,21 +14,17 @@
   <div class="flex-1 flex flex-col overflow-hidden">
     <header id="topnav"></header>
     <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
-      <div class="page-header">
-        <h2>数据字典管理</h2>
-        <div class="flex gap-2">
-          <button class="ant-btn" onclick="openExportModal()">导出数据</button>
-          <button class="ant-btn ant-btn-primary" onclick="openDictModal()">+ 新增字典项</button>
+      <div class="filter-bar" data-progressive-filter>
+        <div class="filter-row filter-primary" style="gap:8px !important">
+          <div class="filter-item"><label>字典编码</label><input class="ant-input" placeholder="请输入字典编码搜索" style="width:150px"></div>
+          <div class="filter-item"><label>字典名称</label><input class="ant-input" placeholder="请输入字典名称搜索" style="width:150px"></div>
+          <div class="filter-item"><label>所属应用</label><select class="ant-input" style="width:120px"><option value="all">全部</option><option>准入管理</option><option>监测管理</option><option>数据分析</option><option>道路管理</option><option>平台管理</option></select></div>
+          <div class="filter-actions"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn" onclick="openExportModal()">导出</button><button class="ant-btn ant-btn-primary" onclick="openDictModal()">+ 新增字典项</button></div>
+          <button type="button" class="filter-more-toggle" onclick="toggleProgressiveFilter(this)" aria-expanded="false"><span class="filter-more-text">展开更多</span><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>
         </div>
-      </div>
-      <div class="filter-bar">
-        <div class="filter-row">
+        <div class="filter-row filter-extra">
           <div class="filter-item"><label>时间范围</label><div style="display:flex;gap:4px;align-items:center;"><input class="ant-input" type="date" value="2026-04-01" style="width:140px"><span class="mx-1 text-[#00000040]">~</span><input class="ant-input" type="date" value="2026-05-08" style="width:140px"></div></div>
-          <div class="filter-item"><label>字典编码</label><input class="ant-input" placeholder="请输入字典编码搜索"></div>
-          <div class="filter-item"><label>字典名称</label><input class="ant-input" placeholder="请输入字典名称搜索"></div>
-          <div class="filter-item"><label>所属应用</label><select class="ant-input" style="width:140px"><option value="all">全部</option><option>准入管理</option><option>监测管理</option><option>数据分析</option><option>道路管理</option><option>平台管理</option></select></div>
           <div class="filter-item"><label>状态</label><select class="ant-input" style="width:120px"><option value="all">全部</option><option>已启用</option><option>已停用</option></select></div>
-          <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div>
         </div>
       </div>
       <div class="ant-table-wrapper">

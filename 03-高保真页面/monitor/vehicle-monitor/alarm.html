@@ -14,6 +14,8 @@
     .stat-card .stat-icon{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px}
     .stat-card .stat-info .stat-value{font-size:24px;font-weight:600;color:#000000d9}
     .stat-card .stat-info .stat-label{font-size:14px;color:#00000073}
+    .alarm-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
+    @media (max-width:1180px){.alarm-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .filter-bar{background:#fff;padding:16px 24px;border-radius:8px;margin-bottom:16px}
     .filter-row{display:flex;flex-wrap:wrap;gap:20px 24px;align-items:center}
     .filter-item{display:inline-flex;flex-direction:row;align-items:center;gap:8px}
@@ -72,19 +74,22 @@
         <h2>异常状态事件</h2>
       </div>
       <!-- 全局查询条件区 -->
-      <div class="filter-bar">
-        <div class="filter-row">
+      <div class="filter-bar" data-progressive-filter>
+        <div class="filter-row filter-primary">
           <div class="filter-item"><label>事件分类</label><select id="filter-category" class="ant-input" style="width:104px"><option>全部</option><option>预警</option><option>告警</option></select></div>
           <div class="filter-item"><label>所属企业</label><input id="filter-company" class="ant-input" placeholder="请输入企业简称" style="width:150px"></div>
           <div class="filter-item"><label>临牌号</label><input id="filter-plate" class="ant-input" placeholder="请输入临牌号" style="width:130px"></div>
+          <div class="filter-actions"><button class="ant-btn ant-btn-primary" onclick="queryEvents()">查询</button><button class="ant-btn" onclick="resetEventFilters()">重置</button><button class="ant-btn" onclick="exportEvents()">导出</button></div>
+          <button type="button" class="filter-more-toggle" onclick="toggleProgressiveFilter(this)" aria-expanded="false"><span class="filter-more-text">展开更多</span><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>
+        </div>
+        <div class="filter-row filter-extra">
           <div class="filter-item"><label>VIN码</label><input id="filter-vin" class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
           <div class="filter-item"><label>处理状态</label><select id="filter-status" class="ant-input" style="width:104px"><option>全部</option><option>待处理</option><option>处理中</option><option>已处理</option></select></div>
           <div class="filter-item"><label>发生时间</label><input id="filter-start-time" class="ant-input" type="datetime-local" step="1" style="width:196px"> <span style="color:#00000073">~</span> <input id="filter-end-time" class="ant-input" type="datetime-local" step="1" style="width:196px"></div>
-          <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="queryEvents()">查询</button><button class="ant-btn" onclick="resetEventFilters()">重置</button><button class="ant-btn" onclick="exportEvents()">导出</button></div>
         </div>
       </div>
       <!-- 统计卡片 -->
-      <div class="grid grid-cols-4 gap-4 mb-4">
+      <div class="alarm-stats-grid">
         <div class="stat-card"><div class="stat-icon bg-[#fff2f0] text-[#ff4d4f]">🔴</div><div class="stat-info"><div id="stat-pending" class="stat-value">0</div><div class="stat-label">未处理事件数</div></div></div>
         <div class="stat-card"><div class="stat-icon bg-[#e6f7ff] text-[#1890ff]">⚠️</div><div class="stat-info"><div id="stat-processing" class="stat-value">0</div><div class="stat-label">处理中事件数</div></div></div>
         <div class="stat-card"><div class="stat-icon bg-[#f6ffed] text-[#52c41a]">✅</div><div class="stat-info"><div id="stat-resolved" class="stat-value">0</div><div class="stat-label">已处理事件数</div></div></div>
@@ -366,14 +371,15 @@ function updateStatistics(){
 function renderTable(tabId){
   var table = document.querySelector('#' + tabId + ' table');
   if(!table) return;
-  var selectable = tabId === 'tab-ew01';
+  var selectable = true;
   var records = getEventsForTab(tabId);
   var pager = eventPagers[tabId];
   if(pager) pager.setTotal(records.length);
   var page = pager ? pager.getCurrentPage() : 1;
   var pageSize = pager ? pager.getPageSize() : 10;
   var rows = records.slice((page - 1) * pageSize, page * pageSize);
-  var header = (selectable ? '<th style="width:48px;text-align:center"><input type="checkbox" aria-label="全选当前筛选结果" onclick="toggleAllEvents(this.checked)"></th>' : '') +
+  var allRowsSelected = rows.length > 0 && rows.every(function(record){ return selectedEventIds[record.id]; });
+  var header = (selectable ? '<th style="width:48px;text-align:center"><input type="checkbox" aria-label="全选当前页" ' + (allRowsSelected ? 'checked ' : '') + 'onclick="toggleAllEvents(this.checked,\'' + tabId + '\')"></th>' : '') +
     '<th>事件编号</th><th>事件分类</th><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>事件描述</th><th>发生时间</th><th>处理状态</th><th style="text-align:center">操作</th>';
   table.tHead.innerHTML = '<tr>' + header + '</tr>';
   table.querySelector('colgroup').innerHTML = (selectable ? '<col style="width:48px">' : '') + '<col style="width:200px"><col style="width:80px"><col style="width:120px"><col style="width:180px"><col style="width:120px"><col style="width:240px"><col style="width:180px"><col style="width:100px"><col style="width:100px">';
@@ -388,6 +394,7 @@ function renderTable(tabId){
 }
 function renderActiveTable(){ renderTable(activeTabId); }
 function queryEvents(){
+  selectedEventIds = {};
   Object.keys(eventPagers).forEach(function(tabId){ eventPagers[tabId].reset(); });
   updateStatistics();
   renderActiveTable();
@@ -405,16 +412,22 @@ function resetEventFilters(){
 function toggleEventSelection(eventId, checked){
   if(checked) selectedEventIds[eventId] = true;
   else delete selectedEventIds[eventId];
+  renderTable(activeTabId);
 }
-function toggleAllEvents(checked){
-  getEventsForTab('tab-ew01').forEach(function(record){
+function toggleAllEvents(checked, tabId){
+  var pager = eventPagers[tabId];
+  var page = pager ? pager.getCurrentPage() : 1;
+  var pageSize = pager ? pager.getPageSize() : 10;
+  getEventsForTab(tabId).slice((page - 1) * pageSize, page * pageSize).forEach(function(record){
     if(checked) selectedEventIds[record.id] = true;
     else delete selectedEventIds[record.id];
   });
-  renderTable('tab-ew01');
+  renderTable(tabId);
 }
 function exportEvents(){
-  var records = getEventsForTab(activeTabId);
+  var allRecords = getEventsForTab(activeTabId);
+  var selectedRecords = allRecords.filter(function(record){ return selectedEventIds[record.id]; });
+  var records = selectedRecords.length ? selectedRecords : allRecords;
   if(!records.length){
     notify('当前筛选条件下没有可导出的事件记录');
     return;
@@ -432,7 +445,7 @@ function exportEvents(){
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  notify('已导出 ' + records.length + ' 条事件记录');
+  notify('已导出 ' + records.length + ' 条事件记录' + (selectedRecords.length ? '（已勾选）' : '（当前筛选结果）'));
 }
 function notify(message){
   if(typeof showToast === 'function') showToast(message);

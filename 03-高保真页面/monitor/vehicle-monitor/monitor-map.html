@@ -1929,7 +1929,8 @@ function openAlarmReplayFromQuery(){
   function pad(value){return String(value).padStart(2,'0')}
   function dateText(value){return value.getFullYear()+'-'+pad(value.getMonth()+1)+'-'+pad(value.getDate())}
   function timeText(value){return pad(value.getHours())+':'+pad(value.getMinutes())+':'+pad(value.getSeconds())}
-  var range={playbackDate:dateText(startAt),startTime:timeText(startAt),endTime:timeText(endAt),currentTime:timeText(new Date(params.get('time').replace(' ','T')))};
+  var eventAt=new Date(String(params.get('time')||'').replace(' ','T'));
+  var range={playbackDate:dateText(startAt),startTime:timeText(startAt),endTime:timeText(endAt),currentTime:isNaN(eventAt.getTime()) ? timeText(startAt) : timeText(eventAt)};
   var externalEvent={
     category:params.get('category') || '预警',
     type:params.get('type') || '异常状态事件',
