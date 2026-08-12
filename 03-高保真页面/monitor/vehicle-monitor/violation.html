@@ -246,12 +246,12 @@ function renderTable() {
     var checked = selectedIds.has(d.caseNo) ? 'checked' : '';
     html += '<tr>' +
       '<td style="text-align:center"><input type="checkbox" ' + checked + ' onchange="toggleCheck(\'' + d.caseNo + '\',this)"></td>' +
-      '<td style="text-align:center;font-family:monospace">' + d.caseNo + '</td>' +
+      '<td style="text-align:center">' + d.caseNo + '</td>' +
       '<td style="text-align:center">' + d.time + '</td>' +
       '<td style="text-align:center">' + d.plate + '</td>' +
       '<td style="text-align:left">' + d.enterprise + '</td>' +
       '<td style="text-align:center">' + d.vehicleType + '</td>' +
-      '<td style="text-align:center;font-family:monospace">' + d.violationCode + '</td>' +
+      '<td style="text-align:center">' + d.violationCode + '</td>' +
       '<td style="text-align:center"><span class="ant-tag ' + evClass + '">' + d.evidenceType + '</span></td>' +
       '<td style="text-align:center">' + d.policeId + '</td>' +
       '<td style="text-align:center">' + d.issueDate + '</td>' +
@@ -309,10 +309,10 @@ function showDetail(id) {
     '<div class="desc-section">' +
       '<div class="desc-section-title">案件基本信息</div>' +
       '<div class="desc-grid">' +
-        '<div class="desc-item"><div class="desc-label">违法案件编号</div><div class="desc-value" style="font-family:monospace">' + d.caseNo + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">违法案件编号</div><div class="desc-value">' + d.caseNo + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">违法发生时间</div><div class="desc-value">' + d.time + '</div></div>' +
         '<div class="desc-item full"><div class="desc-label">违法发生地址</div><div class="desc-value">' + d.address + '</div></div>' +
-        '<div class="desc-item"><div class="desc-label">违法行为代码</div><div class="desc-value" style="font-family:monospace">' + d.violationCode + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">违法行为代码</div><div class="desc-value">' + d.violationCode + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">违法取证类型</div><div class="desc-value"><span class="ant-tag ' + evClass + '">' + d.evidenceType + '</span></div></div>' +
         '<div class="desc-item full"><div class="desc-label">违法行为文字描述</div><div class="desc-value">' + d.violationDesc + '</div></div>' +
         '<div class="desc-item full"><div class="desc-label">违法适用法律依据</div><div class="desc-value">' + d.legalBasis + '</div></div>' +
@@ -323,7 +323,7 @@ function showDetail(id) {
       '<div class="desc-section-title">车辆与企业信息</div>' +
       '<div class="desc-grid">' +
         '<div class="desc-item"><div class="desc-label">运营企业名称</div><div class="desc-value">' + d.enterprise + '</div></div>' +
-        '<div class="desc-item"><div class="desc-label">统一社会信用代码</div><div class="desc-value" style="font-family:monospace;font-size:12px">' + d.creditCode + '</div></div>' +
+        '<div class="desc-item"><div class="desc-label">统一社会信用代码</div><div class="desc-value" style="font-size:12px">' + d.creditCode + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">车辆类型</div><div class="desc-value">' + d.vehicleType + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">车辆自动驾驶等级</div><div class="desc-value">' + d.autoLevel + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">临牌号</div><div class="desc-value">' + d.plate + '</div></div>' +

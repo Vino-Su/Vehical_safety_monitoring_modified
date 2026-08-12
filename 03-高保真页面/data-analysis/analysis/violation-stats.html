@@ -200,7 +200,7 @@ const PAGE_ID = 'violation-stats';
         '<td><span class="' + typeTag(a.accidentType) + '">' + a.accidentType + '</span></td>' +
         '<td><span class="' + severityTag(a.severity) + '">' + a.severity + '</span></td>' +
         '<td class="col-code">' + a.plate + '</td>' +
-        '<td class="col-code" style="font-family:monospace;font-size:11px">' + a.vin + '</td>' +
+        '<td class="col-code" style="font-size:11px">' + a.vin + '</td>' +
         '<td>' + a.company + '</td>' +
         '<td><span class="' + categoryTag(a.category) + '">' + a.category + '</span></td>' +
         '<td class="col-action"><button class="ant-btn-link" onclick="event.stopPropagation();openDetail(\'' + a.id + '\')">查看</button></td>' +
@@ -218,7 +218,7 @@ const PAGE_ID = 'violation-stats';
       '<div><div class="text-xs text-[#00000073]">事故类型</div><div class="text-sm"><span class="' + typeTag(a.accidentType) + '">' + a.accidentType + '</span></div></div>' +
       '<div><div class="text-xs text-[#00000073]">严重程度</div><div class="text-sm"><span class="' + severityTag(a.severity) + '">' + a.severity + '</span></div></div>' +
       '<div><div class="text-xs text-[#00000073]">车牌号</div><div class="text-sm font-semibold text-[#000000d9]">' + a.plate + '</div></div>' +
-      '<div><div class="text-xs text-[#00000073]">VIN码</div><div class="text-sm font-semibold text-[#000000d9]" style="font-family:monospace">' + a.vin + '</div></div>' +
+      '<div><div class="text-xs text-[#00000073]">VIN码</div><div class="text-sm font-semibold text-[#000000d9]">' + a.vin + '</div></div>' +
       '<div><div class="text-xs text-[#00000073]">所属企业</div><div class="text-sm font-semibold text-[#000000d9]">' + a.company + '</div></div>' +
       '<div><div class="text-xs text-[#00000073]">事故分类</div><div class="text-sm"><span class="' + categoryTag(a.category) + '">' + a.category + '</span></div></div>' +
       '<div><div class="text-xs text-[#00000073]">伤亡情况</div><div class="text-sm font-semibold text-[#000000d9]">' + a.casualties + '</div></div>' +

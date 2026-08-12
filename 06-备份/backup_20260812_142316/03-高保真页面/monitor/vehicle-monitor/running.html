@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>车辆运行监测 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <link rel="stylesheet" href="../../common/video-workbench.css">
+  <style>
+    .running-data-detail .detail-section{margin-bottom:16px;overflow:hidden;border:1px solid #f0f0f0;border-radius:6px}
+    .running-data-detail .detail-section:last-child{margin-bottom:0}
+    .running-data-detail .detail-section-title{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid #f0f0f0;background:#fafafa;color:#000000d9;font-size:14px;font-weight:600}
+    .running-data-detail .detail-section-title::before{width:3px;height:14px;border-radius:2px;background:#1677ff;content:""}
+    .running-data-detail .ant-descriptions-row:last-child{border-bottom:0}
+    .running-data-detail .ant-descriptions-label{width:126px;min-width:126px;padding:9px 12px;font-size:13px}
+    .running-data-detail .ant-descriptions-value{min-width:0;padding:9px 12px;font-size:13px;line-height:20px}
+    .running-data-detail .detail-code{font-family:SFMono-Regular,Consolas,"Liberation Mono",monospace;font-size:12px}
+    .running-data-detail .detail-long .ant-descriptions-value{word-break:break-all}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>车辆运行监测</h2></div>
+      <div class="filter-bar"><div class="filter-row"><div class="filter-item"><label>车牌号</label><input class="ant-input" placeholder="请输入车牌号搜索"></div><div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索"></div><div class="filter-item"><label>企业名称</label><input class="ant-input" placeholder="请输入企业名称"></div><div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button></div></div></div>
+
+      <div class="ant-tabs mb-4">
+        <span class="ant-tab active" onclick="switchTab(this,'tab-video')">视频监控</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-data')">运行数据</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-ad')">自动驾驶状态</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-sensor')">传感器数据上报</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-mileage')">里程统计</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-battery')">电池状态监测</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-fault')">车辆故障信息</span>
+      </div>
+
+      <div id="tab-video">
+        <div class="flex gap-4" style="height:calc(100vh - 320px)">
+          <div class="card flex flex-col" style="width:280px;min-width:280px">
+            <h4 class="text-sm font-semibold text-[#000000d9] mb-3">车辆列表</h4>
+            <div class="flex-1 overflow-y-auto" id="vehicleList" role="listbox" aria-label="视频车辆列表"></div>
+          </div>
+
+          <div class="flex-1 flex flex-col card" style="padding:12px">
+            <div id="runningVideoPane" class="vw-container" style="flex:1;min-height:0"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-data" style="display:none">
+        <div class="ant-table-wrapper">
+          <table class="ant-table"><thead><tr><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>数据采集时间</th><th>经度</th><th>纬度</th><th>车辆驾驶模式</th><th>车辆速度</th><th>档位</th><th>操作</th></tr></thead>
+          <tbody id="tbody-data"></tbody></table>
+        </div>
+        <div id="paginationBar-data"></div>
+      </div>
+
+      <div id="tab-ad" style="display:none">
+        <div class="ant-table-wrapper">
+          <table class="ant-table"><thead><tr><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>数据采集时间</th><th>车辆驾驶模式</th><th>接管状态</th></tr></thead>
+          <tbody id="tbody-ad"></tbody></table>
+        </div>
+        <div id="paginationBar-ad"></div>
+      </div>
+
+      <div id="tab-sensor" style="display:none">
+        <div class="ant-table-wrapper">
+          <table class="ant-table"><thead><tr><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>数据采集时间</th><th>车辆纵向加速度(m/s²)</th><th>车辆横向加速度(m/s²)</th><th>车辆横摆角速度(°/s)</th><th>车辆侧倾角速度(°/s)</th><th>车辆航向角(°)</th></tr></thead>
+          <tbody id="tbody-sensor"></tbody></table>
+        </div>
+        <div id="paginationBar-sensor"></div>
+      </div>
+
+      <div id="tab-mileage" style="display:none">
+        <div class="ant-table-wrapper">
+          <table class="ant-table"><thead><tr><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>数据更新时间</th><th>自动驾驶里程(km)</th><th>人工驾驶里程(km)</th><th>总里程(km)</th></tr></thead>
+          <tbody id="tbody-mileage"></tbody></table>
+        </div>
+        <div id="paginationBar-mileage"></div>
+      </div>
+
+      <div id="tab-battery" style="display:none">
+        <div class="ant-table-wrapper">
+          <table class="ant-table"><thead><tr><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>数据采集时间</th><th>总电压(V)</th><th>总电流(A)</th><th>温度(℃)</th><th>SOC(%)</th><th>SOH(%)</th></tr></thead>
+          <tbody id="tbody-battery"></tbody></table>
+        </div>
+        <div id="paginationBar-battery"></div>
+      </div>
+
+      <div id="tab-fault" style="display:none">
+        <div class="ant-table-wrapper">
+          <table class="ant-table"><thead><tr><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>数据采集时间</th><th>设备编号</th><th>故障码</th><th>故障描述</th><th>故障等级</th><th>所属系统</th></tr></thead>
+          <tbody id="tbody-fault"></tbody></table>
+        </div>
+        <div id="paginationBar-fault"></div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='running';
+var runningVehicleId='V001';
+// 挂载公共视频组件（默认多路布局，与地图页的单路面板态形成差异）
+function initRunningVideo(){
+  var pane=document.getElementById('runningVideoPane');
+  if(!pane)return;
+  if(VideoWorkbench.getInstance('runningVideoPane')){VideoWorkbench.setVehicle('runningVideoPane',runningVehicleId);return}
+  VideoWorkbench.mount({container:pane,vehicleId:runningVehicleId,layout:'multi',gridCount:4,mode:'live',timeSource:'now'});
+}
+function switchTab(el,tabId){
+  document.querySelectorAll('.ant-tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  ['tab-video','tab-data','tab-ad','tab-sensor','tab-mileage','tab-battery','tab-fault'].forEach(function(id){document.getElementById(id).style.display=id===tabId?'':'none'});
+  if(tabId==='video'&&!VideoWorkbench.getInstance('runningVideoPane')){initRunningVideo()}
+}
+// 左侧车辆列表驱动选车（running 页主入口）：切换组件到选中车辆
+function selectVideoVehicle(el,plate){
+  document.querySelectorAll('.vehicle-item').forEach(function(v){v.classList.remove('active')});
+  el.classList.add('active');
+  var v=vehicleData.find(function(d){return d.plate===plate});
+  if(v){runningVehicleId=v.id}
+  if(VideoWorkbench.getInstance('runningVideoPane')){VideoWorkbench.setVehicle('runningVideoPane',runningVehicleId)}
+}
+
+function renderVideoVehicleList(){
+  var list=document.getElementById('vehicleList');if(!list)return;
+  var typeMap={'road-test':'道路测试','demo':'示范应用','operate':'商业化试点'};
+  var statusMap={online:{label:'在线',tag:'ant-tag-success'},alarm:{label:'异常',tag:'ant-tag-warning'},offline:{label:'离线',tag:'ant-tag-default'}};
+  var rows=vehicleData;
+  list.innerHTML=rows.map(function(v){
+    var status=statusMap[v.status]||statusMap.online;
+    var selected=v.id===runningVehicleId?' active':'';
+    return '<button type="button" role="option" aria-selected="'+(v.id===runningVehicleId)+'" class="vehicle-item'+selected+'" onclick="selectVideoVehicle(this,\''+v.plate+'\')">'+
+      '<span class="vehicle-meta"><b>'+v.plate+'</b><small>'+v.company+' | '+typeMap[v.applyType]+'</small></span>'+
+      '<span class="ant-tag '+status.tag+'">'+status.label+'</span>'+
+    '</button>';
+  }).join('')||'<div class="text-xs text-[#00000073] text-center py-6">未找到匹配车辆</div>';
+}
+// 历史回放：不再弹窗，直接进入组件内回放工作台（进度条贴视频，T 由其驱动）
+function openVideoHistory(){
+  if(VideoWorkbench.getInstance('runningVideoPane')){VideoWorkbench.enterPlayback('runningVideoPane')}
+}
+function openDetail_data(){
+  openModal('运行数据详情 - 鄂F·A001',
+    '<div class="running-data-detail">' +
+      '<section class="detail-section"><div class="detail-section-title">基础信息</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">临牌号</div><div class="ant-descriptions-value">鄂F·A001</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value detail-code">LSVAA4189N2000001</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">A公司</div><div class="ant-descriptions-label">数据采集时间</div><div class="ant-descriptions-value">2026-05-11 14:32:15</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">经度</div><div class="ant-descriptions-value detail-code">112.144025</div><div class="ant-descriptions-label">纬度</div><div class="ant-descriptions-value detail-code">32.042374</div></div>' +
+      '</div></section>' +
+      '<section class="detail-section"><div class="detail-section-title">驾驶与车辆动态</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆驾驶模式</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-processing">自动驾驶</span></div><div class="ant-descriptions-label">接管状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-default">未接管</span></div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">DMS状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">正常</span></div><div class="ant-descriptions-label">执行最小风险策略原因</div><div class="ant-descriptions-value">未触发</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆速度</div><div class="ant-descriptions-value">45 km/h</div><div class="ant-descriptions-label">车辆纵向加速度</div><div class="ant-descriptions-value">0.18 m/s²</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆横向加速度</div><div class="ant-descriptions-value">0.06 m/s²</div><div class="ant-descriptions-label">车辆横摆角速度</div><div class="ant-descriptions-value">0.42 °/s</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆侧倾角速度</div><div class="ant-descriptions-value">0.03 °/s</div><div class="ant-descriptions-label">车辆航向角</div><div class="ant-descriptions-value">128.6°</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">失效类型</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">无</span></div></div>' +
+      '</div></section>' +
+      '<section class="detail-section"><div class="detail-section-title">车身信号与操控</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自适应前照明系统状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">近灯光状态</div><div class="ant-descriptions-value">关闭</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">远灯光状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">危险警告信号状态</div><div class="ant-descriptions-value">关闭</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">制动灯状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">左转向信号灯状态</div><div class="ant-descriptions-value">关闭</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">右转向灯状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">车辆喇叭信息</div><div class="ant-descriptions-value">未鸣笛</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">加速踏板开度比例</div><div class="ant-descriptions-value">18%</div><div class="ant-descriptions-label">制动踏板开度比例</div><div class="ant-descriptions-value">0%</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">制动踏板状态</div><div class="ant-descriptions-value">未踩下</div><div class="ant-descriptions-label">转向盘角度</div><div class="ant-descriptions-value">12.4°</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">档位</div><div class="ant-descriptions-value">D</div><div class="ant-descriptions-label">雨刮</div><div class="ant-descriptions-value">关闭</div></div>' +
+      '</div></section>' +
+      '<section class="detail-section"><div class="detail-section-title">远程控制</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">远程控制指令长度</div><div class="ant-descriptions-value">0 字节</div></div>' +
+        '<div class="ant-descriptions-row detail-long"><div class="ant-descriptions-label">远程控制指令内容</div><div class="ant-descriptions-value">无</div></div>' +
+      '</div></section>' +
+    '</div>',{wide:true,fullscreen:true,maxHeight:'calc(100vh - 96px)',footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+function openDetail_ad(){
+  openModal('自动驾驶状态详情 - 鄂F·A001',
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号码</div><div class="ant-descriptions-value">鄂F·A001</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value" style="font-family:monospace;font-size:12px">LSVAA4189N2000001</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">AD系统使能状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">已启用(系统默认开启)</span></div><div class="ant-descriptions-label">自动驾驶等级</div><div class="ant-descriptions-value">L3</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">当前速度</div><div class="ant-descriptions-value">0 km/h</div><div class="ant-descriptions-label">当前接管次数</div><div class="ant-descriptions-value">0次</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">当前运行模式</div><div class="ant-descriptions-value">自动驾驶</div><div class="ant-descriptions-label">AD软件版本</div><div class="ant-descriptions-value">V3.2.1-RC4</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">最近更新时间</div><div class="ant-descriptions-value">2026-04-25 10:15</div></div>' +
+    '</div>',{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+function openDetail_sensor(){
+  openModal('传感器数据上报详情 - 鄂F·A001',
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号码</div><div class="ant-descriptions-value">鄂F·A001</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value" style="font-family:monospace;font-size:12px">LSVAA4189N2000001</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">最后上报时间</div><div class="ant-descriptions-value">2026-05-11 14:32:15</div><div class="ant-descriptions-label">传感器数据上报状态</div><div class="ant-descriptions-value">正常上报(10Hz)</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">定位精度</div><div class="ant-descriptions-value">正常</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">数据完整性</div><div class="ant-descriptions-value">8项指标全正常</div><div class="ant-descriptions-label">定位精度</div><div class="ant-descriptions-value">12项指标全正常</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">传感器类型</div><div class="ant-descriptions-value">激光雷达、毫米波雷达、视觉相机等(共12类)</div><div class="ant-descriptions-label">定位方式</div><div class="ant-descriptions-value">组合导航</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">数据传输方式</div><div class="ant-descriptions-value">加密传输</div><div class="ant-descriptions-label">数据完整性校验</div><div class="ant-descriptions-value">100%</div></div>' +
+    '</div>',{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+function openDetail_mileage(){
+  openModal('里程统计详情 - 鄂F·A001',
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号码</div><div class="ant-descriptions-value">鄂F·A001</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value" style="font-family:monospace;font-size:12px">LSVAA4189N2000001</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">历史总里程</div><div class="ant-descriptions-value">2,350 km</div><div class="ant-descriptions-label">当日累计里程</div><div class="ant-descriptions-value">86.5 km</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自动驾驶里程</div><div class="ant-descriptions-value">72.3 km (83.6%)</div><div class="ant-descriptions-label">人工驾驶里程</div><div class="ant-descriptions-value">14.2 km (16.4%)</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">历史总测试里程</div><div class="ant-descriptions-value">15,230 km</div></div>' +
+    '</div>',{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+function openDetail_battery(){
+  openModal('电池状态监测详情 - 鄂F·A001',
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号码</div><div class="ant-descriptions-value">鄂F·A001</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value" style="font-family:monospace;font-size:12px">LSVAA4189N2000001</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">SOC</div><div class="ant-descriptions-value">78%</div><div class="ant-descriptions-label">SOH</div><div class="ant-descriptions-value">96%</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">电池温度(最高值)</div><div class="ant-descriptions-value">32℃</div><div class="ant-descriptions-label">总电压</div><div class="ant-descriptions-value">385 V</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">电流</div><div class="ant-descriptions-value">-15.2 A (放电中)</div><div class="ant-descriptions-label">充电状态</div><div class="ant-descriptions-value">放电中</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">剩余续航</div><div class="ant-descriptions-value">328km</div></div>' +
+    '</div>',{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+function openDetail_fault(){
+  openModal('车辆故障告警详情 - 鄂F·D010',
+    '<div class="ant-descriptions">' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车牌号码</div><div class="ant-descriptions-value">鄂F·D010</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value" style="font-family:monospace;font-size:12px">LSVAA4189N2000005</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">故障码</div><div class="ant-descriptions-value">P0700</div><div class="ant-descriptions-label">故障来源</div><div class="ant-descriptions-value">车载终端</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">故障描述</div><div class="ant-descriptions-value">控制器局域网通信丢失(可能涉及CAN总线断连或网关故障)</div><div class="ant-descriptions-label">故障发生时间</div><div class="ant-descriptions-value">2026-04-27 13:45</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">故障处理状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-warning">待处理</span></div><div class="ant-descriptions-label">故障级别</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-error">严重故障</span></div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">建议处理方案</div><div class="ant-descriptions-value">立即检查CAN总线连接及网关模块</div></div>' +
+    '</div>',{wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+</script>
+<script src="../../components/pagination-component.js"></script>
+<script src="../../common.js"></script>
+<script src="../../common/vehicle-data.js"></script>
+<script src="../../common/time-clock.js"></script>
+<script src="../../common/video-workbench.js"></script>
+<script>
+var LIST_TABS = ['tab-data','tab-ad','tab-sensor','tab-mileage','tab-battery','tab-fault'];
+var PAGERS = {};
+var activeListTab = null;
+
+// ===== 基础车辆 =====
+var VIN_MONO = 'style="font-family:monospace;font-size:12px"';
+var BASE = [
+  {p:'鄂F·A001',v:'LSVAA4189N2000001',c:'A公司'},
+  {p:'鄂F·B003',v:'LSVAA4189N2000003',c:'B公司'},
+  {p:'鄂F·C007',v:'LSVAA4189N2000004',c:'D公司'},
+  {p:'鄂F·D010',v:'LSVAA4189N2000005',c:'C公司'},
+  {p:'鄂F·E005',v:'LSVAA4189N2000006',c:'A公司'},
+  {p:'鄂F·A002',v:'LSVAA4189N2000002',c:'A公司'},
+  {p:'鄂F·F008',v:'LSVAA4189N2000007',c:'B公司'},
+  {p:'鄂F·G011',v:'LSVAA4189N2000008',c:'E公司'},
+  {p:'鄂F·H012',v:'LSVAA4189N2000009',c:'C公司'},
+  {p:'鄂F·I013',v:'LSVAA4189N2000010',c:'D公司'},
+  {p:'鄂F·J014',v:'LSVAA4189N2000011',c:'B公司'},
+  {p:'鄂F·K015',v:'LSVAA4189N2000012',c:'E公司'}
+];
+var TS = ['14:32:15','14:32:10','14:31:55','14:28:30','13:45:20','14:25:40','14:22:18','14:18:05','14:15:30','14:10:10','14:05:22','14:00:08'];
+
+function VIN(v){return '<td '+VIN_MONO+'>'+v+'</td>'}
+function TAG(c,t){return '<span class="ant-tag '+c+'">'+t+'</span>'}
+
+// ===== 运行数据 =====
+var DATA_data = [
+  {lng:112.144025,lat:32.042374,mode:TAG('ant-tag-processing','自动驾驶'),spd:'45 km/h',gear:'D'},
+  {lng:112.138156,lat:32.048217,mode:TAG('ant-tag-processing','自动驾驶'),spd:'32 km/h',gear:'D'},
+  {lng:112.158241,lat:32.035189,mode:TAG('ant-tag-success','人工驾驶'),spd:'58 km/h',gear:'D'},
+  {lng:112.121468,lat:32.051926,mode:TAG('ant-tag-default','人工驾驶'),spd:'0 km/h',gear:'P'},
+  {lng:112.165,lat:32.040,mode:TAG('ant-tag-default','人工驾驶'),spd:'22 km/h',gear:'D'},
+  {lng:112.132,lat:32.045,mode:TAG('ant-tag-processing','自动驾驶'),spd:'38 km/h',gear:'D'},
+  {lng:112.148,lat:32.038,mode:TAG('ant-tag-processing','自动驾驶'),spd:'42 km/h',gear:'D'},
+  {lng:112.120,lat:32.055,mode:TAG('ant-tag-default','人工驾驶'),spd:'15 km/h',gear:'P'},
+  {lng:112.156,lat:32.033,mode:TAG('ant-tag-processing','自动驾驶'),spd:'50 km/h',gear:'D'},
+  {lng:112.134,lat:32.047,mode:TAG('ant-tag-default','人工驾驶'),spd:'28 km/h',gear:'D'},
+  {lng:112.142,lat:32.042,mode:TAG('ant-tag-processing','自动驾驶'),spd:'35 km/h',gear:'D'},
+  {lng:112.110,lat:32.058,mode:TAG('ant-tag-default','人工驾驶'),spd:'20 km/h',gear:'N'}
+];
+DATA_data.forEach(function(d,i){d.plate=BASE[i].p;d.vin=BASE[i].v;d.company=BASE[i].c;d.time='2026-05-11 '+TS[i]});
+function renderDataTable(){
+  var pg=PAGERS['tab-data'],page=pg.getCurrentPage(),size=pg.getPageSize();
+  var rows=DATA_data.slice((page-1)*size,page*size);
+  document.getElementById('tbody-data').innerHTML=rows.map(function(d){
+    return '<tr><td>'+d.plate+'</td>'+VIN(d.vin)+'<td>'+d.company+'</td><td>'+d.time+'</td><td>'+d.lng+'</td><td>'+d.lat+'</td><td>'+d.mode+'</td><td>'+d.spd+'</td><td>'+d.gear+'</td><td><button class="ant-btn-link" onclick="openDetail_data()">查看</button></td></tr>';
+  }).join('');
+}
+
+// ===== 自动驾驶状态 =====
+var DATA_ad = [
+  {mode:TAG('ant-tag-processing','自动驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-processing','自动驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-default','人工驾驶'),takeover:TAG('ant-tag-warning','已接管')},
+  {mode:TAG('ant-tag-default','人工驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-default','人工驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-processing','自动驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-processing','自动驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-default','人工驾驶'),takeover:TAG('ant-tag-warning','已接管')},
+  {mode:TAG('ant-tag-processing','自动驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-default','人工驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-processing','自动驾驶'),takeover:TAG('ant-tag-default','未接管')},
+  {mode:TAG('ant-tag-default','人工驾驶'),takeover:TAG('ant-tag-default','未接管')}
+];
+DATA_ad.forEach(function(d,i){d.plate=BASE[i].p;d.vin=BASE[i].v;d.company=BASE[i].c;d.time='2026-05-11 '+TS[i]});
+function renderAdTable(){
+  var pg=PAGERS['tab-ad'],page=pg.getCurrentPage(),size=pg.getPageSize();
+  var rows=DATA_ad.slice((page-1)*size,page*size);
+  document.getElementById('tbody-ad').innerHTML=rows.map(function(d){
+    return '<tr><td>'+d.plate+'</td>'+VIN(d.vin)+'<td>'+d.company+'</td><td>'+d.time+'</td><td>'+d.mode+'</td><td>'+d.takeover+'</td></tr>';
+  }).join('');
+}
+
+// ===== 传感器数据上报 =====
+var DATA_sensor = [
+  {aL:0.18,aT:0.06,yaw:0.42,roll:0.03,hdg:128.6},
+  {aL:0.25,aT:0.12,yaw:0.55,roll:0.05,hdg:95.3},
+  {aL:0.32,aT:0.15,yaw:0.68,roll:0.08,hdg:210.7},
+  {aL:0.45,aT:0.28,yaw:1.12,roll:0.15,hdg:176.2},
+  {aL:0.12,aT:0.04,yaw:0.35,roll:0.02,hdg:45.8},
+  {aL:0.38,aT:0.10,yaw:0.48,roll:0.04,hdg:180.5},
+  {aL:0.22,aT:0.08,yaw:0.52,roll:0.03,hdg:270.2},
+  {aL:0.15,aT:0.05,yaw:0.38,roll:0.02,hdg:315.0},
+  {aL:0.42,aT:0.18,yaw:0.95,roll:0.10,hdg:85.6},
+  {aL:0.28,aT:0.09,yaw:0.50,roll:0.05,hdg:145.3},
+  {aL:0.35,aT:0.14,yaw:0.62,roll:0.07,hdg:220.1},
+  {aL:0.20,aT:0.07,yaw:0.40,roll:0.03,hdg:32.4}
+];
+DATA_sensor.forEach(function(d,i){d.plate=BASE[i].p;d.vin=BASE[i].v;d.company=BASE[i].c;d.time='2026-05-11 '+TS[i]});
+function renderSensorTable(){
+  var pg=PAGERS['tab-sensor'],page=pg.getCurrentPage(),size=pg.getPageSize();
+  var rows=DATA_sensor.slice((page-1)*size,page*size);
+  document.getElementById('tbody-sensor').innerHTML=rows.map(function(d){
+    return '<tr><td>'+d.plate+'</td>'+VIN(d.vin)+'<td>'+d.company+'</td><td>'+d.time+'</td><td>'+d.aL+'</td><td>'+d.aT+'</td><td>'+d.yaw+'</td><td>'+d.roll+'</td><td>'+d.hdg+'</td></tr>';
+  }).join('');
+}
+
+// ===== 里程统计 =====
+var DATA_mileage = [
+  {auto:72.3,manu:14.2,total:86.5},
+  {auto:45.2,manu:0,total:45.2},
+  {auto:58.6,manu:12.4,total:71.0},
+  {auto:32.1,manu:8.7,total:40.8},
+  {auto:28.4,manu:6.5,total:34.9},
+  {auto:65.0,manu:10.2,total:75.2},
+  {auto:41.5,manu:8.0,total:49.5},
+  {auto:35.2,manu:5.5,total:40.7},
+  {auto:50.1,manu:9.3,total:59.4},
+  {auto:42.8,manu:7.1,total:49.9},
+  {auto:38.6,manu:6.8,total:45.4},
+  {auto:55.3,manu:11.2,total:66.5}
+];
+DATA_mileage.forEach(function(d,i){d.plate=BASE[i].p;d.vin=BASE[i].v;d.company=BASE[i].c;d.time='2026-05-11 '+TS[i]});
+function renderMileageTable(){
+  var pg=PAGERS['tab-mileage'],page=pg.getCurrentPage(),size=pg.getPageSize();
+  var rows=DATA_mileage.slice((page-1)*size,page*size);
+  document.getElementById('tbody-mileage').innerHTML=rows.map(function(d){
+    return '<tr><td>'+d.plate+'</td>'+VIN(d.vin)+'<td>'+d.company+'</td><td>'+d.time+'</td><td>'+d.auto+'</td><td>'+d.manu+'</td><td>'+d.total+'</td></tr>';
+  }).join('');
+}
+
+// ===== 电池状态监测 =====
+var DATA_battery = [
+  {volt:385,curr:-15.2,temp:32,soc:'<span style="color:#52c41a">78</span>',soh:96},
+  {volt:372,curr:-22.8,temp:35,soc:'<span style="color:#faad14">35</span>',soh:94},
+  {volt:368,curr:-8.5,temp:30,soc:'<span style="color:#52c41a">65</span>',soh:95},
+  {volt:358,curr:-28.5,temp:38,soc:'<span style="color:#ff4d4f">12</span>',soh:88},
+  {volt:392,curr:-12.0,temp:28,soc:'<span style="color:#52c41a">85</span>',soh:97},
+  {volt:380,curr:-18.5,temp:33,soc:'<span style="color:#faad14">45</span>',soh:93},
+  {volt:375,curr:-10.2,temp:31,soc:'<span style="color:#52c41a">55</span>',soh:96},
+  {volt:365,curr:-25.0,temp:36,soc:'<span style="color:#ff4d4f">25</span>',soh:90},
+  {volt:388,curr:-14.5,temp:29,soc:'<span style="color:#52c41a">70</span>',soh:95},
+  {volt:370,curr:-20.2,temp:34,soc:'<span style="color:#faad14">40</span>',soh:92},
+  {volt:382,curr:-9.8,temp:27,soc:'<span style="color:#52c41a">60</span>',soh:96},
+  {volt:360,curr:-26.5,temp:37,soc:'<span style="color:#ff4d4f">18</span>',soh:89}
+];
+DATA_battery.forEach(function(d,i){d.plate=BASE[i].p;d.vin=BASE[i].v;d.company=BASE[i].c;d.time='2026-05-11 '+TS[i]});
+function renderBatteryTable(){
+  var pg=PAGERS['tab-battery'],page=pg.getCurrentPage(),size=pg.getPageSize();
+  var rows=DATA_battery.slice((page-1)*size,page*size);
+  document.getElementById('tbody-battery').innerHTML=rows.map(function(d){
+    return '<tr><td>'+d.plate+'</td>'+VIN(d.vin)+'<td>'+d.company+'</td><td>'+d.time+'</td><td>'+d.volt+'</td><td>'+d.curr+'</td><td>'+d.temp+'</td><td>'+d.soc+'</td><td>'+d.soh+'</td></tr>';
+  }).join('');
+}
+
+// ===== 车辆故障信息 =====
+var FAULT_LEVEL = {2:TAG('ant-tag-error','严重'),1:TAG('ant-tag-warning','一般'),0:TAG('ant-tag-default','轻微')};
+var DATA_fault = [
+  {dev:'TBOX-D010-001',code:'P0700',desc:'控制器局域网通信丢失(可能涉及CAN总线断连或网关故障)',lv:2,sys:'车载终端'},
+  {dev:'ADAS-A002-001',code:'C0035',desc:'自动驾驶系统路径规划模块异常(可能与高精地图数据不一致有关)',lv:1,sys:'AD系统'},
+  {dev:'BMS-B003-002',code:'B0118',desc:'动力电池单体电压差异过大(单体压差超过限值)',lv:1,sys:'动力电池系统'},
+  {dev:'ESC-C007-001',code:'C1201',desc:'电子稳定控制系统通讯超时(轮速传感器信号间歇性丢失)',lv:0,sys:'底盘电控系统'},
+  {dev:'TBOX-A001-001',code:'P0500',desc:'车速传感器信号异常',lv:1,sys:'车载终端'},
+  {dev:'ADAS-F008-002',code:'C0042',desc:'前向碰撞预警模块校准失效',lv:2,sys:'AD系统'},
+  {dev:'BMS-G011-001',code:'B0120',desc:'电池管理系统温度传感器偏移',lv:0,sys:'动力电池系统'},
+  {dev:'ESC-H012-001',code:'C1205',desc:'制动压力传感器信号不稳定',lv:1,sys:'底盘电控系统'},
+  {dev:'TBOX-I013-001',code:'P0606',desc:'ECM/PCM处理器故障(控制器内部错误)',lv:2,sys:'车载终端'},
+  {dev:'ADAS-J014-001',code:'C0030',desc:'车道偏离预警摄像头模糊',lv:1,sys:'AD系统'},
+  {dev:'BMS-K015-001',code:'B0115',desc:'动力电池绝缘电阻偏低',lv:0,sys:'动力电池系统'},
+  {dev:'ESC-E005-001',code:'C1210',desc:'转向角传感器零点漂移',lv:1,sys:'底盘电控系统'}
+];
+DATA_fault.forEach(function(d,i){d.plate=BASE[i].p;d.vin=BASE[i].v;d.company=BASE[i].c;d.time='2026-05-11 '+TS[i]});
+function renderFaultTable(){
+  var pg=PAGERS['tab-fault'],page=pg.getCurrentPage(),size=pg.getPageSize();
+  var rows=DATA_fault.slice((page-1)*size,page*size);
+  document.getElementById('tbody-fault').innerHTML=rows.map(function(d){
+    return '<tr><td>'+d.plate+'</td>'+VIN(d.vin)+'<td>'+d.company+'</td><td>'+d.time+'</td><td>'+d.dev+'</td><td>'+d.code+'</td><td>'+d.desc+'</td><td>'+FAULT_LEVEL[d.lv]+'</td><td>'+d.sys+'</td></tr>';
+  }).join('');
+}
+
+// ===== 分页管理器 =====
+var TAB_META = {
+  'tab-data':    {data:DATA_data,    render:renderDataTable,    container:'paginationBar-data'},
+  'tab-ad':      {data:DATA_ad,      render:renderAdTable,      container:'paginationBar-ad'},
+  'tab-sensor':  {data:DATA_sensor,  render:renderSensorTable,  container:'paginationBar-sensor'},
+  'tab-mileage': {data:DATA_mileage, render:renderMileageTable, container:'paginationBar-mileage'},
+  'tab-battery': {data:DATA_battery, render:renderBatteryTable, container:'paginationBar-battery'},
+  'tab-fault':   {data:DATA_fault,   render:renderFaultTable,   container:'paginationBar-fault'}
+};
+
+function initListPager(tabId) {
+  if (PAGERS[tabId]) return;
+  var meta = TAB_META[tabId];
+  if (!meta) return;
+  var pager = new Pagination({
+    container: meta.container,
+    pageSize: 10,
+    pageSizeOptions: [10, 20, 50],
+    size: 'small',
+    onPageChange: function() { meta.render(); },
+    onPageSizeChange: function() { meta.render(); }
+  });
+  pager.setTotal(meta.data.length);
+  PAGERS[tabId] = pager;
+  activeListTab = tabId;
+  meta.render();
+}
+
+// ===== 覆盖 switchTab，集成分页 =====
+var _origSwitchTab = switchTab;
+switchTab = function(el, tabId) {
+  // 清理已有分页实例
+  for (var k in PAGERS) { if (PAGERS[k]) { PAGERS[k].destroy(); delete PAGERS[k]; } }
+  // 调用原始逻辑
+  _origSwitchTab(el, tabId);
+  // 如果是列表tab，初始化分页
+  if (TAB_META[tabId]) { initListPager(tabId); }
+};
+
+// 视频tab默认激活；script位于body末尾，DOM元素与公共组件均已就绪，直接挂载
+renderVideoVehicleList();
+initRunningVideo();
+</script>
+</body>
+</html>

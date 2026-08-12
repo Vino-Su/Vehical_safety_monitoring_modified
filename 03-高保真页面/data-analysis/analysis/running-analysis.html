@@ -176,7 +176,7 @@ function renderTable(page) {
     const modeTag = d.mode === '自动驾驶' ? 'ant-tag-processing' : d.mode === '人工驾驶' ? 'ant-tag-success' : 'ant-tag-warning';
     return '<tr onclick="openDetail(\'' + d.plate + '\')" style="cursor:pointer;">' +
       '<td><strong>' + d.plate + '</strong></td>' +
-      '<td style="font-family:monospace;font-size:12px;">' + d.vin + '</td>' +
+      '<td style="font-size:12px;">' + d.vin + '</td>' +
       '<td>' + d.company + '</td>' +
       '<td>' + d.lastReportTime + '</td>' +
       '<td><span class="ant-tag ' + compTag + '">' + d.completeness.toFixed(1) + '%</span></td>' +
@@ -211,7 +211,7 @@ function openDetail(plate) {
   const d = allQualityData.find(item => item.plate === plate) || allQualityData[0];
   const html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;line-height:2;">' +
     '<div><div style="color:#8c8c8c;font-size:12px;">车牌号</div><div style="font-weight:500;">' + d.plate + '</div></div>' +
-    '<div><div style="color:#8c8c8c;font-size:12px;">VIN码</div><div style="font-weight:500;font-family:monospace;">' + d.vin + '</div></div>' +
+    '<div><div style="color:#8c8c8c;font-size:12px;">VIN码</div><div style="font-weight:500;">' + d.vin + '</div></div>' +
     '<div><div style="color:#8c8c8c;font-size:12px;">所属企业</div><div style="font-weight:500;">' + d.company + '</div></div>' +
     '<div><div style="color:#8c8c8c;font-size:12px;">车型</div><div style="font-weight:500;">' + d.vehicleType + '</div></div>' +
     '<div><div style="color:#8c8c8c;font-size:12px;">行政区域</div><div style="font-weight:500;">' + d.district + '</div></div>' +

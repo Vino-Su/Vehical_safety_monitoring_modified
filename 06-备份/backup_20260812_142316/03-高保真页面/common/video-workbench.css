@@ -1,0 +1,89 @@
+/* ============================================================
+   公共视频工作台样式（monitor-map / running 两页共用）
+   遵循项目 UI 设计规范：主色 #1677ff，圆角 6-8px，字号 11-13px
+   ============================================================ */
+
+/* 视频面板态容器（右侧面板 / tab 容器内） */
+.vw-container{display:flex;flex-direction:column;height:100%;min-height:0;padding:12px;background:#fff}
+.vw-workbench{display:flex;flex:1;min-height:0;flex-direction:column}
+.vw-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;min-height:24px}
+.vw-vehicle-title{display:flex;min-width:0;align-items:baseline;gap:8px;color:#000000d9;font-size:13px;font-weight:600}
+.vw-vehicle-title em{overflow:hidden;color:#00000073;font-size:11px;font-style:normal;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
+.vw-vehicle-select{min-width:0;height:28px;padding:0 8px;font-size:12px;font-weight:600}
+.vw-tool-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px}
+.vw-main-stage{position:relative;display:flex;min-height:0;flex:1;align-items:center;justify-content:center;overflow:hidden;border-radius:6px;background:#000}
+.vw-stage-status{position:absolute;top:6px;right:6px;z-index:2}
+.vw-camera-actions{position:absolute;right:6px;bottom:6px;z-index:3;display:flex;gap:4px}
+.vw-camera-action{display:flex;min-width:38px;height:24px;align-items:center;justify-content:center;padding:0 6px;border:1px solid rgba(255,255,255,.32);border-radius:4px;background:rgba(0,0,0,.64);color:#fff;font-size:11px;cursor:pointer}
+.vw-camera-action:hover{border-color:#91caff;background:#1677ff}
+
+/* 摄像头缩略图 hover */
+.vw-thumb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.vw-thumb{position:relative;display:flex;min-height:52px;align-items:center;justify-content:center;overflow:hidden;border:1px solid #f0f0f0;border-radius:4px;background:#000;color:rgba(255,255,255,.64);cursor:pointer}
+.vw-thumb:hover{border-color:#4096ff;box-shadow:0 0 0 1px #4096ff;opacity:.96}
+.vw-thumb.active{border-color:#1677ff;box-shadow:0 0 0 2px #1677ff}
+.vw-thumb-label{position:absolute;top:4px;left:4px;padding:1px 4px;border-radius:2px;color:#fff;font-size:9px;line-height:14px}
+.vw-thumb-icon{font-size:16px}
+.vw-thumb-name{position:absolute;right:4px;bottom:3px;left:4px;overflow:hidden;color:rgba(255,255,255,.78);font-size:10px;text-align:left;text-overflow:ellipsis;white-space:nowrap}
+
+/* 进度条 range 美化（与轨迹回放条风格一致） */
+.vw-range{-webkit-appearance:none;appearance:none;height:18px;background:transparent;outline:none;position:relative;z-index:2}
+.vw-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#1677ff;cursor:pointer;box-shadow:0 1px 4px rgba(22,119,255,.4);margin-top:3px}
+.vw-range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#1677ff;cursor:pointer;border:none}
+.vw-playback{margin-top:8px}
+.vw-history-query{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.vw-history-query input{height:24px!important;box-sizing:border-box;font-size:11px!important;padding:0 5px!important}
+.vw-history-query input[type="date"]{flex:0 0 132px;width:132px!important}
+.vw-history-times{display:flex;align-items:center;gap:3px}
+.vw-history-times input{flex:0 0 82px;width:82px!important}
+.vw-history-times span{color:#00000073;font-size:10px}
+.vw-history-query .vw-query-button{flex:0 0 auto;width:auto!important;height:24px!important;padding:0 8px!important}
+.vw-progress-wrap{position:relative;height:18px}
+.vw-progress-track{position:absolute;top:7px;right:0;left:0;height:4px;border-radius:2px;background:#333;pointer-events:none}
+.vw-progress-value{height:100%;border-radius:2px;background:#1677ff}
+.vw-time-labels{display:flex;justify-content:space-between;margin-top:2px;color:#00000073;font-size:10px}
+.vw-playback-actions{display:inline-flex;align-self:flex-start;width:max-content;align-items:center;gap:4px;margin-top:4px}
+.vw-playback-actions .ant-btn{flex:0 0 auto;width:auto!important}
+.vw-speed-select{flex:0 0 56px;width:56px!important;height:22px!important;padding:0 4px!important;font-size:11px!important}
+
+/* 全屏态背景 */
+#vwFullscreen{background:#1a1a2e}
+#vwFullscreen .vw-container{background:transparent;padding:8px}
+#vwFullscreen .vw-toolbar{margin-bottom:12px}
+#vwFullscreen .vw-vehicle-title{color:#fff}
+#vwFullscreen .vw-vehicle-title em{color:rgba(255,255,255,.65)}
+#vwFullscreen .vw-tool-actions .ant-btn{border-color:#434343;background:#262626;color:#fff}
+#vwFullscreen .vw-tool-actions .ant-btn-primary{border-color:#1677ff;background:#1677ff}
+#vwFullscreen .vw-history-query{flex-wrap:nowrap;justify-content:flex-start}
+#vwFullscreen .vw-history-query input[type="date"]{flex:0 0 150px;width:150px!important}
+#vwFullscreen .vw-history-query .vw-query-button{width:auto!important;padding:0 18px!important}
+
+/* 小按钮紧凑态（视频组件内 xs 按钮） */
+.vw-container .ant-btn-xs{height:22px;padding:0 6px;font-size:11px;line-height:20px;border-radius:4px}
+
+/* 面板态无进度条时，底部不留白 */
+.vw-container:has(.vw-range){padding-bottom:8px}
+
+/* 地图侧栏采用固定主画面和两列摄像头选择，避免画面被缩略图挤压。 */
+#vwVideoPane .vw-main-stage{flex:0 0 auto;aspect-ratio:16/9}
+#vwVideoPane .vw-thumb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#vwVideoPane{overflow-y:auto;padding-right:2px}
+#vwVideoPane .vw-toolbar{align-items:stretch;flex-direction:column;gap:6px}
+#vwVideoPane .vw-vehicle-title{align-items:center;width:100%}
+#vwVideoPane .vw-vehicle-title .vw-vehicle-select{flex:1;width:100%}
+#vwVideoPane .vw-vehicle-title em{max-width:116px}
+#vwVideoPane .vw-tool-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+#vwVideoPane .vw-tool-actions .ant-btn-xs{width:100%;height:26px}
+#vwVideoPane .vw-toolbar{position:sticky;top:0;z-index:3;padding-bottom:6px;background:#fff}
+
+/* 运行监测页车辆入口与公共车辆数据源保持一致。 */
+#tab-video .vehicle-item{display:flex;width:100%;align-items:center;gap:10px;margin-bottom:6px;padding:10px;border:1px solid transparent;border-radius:6px;background:#fff;color:#000000d9;text-align:left;cursor:pointer}
+#tab-video .vehicle-item:hover{background:#f5f5f5}
+#tab-video .vehicle-item.active{border-color:#91caff;background:#e6f4ff}
+#tab-video .vehicle-meta{display:flex;min-width:0;flex:1;flex-direction:column;gap:2px}
+#tab-video .vehicle-meta b{overflow:hidden;font-size:13px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}
+#tab-video .vehicle-meta small{overflow:hidden;color:#00000073;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+#tab-video .vehicle-item .ant-tag{margin-right:0;font-size:11px}
+
+/* 离线画面提示 */
+.vw-container .cam-offline{color:#ff4d4f}

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>车辆数据查询 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .ant-table th.col-check,.ant-table td.col-check{text-align:center!important}
+    .col-check input[type="checkbox"]{width:16px;height:16px;accent-color:#1677ff;cursor:pointer;vertical-align:middle}
+    .ant-table td.col-code{white-space:nowrap}
+    .realtime-detail .detail-section{margin-bottom:16px;overflow:hidden;border:1px solid #f0f0f0;border-radius:6px}
+    .realtime-detail .detail-section:last-child{margin-bottom:0}
+    .realtime-detail .detail-section-title{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid #f0f0f0;background:#fafafa;color:#000000d9;font-size:14px;font-weight:600}
+    .realtime-detail .detail-section-title::before{width:3px;height:14px;border-radius:2px;background:#1677ff;content:""}
+    .realtime-detail .ant-descriptions-row:last-child{border-bottom:0}
+    .realtime-detail .ant-descriptions-label{width:126px;min-width:126px;padding:9px 12px;font-size:13px}
+    .realtime-detail .ant-descriptions-value{min-width:0;padding:9px 12px;font-size:13px;line-height:20px}
+    .realtime-detail .detail-code{font-family:SFMono-Regular,Consolas,"Liberation Mono",monospace;font-size:12px}
+    .realtime-detail .detail-long .ant-descriptions-value{word-break:break-all}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header"><h2>车辆数据查询</h2></div>
+      <div class="ant-tabs mb-4">
+        <span class="ant-tab active" onclick="switchTab(this,'tab-plate')">车辆牌照查询</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-test')">车辆测试查询</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-disengage')">车辆脱手率查询</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-realtime')">车辆实时数据查询</span>
+        <span class="ant-tab" onclick="switchTab(this,'tab-work')">车辆作业数据查询</span>
+      </div>
+
+      <!-- 车辆牌照查询 -->
+      <div id="tab-plate">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>临牌号</label><input class="ant-input" placeholder="请输入临牌号搜索" style="width:180px"></div>
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:200px"></div>
+            <div class="filter-item"><label>企业名称</label><input class="ant-input" placeholder="请输入企业名称" style="width:180px"></div>
+            <div class="filter-item"><label>车辆类型</label><select class="ant-input" style="width:140px"><option value="all">全部</option><option>乘用车</option><option>商用车</option><option>专用作业车</option></select></div>
+            <div class="filter-item"><label>牌照状态</label><select class="ant-input" style="width:120px"><option value="all">全部</option><option value="1">有效期内</option><option value="0">已过期</option></select></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="showToast('查询完成')">查询</button><button class="ant-btn" onclick="doResetPlate()">重置</button></div>
+            <button class="ant-btn ml-auto" onclick="doExportPlate()">导出</button>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <thead><tr><th class="col-check" style="width:40px"><input type="checkbox" title="全选当页"></th><th>临牌号</th><th>VIN码</th><th>企业名称</th><th>车辆类型</th><th>牌照状态</th><th>有效期起止</th><th>历史牌照</th></tr></thead>
+              <tbody id="plateTableBody"></tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 <b id="plateTotal">8</b> 条</span>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 text-sm text-[#00000073]">
+                <span>每页显示</span>
+                <select class="ant-input" style="width:60px;height:28px;padding:0 6px;font-size:12px">
+                  <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option>
+                </select>
+                <span>条</span>
+              </div>
+              <div class="ant-pagination flex items-center gap-1">
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&lt;</span>
+                <span class="page-item active" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">1</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 车辆测试查询 -->
+      <div id="tab-test" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索" style="width:220px"></div>
+            <div class="filter-item"><label>临牌号</label><input class="ant-input" placeholder="请输入临牌号搜索" style="width:180px"></div>
+            <div class="filter-item"><label>企业名称</label><input class="ant-input" placeholder="请输入企业名称" style="width:180px"></div>
+            <div class="filter-item"><label>日期范围</label><div style="display:flex;gap:4px;align-items:center"><input class="ant-input" type="date" id="vt-range-start" value="2026-01-01" style="width:150px"><span class="text-[#00000040]">~</span><input class="ant-input" type="date" id="vt-range-end" value="2026-04-30" style="width:150px"></div></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="doQueryRange('vt-range-start','vt-range-end')">查询</button><button class="ant-btn" onclick="doResetTest()">重置</button></div>
+            <button class="ant-btn ml-auto" onclick="doExportTest()">导出</button>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <thead><tr><th class="col-check" style="width:40px"><input type="checkbox" title="全选当页"></th><th>VIN码</th><th>临牌号</th><th>企业名称</th><th>日期</th><th>测试里程(km)</th><th>自动驾驶测试里程(km)</th><th>测试时长(h)</th><th>自动驾驶测试时长(h)</th></tr></thead>
+              <tbody>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000001</td><td>鄂A·T0001</td><td>A公司</td><td>2026-04-30</td><td>486</td><td>320</td><td>42</td><td>28</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000002</td><td>鄂A·T0002</td><td>A公司</td><td>2026-04-30</td><td>352</td><td>228</td><td>30</td><td>20</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000003</td><td>沪A·W0003</td><td>E公司</td><td>2026-04-29</td><td>528</td><td>356</td><td>46</td><td>31</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000004</td><td>京B·T0004</td><td>C公司</td><td>2026-04-29</td><td>296</td><td>205</td><td>26</td><td>18</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000005</td><td>粤B·T0005</td><td>G公司</td><td>2026-04-28</td><td>275</td><td>186</td><td>24</td><td>16</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000006</td><td>京A·T0006</td><td>C公司</td><td>2026-04-28</td><td>368</td><td>254</td><td>32</td><td>22</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000007</td><td>粤A·T0007</td><td>J公司</td><td>2026-04-27</td><td>224</td><td>152</td><td>20</td><td>13</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000008</td><td>鄂C·T0008</td><td>B公司</td><td>2026-04-27</td><td>315</td><td>226</td><td>28</td><td>19</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000009</td><td>鄂A·T0009</td><td>I公司</td><td>2026-04-26</td><td>198</td><td>134</td><td>17</td><td>11</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000010</td><td>渝A·T0010</td><td>H公司</td><td>2026-04-26</td><td>165</td><td>112</td><td>14</td><td>9</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 58 条</span>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 text-sm text-[#00000073]">
+                <span>每页显示</span>
+                <select class="ant-input" style="width:60px;height:28px;padding:0 6px;font-size:12px">
+                  <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option>
+                </select>
+                <span>条</span>
+              </div>
+              <div class="ant-pagination flex items-center gap-1">
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&lt;</span>
+                <span class="page-item active" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">1</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">2</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">3</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 车辆脱手率查询 -->
+      <div id="tab-disengage" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码搜索" style="width:220px"></div>
+            <div class="filter-item"><label>临牌号</label><input class="ant-input" placeholder="请输入临牌号搜索" style="width:180px"></div>
+            <div class="filter-item"><label>企业名称</label><input class="ant-input" placeholder="请输入企业名称" style="width:180px"></div>
+            <div class="filter-item"><label>日期范围</label><div style="display:flex;gap:4px;align-items:center"><input class="ant-input" type="date" id="vd-range-start" value="2026-01-01" style="width:150px"><span class="text-[#00000040]">~</span><input class="ant-input" type="date" id="vd-range-end" value="2026-04-30" style="width:150px"></div></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="doQueryRange('vd-range-start','vd-range-end')">查询</button><button class="ant-btn" onclick="doResetDisengage()">重置</button></div>
+            <button class="ant-btn ml-auto" onclick="doExportDisengage()">导出</button>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <thead><tr><th class="col-check" style="width:40px"><input type="checkbox" title="全选当页"></th><th>VIN码</th><th>临牌号</th><th>企业名称</th><th>日期</th><th>脱离次数</th><th>自动驾驶里程(km)</th><th class="col-num">脱手率(%)</th></tr></thead>
+              <tbody>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000001</td><td>鄂A·T0001</td><td>A公司</td><td>2026-04-30</td><td>1</td><td>852</td><td class="col-num">0.12</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000002</td><td>鄂A·T0002</td><td>A公司</td><td>2026-04-30</td><td>1</td><td>634</td><td class="col-num">0.16</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000003</td><td>沪A·W0003</td><td>E公司</td><td>2026-04-29</td><td>1</td><td>1,025</td><td class="col-num">0.10</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000004</td><td>京B·T0004</td><td>C公司</td><td>2026-04-29</td><td>2</td><td>589</td><td class="col-num">0.34</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000005</td><td>粤B·T0005</td><td>G公司</td><td>2026-04-28</td><td>1</td><td>512</td><td class="col-num">0.20</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000006</td><td>京A·T0006</td><td>C公司</td><td>2026-04-28</td><td>1</td><td>789</td><td class="col-num">0.13</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000007</td><td>粤A·T0007</td><td>J公司</td><td>2026-04-27</td><td>0</td><td>452</td><td class="col-num">0.00</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000008</td><td>鄂C·T0008</td><td>B公司</td><td>2026-04-27</td><td>1</td><td>678</td><td class="col-num">0.15</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000009</td><td>鄂A·T0009</td><td>I公司</td><td>2026-04-26</td><td>1</td><td>412</td><td class="col-num">0.24</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LSVAG2180N2000010</td><td>渝A·T0010</td><td>H公司</td><td>2026-04-26</td><td>0</td><td>0</td><td class="col-num">-</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 36 条</span>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 text-sm text-[#00000073]">
+                <span>每页显示</span>
+                <select class="ant-input" style="width:60px;height:28px;padding:0 6px;font-size:12px">
+                  <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option>
+                </select>
+                <span>条</span>
+              </div>
+              <div class="ant-pagination flex items-center gap-1">
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&lt;</span>
+                <span class="page-item active" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">1</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">2</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 车辆实时数据查询 -->
+      <div id="tab-realtime" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>VIN码</label><input id="rt-vin" class="ant-input" placeholder="请输入VIN码" style="width:220px"></div>
+            <div class="filter-item"><label>临牌号</label><input id="rt-plate" class="ant-input" placeholder="请输入临牌号" style="width:180px"></div>
+            <div class="filter-item"><label>企业名称</label><input class="ant-input" placeholder="请输入企业名称" style="width:180px"></div>
+            <div class="filter-item"><label>时间范围</label><div style="display:flex;gap:4px;align-items:center"><input class="ant-input" type="datetime-local" id="rt-range-start" value="2026-05-01T00:00:00" step="1" style="width:200px"><span class="text-[#00000040]">~</span><input class="ant-input" type="datetime-local" id="rt-range-end" value="2026-05-08T23:59:59" step="1" style="width:200px"></div></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="queryRealtimeData()">查询</button><button class="ant-btn" onclick="doResetRealtime()">重置</button></div>
+            <button class="ant-btn ml-auto" onclick="doExportRealtime()">导出</button>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <thead><tr><th class="col-check" style="width:40px"><input type="checkbox" title="全选当页"></th><th>临牌号</th><th>VIN码</th><th>所属企业</th><th>数据采集时间</th><th>经度</th><th>纬度</th><th>车辆驾驶模式</th><th>车辆速度</th><th>档位</th><th>操作</th></tr></thead>
+              <tbody id="realtimeTableBody"></tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 156 条</span>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 text-sm text-[#00000073]">
+                <span>每页显示</span>
+                <select class="ant-input" style="width:60px;height:28px;padding:0 6px;font-size:12px">
+                  <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option>
+                </select>
+                <span>条</span>
+              </div>
+              <div class="ant-pagination flex items-center gap-1">
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&lt;</span>
+                <span class="page-item active" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">1</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">2</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">3</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">...</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">8</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 车辆作业数据查询 -->
+      <div id="tab-work" style="display:none">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item"><label>VIN码</label><input class="ant-input" placeholder="请输入VIN码" style="width:220px"></div>
+            <div class="filter-item"><label>临牌号</label><input class="ant-input" placeholder="请输入临牌号" style="width:180px"></div>
+            <div class="filter-item"><label>企业名称</label><input class="ant-input" placeholder="请输入企业名称" style="width:180px"></div>
+            <div class="filter-item"><label>日期范围</label><div style="display:flex;gap:4px;align-items:center"><input class="ant-input" type="date" id="wr-range-start" value="2026-04-01" style="width:150px"><span class="text-[#00000040]">~</span><input class="ant-input" type="date" id="wr-range-end" value="2026-04-30" style="width:150px"></div></div>
+            <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="doQueryRange('wr-range-start','wr-range-end')">查询</button><button class="ant-btn" onclick="doResetWork()">重置</button></div>
+            <button class="ant-btn ml-auto" onclick="doExportWork()">导出</button>
+          </div>
+        </div>
+        <div class="ant-table-wrapper">
+          <div style="overflow-x:auto">
+            <table class="ant-table">
+              <thead><tr><th class="col-check" style="width:40px"><input type="checkbox" title="全选当页"></th><th>VIN码</th><th>临牌号</th><th>企业名称</th><th>日期</th><th>作业时长(h)</th><th>作业里程(km)</th><th class="col-num">油耗(L)</th><th class="col-num">电耗(kWh)</th></tr></thead>
+              <tbody>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100001</td><td>鄂C·S0001</td><td>B公司</td><td>2026-04-28</td><td>10.0</td><td>78.0</td><td class="col-num">50.8</td><td class="col-num">-</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100002</td><td>鄂C·S0002</td><td>B公司</td><td>2026-04-28</td><td>6.0</td><td>52.6</td><td class="col-num">-</td><td class="col-num">156.3</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100003</td><td>鄂F·S0003</td><td>G公司</td><td>2026-04-27</td><td>8.0</td><td>68.4</td><td class="col-num">45.8</td><td class="col-num">-</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100004</td><td>鄂A·S0004</td><td>C公司</td><td>2026-04-27</td><td>6.0</td><td>48.5</td><td class="col-num">-</td><td class="col-num">125.4</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100005</td><td>鄂D·S0005</td><td>H公司</td><td>2026-04-26</td><td>8.0</td><td>72.1</td><td class="col-num">52.1</td><td class="col-num">-</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100006</td><td>鄂C·S0006</td><td>B公司</td><td>2026-04-26</td><td>6.0</td><td>38.7</td><td class="col-num">-</td><td class="col-num">98.7</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100007</td><td>鄂B·S0007</td><td>J公司</td><td>2026-04-25</td><td>6.0</td><td>42.3</td><td class="col-num">32.6</td><td class="col-num">-</td></tr>
+                <tr><td class="col-check"><input type="checkbox"></td><td>LZZ5E3F08NC100008</td><td>鄂A·S0008</td><td>K公司</td><td>2026-04-25</td><td>5.0</td><td>35.4</td><td class="col-num">-</td><td class="col-num">88.2</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3">
+            <span class="text-sm text-[#00000073]">共 32 条</span>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 text-sm text-[#00000073]">
+                <span>每页显示</span>
+                <select class="ant-input" style="width:60px;height:28px;padding:0 6px;font-size:12px">
+                  <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option>
+                </select>
+                <span>条</span>
+              </div>
+              <div class="ant-pagination flex items-center gap-1">
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&lt;</span>
+                <span class="page-item active" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">1</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">2</span>
+                <span class="page-item cursor-pointer" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='vehicle-query';
+var tabIds=['tab-plate','tab-test','tab-disengage','tab-realtime','tab-work'];
+
+var plateData=[
+  {vin:'LSVAG2180N2000001',plate:'鄂A·T0001',company:'A公司',type:'乘用车',model:'风神E70',status:'有效期内',start:'2025-06-01',end:'2026-05-31',
+    history:[
+      {plate:'临A·L001',type:'临时牌照',start:'2025-03-01',end:'2025-05-31',status:'已过期'},
+      {plate:'鄂A·T0001',type:'正式牌照',start:'2025-06-01',end:'2026-05-31',status:'有效期内'}
+    ]
+  },
+  {vin:'LSVAG2180N2000002',plate:'鄂A·T0002',company:'A公司',type:'乘用车',model:'汉EV',status:'有效期内',start:'2025-08-15',end:'2026-08-14',
+    history:[
+      {plate:'临A·L002',type:'临时牌照',start:'2025-06-01',end:'2025-08-14',status:'已过期'},
+      {plate:'临A·L002B',type:'临时牌照延期',start:'2025-08-15',end:'2025-09-30',status:'已过期'},
+      {plate:'鄂A·T0002',type:'正式牌照',start:'2025-10-01',end:'2026-08-14',status:'有效期内'}
+    ]
+  },
+  {vin:'LSVAG2180N2000003',plate:'沪A·W0003',company:'E公司',type:'乘用车',model:'ET7',status:'有效期内',start:'2025-03-01',end:'2027-02-28',
+    history:[
+      {plate:'沪临·W003',type:'临时牌照',start:'2024-12-01',end:'2025-02-28',status:'已过期'},
+      {plate:'沪A·W0003',type:'正式牌照',start:'2025-03-01',end:'2027-02-28',status:'有效期内'}
+    ]
+  },
+  {vin:'LSVAG2180N2000004',plate:'京B·T0004',company:'C公司',type:'商用车',model:'XMQ6127',status:'已过期',start:'2025-01-15',end:'2026-01-14',
+    history:[
+      {plate:'京临·T004',type:'临时牌照',start:'2024-11-01',end:'2025-01-14',status:'已过期'},
+      {plate:'京B·T0004',type:'正式牌照',start:'2025-01-15',end:'2026-01-14',status:'已过期'},
+      {plate:'京临·T004B',type:'临时牌照(换牌中)',start:'2026-02-01',end:'2026-04-30',status:'有效期内'}
+    ]
+  },
+  {vin:'LSVAG2180N2000005',plate:'粤B·T0005',company:'G公司',type:'乘用车',model:'P7',status:'有效期内',start:'2025-09-01',end:'2026-09-01',
+    history:[
+      {plate:'粤临·T005',type:'临时牌照',start:'2025-07-01',end:'2025-08-31',status:'已过期'},
+      {plate:'粤B·T0005',type:'正式牌照',start:'2025-09-01',end:'2026-09-01',status:'有效期内'}
+    ]
+  },
+  {vin:'LSVAG2180N2000006',plate:'京A·T0006',company:'C公司',type:'商用车',model:'BJ6123',status:'有效期内',start:'2025-02-15',end:'2027-02-14',
+    history:[
+      {plate:'京临·T006',type:'临时牌照',start:'2024-12-15',end:'2025-02-14',status:'已过期'},
+      {plate:'京A·T0006',type:'正式牌照',start:'2025-02-15',end:'2027-02-14',status:'有效期内'}
+    ]
+  },
+  {vin:'LSVAG2180N2000007',plate:'粤A·T0007',company:'J公司',type:'乘用车',model:'埃安LX',status:'有效期内',start:'2025-10-01',end:'2026-04-01',
+    history:[
+      {plate:'粤临·T007',type:'临时牌照',start:'2025-08-01',end:'2025-09-30',status:'已过期'},
+      {plate:'粤临·T007B',type:'临时牌照延期',start:'2025-10-01',end:'2025-12-31',status:'已过期'},
+      {plate:'粤A·T0007',type:'正式牌照',start:'2026-01-01',end:'2026-04-01',status:'有效期内'}
+    ]
+  },
+  {vin:'LSVAG2180N2000008',plate:'鄂C·T0008',company:'B公司',type:'专用作业车',model:'天龙KL',status:'有效期内',start:'2025-05-01',end:'2026-05-01',
+    history:[
+      {plate:'鄂临·T008',type:'临时牌照',start:'2025-03-01',end:'2025-04-30',status:'已过期'},
+      {plate:'鄂C·T0008',type:'正式牌照',start:'2025-05-01',end:'2026-05-01',status:'有效期内'}
+    ]
+  }
+];
+
+var realtimeData=[
+  {plate:'鄂F·A001',vin:'LSVAA4189N2000001',company:'A公司',collectTime:'2026-05-11 14:32:15',longitude:'112.144025',latitude:'32.042374',mode:'自动驾驶',speed:'45 km/h',gear:'D'},
+  {plate:'鄂F·B003',vin:'LSVAA4189N2000003',company:'B公司',collectTime:'2026-05-11 14:32:10',longitude:'112.138156',latitude:'32.048217',mode:'自动驾驶',speed:'32 km/h',gear:'D'},
+  {plate:'鄂F·C007',vin:'LSVAA4189N2000004',company:'D公司',collectTime:'2026-05-11 14:31:55',longitude:'112.158241',latitude:'32.035189',mode:'人工驾驶',speed:'58 km/h',gear:'D'},
+  {plate:'鄂F·D010',vin:'LSVAA4189N2000005',company:'C公司',collectTime:'2026-05-11 14:28:30',longitude:'112.151764',latitude:'32.039832',mode:'自动驾驶',speed:'0 km/h',gear:'P'},
+  {plate:'鄂F·E005',vin:'LSVAA4189N2000006',company:'A公司',collectTime:'2026-05-11 13:45:20',longitude:'112.121468',latitude:'32.051926',mode:'人工驾驶',speed:'0 km/h',gear:'P'},
+  {plate:'鄂F·F012',vin:'LSVAA4189N2000007',company:'J公司',collectTime:'2026-05-11 14:30:22',longitude:'112.161528',latitude:'32.053214',mode:'自动驾驶',speed:'72 km/h',gear:'D'},
+  {plate:'鄂F·G023',vin:'LSVAA4189N2000008',company:'C公司',collectTime:'2026-05-11 14:30:15',longitude:'112.158964',latitude:'32.047836',mode:'人工驾驶',speed:'28 km/h',gear:'D'},
+  {plate:'鄂F·H034',vin:'LSVAA4189N2000009',company:'D公司',collectTime:'2026-05-11 14:29:42',longitude:'112.147852',latitude:'32.058241',mode:'自动驾驶',speed:'41 km/h',gear:'D'}
+];
+var currentRealtimeRows=[];
+
+function renderPlateTable(){
+  var tbody=document.getElementById('plateTableBody');
+  tbody.innerHTML=plateData.map(function(r){
+    var statusTag=r.status==='有效期内'?'<span class="ant-tag ant-tag-success">有效期内</span>':'<span class="ant-tag ant-tag-error">已过期</span>';
+    var count=r.history.length;
+    return '<tr>'+
+      '<td class="col-check"><input type="checkbox"></td>'+
+      '<td>'+r.plate+'</td>'+
+      '<td>'+r.vin+'</td>'+
+      '<td>'+r.company+'</td>'+
+      '<td>'+r.type+'</td>'+
+      '<td>'+statusTag+'</td>'+
+      '<td>'+r.start+' ~ '+r.end+'</td>'+
+      '<td><button class="ant-btn ant-btn-sm" onclick="openHistoryModal(\''+r.vin+'\')">查看('+count+')</button></td>'+
+    '</tr>';
+  }).join('');
+}
+function renderRealtimeTable(records){
+  var tbody=document.getElementById('realtimeTableBody');
+  if(!tbody)return;
+  var data=records || realtimeData;
+  currentRealtimeRows=data.slice();
+  tbody.innerHTML=data.length ? data.map(function(r,index){
+    var modeTag=r.mode==='自动驾驶'?'<span class="ant-tag ant-tag-processing">自动驾驶</span>':'<span class="ant-tag ant-tag-default">人工驾驶</span>';
+    return '<tr>'+
+      '<td class="col-check"><input type="checkbox"></td>'+
+      '<td>'+r.plate+'</td>'+
+      '<td class="col-code">'+r.vin+'</td>'+
+      '<td>'+r.company+'</td>'+
+      '<td>'+r.collectTime+'</td>'+
+      '<td class="col-code">'+r.longitude+'</td>'+
+      '<td class="col-code">'+r.latitude+'</td>'+
+      '<td>'+modeTag+'</td>'+
+      '<td>'+r.speed+'</td>'+
+      '<td>'+r.gear+'</td>'+
+      '<td><button class="ant-btn-link" onclick="openRealtimeDetail('+index+')">查看</button></td>'+
+    '</tr>';
+  }).join('') : '<tr><td colspan="11" style="text-align:center;color:#00000073;padding:32px">暂无符合条件的实时数据</td></tr>';
+}
+function normalizeDateTime(value){
+  return (value || '').replace('T',' ') + ((value || '').length === 16 ? ':00' : '');
+}
+function getLinkedRealtimeRecords(){
+  var params=new URLSearchParams(window.location.search);
+  var plate=params.get('plate');
+  var vin=params.get('vin');
+  var start=params.get('start');
+  var end=params.get('end');
+  if(!plate || !vin || !start || !end)return [];
+  var companyByVin={
+    'LSVAA4189N2000001':'A公司','LSVAA4189N2000002':'A公司','LSVAA4189N2000003':'B公司',
+    'LSVAA4189N2000004':'D公司','LSVAA4189N2000005':'C公司','LSVAA4189N2000006':'A公司'
+  };
+  var startDate=new Date(start.replace(' ','T'));
+  var endDate=new Date(end.replace(' ','T'));
+  var middleDate=new Date((startDate.getTime()+endDate.getTime())/2);
+  function format(date){
+    function pad(n){return String(n).padStart(2,'0')}
+    return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())+' '+pad(date.getHours())+':'+pad(date.getMinutes())+':'+pad(date.getSeconds());
+  }
+  return [
+    {plate:plate,vin:vin,company:companyByVin[vin] || '—',collectTime:format(startDate),longitude:'112.149800',latitude:'32.045600',mode:'自动驾驶',speed:'36 km/h',gear:'D'},
+    {plate:plate,vin:vin,company:companyByVin[vin] || '—',collectTime:format(middleDate),longitude:'112.150120',latitude:'32.045920',mode:'自动驾驶',speed:'42 km/h',gear:'D'},
+    {plate:plate,vin:vin,company:companyByVin[vin] || '—',collectTime:format(endDate),longitude:'112.150440',latitude:'32.046240',mode:'自动驾驶',speed:'38 km/h',gear:'D'}
+  ];
+}
+function queryRealtimeData(){
+  var vin=document.getElementById('rt-vin').value.trim().toLowerCase();
+  var plate=document.getElementById('rt-plate').value.trim().toLowerCase();
+  var start=normalizeDateTime(document.getElementById('rt-range-start').value);
+  var end=normalizeDateTime(document.getElementById('rt-range-end').value);
+  if(start && end && start>end){showToast('开始时间不能晚于结束时间');return;}
+  var data=realtimeData.concat(getLinkedRealtimeRecords()).filter(function(record){
+    return (!vin || record.vin.toLowerCase().indexOf(vin)>-1) &&
+      (!plate || record.plate.toLowerCase().indexOf(plate)>-1) &&
+      (!start || record.collectTime>=start) && (!end || record.collectTime<=end);
+  });
+  renderRealtimeTable(data);
+  showToast('查询完成，共 '+data.length+' 条数据');
+}
+// 复选框联动：表头全选当页 / 行勾选回写表头状态
+function initTabCheckbox(tabId){
+  var tab=document.getElementById(tabId);
+  var headCheck=tab.querySelector('thead input[type="checkbox"]');
+  if(!headCheck)return;
+  headCheck.addEventListener('change',function(){
+    tab.querySelectorAll('tbody input[type="checkbox"]').forEach(function(c){c.checked=headCheck.checked});
+  });
+  tab.querySelector('tbody').addEventListener('change',function(){
+    var all=tab.querySelectorAll('tbody input[type="checkbox"]');
+    var checked=tab.querySelectorAll('tbody input[type="checkbox"]:checked');
+    headCheck.checked=all.length>0&&checked.length===all.length;
+  });
+}
+// 车辆测试查询：查询校验日期范围 / 重置 / 导出（附录A.3）
+function doQueryRange(startId,endId){
+  var s=document.getElementById(startId).value,e=document.getElementById(endId).value;
+  if(s&&e&&s>e){showToast('开始日期不能晚于结束日期');return;}
+  showToast('查询完成');
+}
+function doResetTest(){
+  var tab=document.getElementById('tab-test');
+  tab.querySelectorAll('.filter-item input[placeholder]').forEach(function(i){i.value=''});
+  document.getElementById('vt-range-start').value='2026-01-01';
+  document.getElementById('vt-range-end').value='2026-04-30';
+  tab.querySelectorAll('input[type="checkbox"]').forEach(function(c){c.checked=false});
+}
+function doExportTest(){
+  var checked=document.querySelectorAll('#tab-test tbody input[type="checkbox"]:checked');
+  var now=new Date();
+  var dateStr=''+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  if(checked.length>0){
+    showToast('已导出选中的 '+checked.length+' 条数据，文件名：车辆测试查询_'+dateStr+'.xlsx');
+  }else{
+    showToast('已导出当前筛选条件下全量 58 条数据，文件名：车辆测试查询_'+dateStr+'.xlsx');
+  }
+}
+// 重置：清空筛选条件、恢复下拉默认值并清空勾选
+function doResetPlate(){
+  var tab=document.getElementById('tab-plate');
+  tab.querySelectorAll('.filter-item input').forEach(function(i){i.value=''});
+  tab.querySelectorAll('.filter-item select').forEach(function(s){s.selectedIndex=0});
+  tab.querySelectorAll('input[type="checkbox"]').forEach(function(c){c.checked=false});
+}
+// 导出：勾选导出选中行，未勾选导出当前筛选全量（附录A.3）
+function doExportPlate(){
+  var checked=document.querySelectorAll('#tab-plate tbody input[type="checkbox"]:checked');
+  var total=document.getElementById('plateTotal').textContent;
+  var now=new Date();
+  var dateStr=''+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  if(checked.length>0){
+    showToast('已导出选中的 '+checked.length+' 条数据，文件名：车辆牌照查询_'+dateStr+'.xlsx');
+  }else{
+    showToast('已导出当前筛选条件下全量 '+total+' 条数据，文件名：车辆牌照查询_'+dateStr+'.xlsx');
+  }
+}
+function showToast(msg){var t=document.createElement('div');t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;background:#fff;padding:12px 20px;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,0.1);font-size:14px;border-left:3px solid #1677ff;';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='0.3s';setTimeout(function(){t.remove()},300)},2000)}
+
+function openHistoryModal(vin){
+  var record=plateData.find(function(d){return d.vin===vin});
+  if(!record)return;
+  var rows=record.history.map(function(h,i){
+    var statusTag=h.status==='有效期内'?'<span class="ant-tag ant-tag-success">'+h.status+'</span>':'<span class="ant-tag ant-tag-error">'+h.status+'</span>';
+    return '<tr>'+
+      '<td>'+(i+1)+'</td>'+
+      '<td style="font-weight:600;color:#1677ff">'+h.plate+'</td>'+
+      '<td><span class="ant-tag ant-tag-processing" style="font-size:11px">'+h.type+'</span></td>'+
+      '<td>'+h.start+'</td>'+
+      '<td>'+h.end+'</td>'+
+      '<td>'+statusTag+'</td>'+
+    '</tr>';
+  }).join('');
+  openModal('历史牌照记录 - '+record.plate+' ('+record.vin+')',
+    '<div style="margin-bottom:12px;padding:8px 12px;background:#e6f4ff;border-radius:6px;font-size:12px"><span style="color:#1677ff;font-weight:500">VIN码：</span><code style="font-family:monospace;font-size:12px;background:#fff;padding:2px 6px;border-radius:3px">'+record.vin+'</code></div>'+
+    '<div style="overflow-x:auto">'+
+      '<table class="ant-table">'+
+        '<thead><tr><th>#</th><th>牌照号</th><th>类型</th><th>开始日期</th><th>截止日期</th><th>状态</th></tr></thead>'+
+        '<tbody>'+rows+'</tbody>'+
+      '</table>'+
+    '</div>',
+    {wide:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'}
+  );
+}
+
+function switchTab(el,tabId){
+  document.querySelectorAll('.ant-tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  tabIds.forEach(function(id){document.getElementById(id).style.display=id===tabId?'':'none'});
+}
+function changePageSize(val){console.log('Page size changed to:',val);}
+function openRealtimeDetail(index){
+  var r=currentRealtimeRows[index] || realtimeData[index];
+  if(!r)return;
+  var modeTag=r.mode==='自动驾驶'?'<span class="ant-tag ant-tag-processing">自动驾驶</span>':'<span class="ant-tag ant-tag-default">人工驾驶</span>';
+  openModal('车辆实时数据详情 - '+r.plate,
+    '<div class="realtime-detail">' +
+      '<section class="detail-section"><div class="detail-section-title">基础信息</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">临牌号</div><div class="ant-descriptions-value">'+r.plate+'</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value detail-code">'+r.vin+'</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+r.company+'</div><div class="ant-descriptions-label">数据采集时间</div><div class="ant-descriptions-value">'+r.collectTime+'</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">经度</div><div class="ant-descriptions-value detail-code">'+r.longitude+'</div><div class="ant-descriptions-label">纬度</div><div class="ant-descriptions-value detail-code">'+r.latitude+'</div></div>' +
+      '</div></section>' +
+      '<section class="detail-section"><div class="detail-section-title">驾驶与车辆动态</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆驾驶模式</div><div class="ant-descriptions-value">'+modeTag+'</div><div class="ant-descriptions-label">接管状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-default">未接管</span></div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">DMS状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">正常</span></div><div class="ant-descriptions-label">执行最小风险策略原因</div><div class="ant-descriptions-value">未触发</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆速度</div><div class="ant-descriptions-value">'+r.speed+'</div><div class="ant-descriptions-label">车辆纵向加速度</div><div class="ant-descriptions-value">0.18 m/s²</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆横向加速度</div><div class="ant-descriptions-value">0.06 m/s²</div><div class="ant-descriptions-label">车辆横摆角速度</div><div class="ant-descriptions-value">0.42 °/s</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车辆侧倾角速度</div><div class="ant-descriptions-value">0.03 °/s</div><div class="ant-descriptions-label">车辆航向角</div><div class="ant-descriptions-value">128.6°</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">失效类型</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">无</span></div></div>' +
+      '</div></section>' +
+      '<section class="detail-section"><div class="detail-section-title">车身信号与操控</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">自适应前照明系统状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">近灯光状态</div><div class="ant-descriptions-value">关闭</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">远灯光状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">危险警告信号状态</div><div class="ant-descriptions-value">关闭</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">制动灯状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">左转向信号灯状态</div><div class="ant-descriptions-value">关闭</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">右转向灯状态</div><div class="ant-descriptions-value">关闭</div><div class="ant-descriptions-label">车辆喇叭信息</div><div class="ant-descriptions-value">未鸣笛</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">加速踏板开度比例</div><div class="ant-descriptions-value">18%</div><div class="ant-descriptions-label">制动踏板开度比例</div><div class="ant-descriptions-value">0%</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">制动踏板状态</div><div class="ant-descriptions-value">未踩下</div><div class="ant-descriptions-label">转向盘角度</div><div class="ant-descriptions-value">12.4°</div></div>' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">档位</div><div class="ant-descriptions-value">'+r.gear+'</div><div class="ant-descriptions-label">雨刮</div><div class="ant-descriptions-value">关闭</div></div>' +
+      '</div></section>' +
+      '<section class="detail-section"><div class="detail-section-title">远程控制</div><div class="ant-descriptions">' +
+        '<div class="ant-descriptions-row"><div class="ant-descriptions-label">远程控制指令长度</div><div class="ant-descriptions-value">0 字节</div></div>' +
+        '<div class="ant-descriptions-row detail-long"><div class="ant-descriptions-label">远程控制指令内容</div><div class="ant-descriptions-value">无</div></div>' +
+      '</div></section>' +
+    '</div>',{wide:true,fullscreen:true,maxHeight:'calc(100vh - 96px)',footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+
+// 车辆实时数据查询：重置 / 导出（附录A.3）
+function doResetRealtime(){
+  var tab=document.getElementById('tab-realtime');
+  tab.querySelectorAll('.filter-item input[placeholder]').forEach(function(i){i.value=''});
+  document.getElementById('rt-range-start').value='2026-05-01T00:00:00';
+  document.getElementById('rt-range-end').value='2026-05-08T23:59:59';
+  tab.querySelectorAll('input[type="checkbox"]').forEach(function(c){c.checked=false});
+  renderRealtimeTable();
+}
+function doExportRealtime(){
+  var checked=document.querySelectorAll('#tab-realtime tbody input[type="checkbox"]:checked');
+  var now=new Date();
+  var dateStr=''+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  if(checked.length>0){
+    showToast('已导出选中的 '+checked.length+' 条数据，文件名：车辆实时数据查询_'+dateStr+'.xlsx');
+  }else{
+    showToast('已导出当前筛选条件下全量 156 条数据，文件名：车辆实时数据查询_'+dateStr+'.xlsx');
+  }
+}
+
+// 车辆作业数据查询：重置 / 导出（附录A.3）
+function doResetWork(){
+  var tab=document.getElementById('tab-work');
+  tab.querySelectorAll('.filter-item input[placeholder]').forEach(function(i){i.value=''});
+  document.getElementById('wr-range-start').value='2026-04-01';
+  document.getElementById('wr-range-end').value='2026-04-30';
+  tab.querySelectorAll('input[type="checkbox"]').forEach(function(c){c.checked=false});
+}
+function doExportWork(){
+  var checked=document.querySelectorAll('#tab-work tbody input[type="checkbox"]:checked');
+  var now=new Date();
+  var dateStr=''+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  if(checked.length>0){
+    showToast('已导出选中的 '+checked.length+' 条数据，文件名：车辆作业数据查询_'+dateStr+'.xlsx');
+  }else{
+    showToast('已导出当前筛选条件下全量 32 条数据，文件名：车辆作业数据查询_'+dateStr+'.xlsx');
+  }
+}
+
+// 车辆脱手率查询：重置 / 导出（附录A.3）
+function doResetDisengage(){
+  var tab=document.getElementById('tab-disengage');
+  tab.querySelectorAll('.filter-item input[placeholder]').forEach(function(i){i.value=''});
+  document.getElementById('vd-range-start').value='2026-01-01';
+  document.getElementById('vd-range-end').value='2026-04-30';
+  tab.querySelectorAll('input[type="checkbox"]').forEach(function(c){c.checked=false});
+}
+function doExportDisengage(){
+  var checked=document.querySelectorAll('#tab-disengage tbody input[type="checkbox"]:checked');
+  var now=new Date();
+  var dateStr=''+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  if(checked.length>0){
+    showToast('已导出选中的 '+checked.length+' 条数据，文件名：车辆脱手率查询_'+dateStr+'.xlsx');
+  }else{
+    showToast('已导出当前筛选条件下全量 36 条数据，文件名：车辆脱手率查询_'+dateStr+'.xlsx');
+  }
+}
+
+initTabCheckbox('tab-plate');
+initTabCheckbox('tab-test');
+initTabCheckbox('tab-disengage');
+initTabCheckbox('tab-realtime');
+initTabCheckbox('tab-work');
+renderPlateTable();
+renderRealtimeTable();
+function applyAlarmQueryContext(){
+  var params=new URLSearchParams(window.location.search);
+  if(params.get('tab')!=='realtime')return;
+  var realtimeTab=document.querySelector('[onclick*="tab-realtime"]');
+  if(realtimeTab)switchTab(realtimeTab,'tab-realtime');
+  document.getElementById('rt-plate').value=params.get('plate') || '';
+  document.getElementById('rt-vin').value=params.get('vin') || '';
+  document.getElementById('rt-range-start').value=(params.get('start') || '').replace(' ','T');
+  document.getElementById('rt-range-end').value=(params.get('end') || '').replace(' ','T');
+  queryRealtimeData();
+}
+applyAlarmQueryContext();
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

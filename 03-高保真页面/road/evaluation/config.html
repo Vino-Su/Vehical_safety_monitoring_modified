@@ -47,7 +47,7 @@
     .config-meta-item{display:inline-flex;align-items:center;gap:8px}
     .config-meta-label{font-size:13px;color:#00000073}
     .config-meta-version{display:inline-flex;align-items:center;height:24px;padding:0 10px;background:#1677ff;color:#fff;font-size:12px;font-weight:600;border-radius:4px;letter-spacing:.5px}
-    .config-meta-time{font-size:13px;color:#000000d9;font-family:DIN,Consolas,monospace}
+    .config-meta-time{font-size:13px;color:#000000d9}
     .config-meta-divider{width:1px;height:14px;background:#d9e8ff}
     .config-meta-tip{display:none;align-items:center;gap:6px;margin-left:auto;padding:3px 10px;background:#fff7e6;color:#d46b08;font-size:12px;border:1px solid #ffd591;border-radius:4px}
     .config-meta-tip.show{display:inline-flex}
@@ -59,7 +59,7 @@
     .readonly-section{background:#fafafa;border:1px solid #f0f0f0;border-radius:8px;padding:20px 24px;margin-bottom:16px}
     .readonly-section-title{font-size:16px;font-weight:600;color:#000000d9;line-height:24px;display:flex;align-items:center;gap:8px;margin-bottom:14px}
     .readonly-section-title::before{content:'';width:3px;height:16px;background:#bfbfbf;border-radius:2px}
-    .readonly-input{display:inline-block;min-width:70px;height:28px;padding:0 8px;border:1px solid #e8e8e8;border-radius:4px;font-size:12px;text-align:center;background:#f5f5f5;color:#00000073;line-height:26px;font-family:DIN,Consolas,monospace}
+    .readonly-input{display:inline-block;min-width:70px;height:28px;padding:0 8px;border:1px solid #e8e8e8;border-radius:4px;font-size:12px;text-align:center;background:#f5f5f5;color:#00000073;line-height:26px}
     .readonly-form-input{display:inline-block;height:32px;padding:0 12px;border:1px solid #e8e8e8;border-radius:6px;font-size:14px;color:#00000073;background:#f5f5f5;width:160px;line-height:30px}
     .readonly-form-unit{font-size:14px;color:#00000073}
     .readonly-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;background:#f0f0f0;color:#00000073;border-radius:3px;font-size:12px;margin-right:4px;margin-bottom:4px}
@@ -295,7 +295,7 @@
             <div id="model-weight-error" class="text-sm text-red-500 mt-2 hidden">三项子模型权重之和必须等于 1.0</div>
             <div class="mt-4 p-3 bg-[#f6f8fa] rounded border border-[#e8eaec]">
               <p class="text-sm font-semibold text-[#000000d9]">综合得分计算公式</p>
-              <p class="text-sm text-[#000000d9] mt-2" style="font-family:DIN,Consolas,monospace;background:#fff;padding:8px 12px;border-radius:4px;border:1px dashed #d9d9d9">
+              <p class="text-sm text-[#000000d9] mt-2" style="background:#fff;padding:8px 12px;border-radius:4px;border:1px dashed #d9d9d9">
                 综合得分 = (100 - 复杂度指数) × 复杂度权重 + (100 - 风险指数) × 风险权重 + 场景适配度得分 × 场景适配权重
               </p>
               <p class="text-xs text-[#00000073] mt-2">结果截断到 [0, 100]，保留 1 位小数。若硬性准入条件未通过，直接判定为「禁止开放」，不再计算综合得分。</p>
@@ -1503,7 +1503,7 @@ function renderHistoryRows() {
     return '<tr>' +
       '<td><span class="history-version-tag">' + r.version + '</span></td>' +
       '<td>' + statusTag + '</td>' +
-      '<td style="font-family:DIN,Consolas,monospace">' + r.effectiveTime + '</td>' +
+      '<td>' + r.effectiveTime + '</td>' +
       '<td>' + (r.operator || '-') + '</td>' +
       '<td style="text-align:center"><span class="history-table-link" onclick="openHistoryDetailModal(\'' + r.version + '\')">查看</span></td>' +
     '</tr>';
@@ -1527,7 +1527,7 @@ function openHistoryDetailModal(version) {
     '<div class="readonly-meta">' +
       '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">版本号</span><span class="history-version-tag">' + record.version + '</span></div>' +
       '<div style="width:1px;height:14px;background:#e8e8e8"></div>' +
-      '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">生效时间</span><span style="font-family:DIN,Consolas,monospace;font-size:13px">' + record.effectiveTime + '</span></div>' +
+      '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">生效时间</span><span style="font-size:13px">' + record.effectiveTime + '</span></div>' +
       '<div style="width:1px;height:14px;background:#e8e8e8"></div>' +
       '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">操作人</span><span style="font-size:13px">' + (record.operator || '-') + '</span></div>' +
       (record.status === '当前生效' ? '<div style="width:1px;height:14px;background:#e8e8e8"></div><span class="history-status-current">当前生效</span>' : '') +
@@ -1583,7 +1583,7 @@ function renderHistoryTab0(s) {
     { name: '信号灯完整度', val: s.cl5 }
   ];
   var rows = weights.map(function(w) {
-    return '<tr><td><strong>' + w.name + '</strong></td><td><span class="readonly-input">' + w.val + '</span></td><td class="text-[#00000073]" style="font-family:DIN,Consolas,monospace">' + parseFloat(w.val).toFixed(2) + '</td></tr>';
+    return '<tr><td><strong>' + w.name + '</strong></td><td><span class="readonly-input">' + w.val + '</span></td><td class="text-[#00000073]">' + parseFloat(w.val).toFixed(2) + '</td></tr>';
   }).join('');
   return '<div class="readonly-section">' +
       '<div class="readonly-section-title">权重配置</div>' +
@@ -1662,7 +1662,7 @@ function renderHistoryTab3(s) {
       '<div class="readonly-form-row"><span class="readonly-form-label">复杂度模型权重</span><span class="readonly-form-input">' + s.wComplexity + '</span></div>' +
       '<div class="readonly-form-row"><span class="readonly-form-label">风险模型权重</span><span class="readonly-form-input">' + s.wRisk + '</span></div>' +
       '<div class="readonly-form-row"><span class="readonly-form-label">场景适配模型权重</span><span class="readonly-form-input">' + s.wScene + '</span></div>' +
-      '<div style="margin-top:12px;padding:10px 12px;background:#fff;border:1px dashed #d9d9d9;border-radius:4px;font-family:DIN,Consolas,monospace;font-size:12px;color:#00000073">' +
+      '<div style="margin-top:12px;padding:10px 12px;background:#fff;border:1px dashed #d9d9d9;border-radius:4px;font-size:12px;color:#00000073">' +
         '综合得分 = (100 - 复杂度指数) × 复杂度权重 + (100 - 风险指数) × 风险权重 + 场景适配度得分 × 场景适配权重' +
       '</div>' +
     '</div>' +

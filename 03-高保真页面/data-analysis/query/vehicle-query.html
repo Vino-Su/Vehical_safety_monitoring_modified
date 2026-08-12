@@ -17,7 +17,7 @@
     .realtime-detail .ant-descriptions-row:last-child{border-bottom:0}
     .realtime-detail .ant-descriptions-label{width:126px;min-width:126px;padding:9px 12px;font-size:13px}
     .realtime-detail .ant-descriptions-value{min-width:0;padding:9px 12px;font-size:13px;line-height:20px}
-    .realtime-detail .detail-code{font-family:SFMono-Regular,Consolas,"Liberation Mono",monospace;font-size:12px}
+    .realtime-detail .detail-code{font-size:12px}
     .realtime-detail .detail-long .ant-descriptions-value{word-break:break-all}
   </style>
 </head>
@@ -496,7 +496,7 @@ function openHistoryModal(vin){
     '</tr>';
   }).join('');
   openModal('历史牌照记录 - '+record.plate+' ('+record.vin+')',
-    '<div style="margin-bottom:12px;padding:8px 12px;background:#e6f4ff;border-radius:6px;font-size:12px"><span style="color:#1677ff;font-weight:500">VIN码：</span><code style="font-family:monospace;font-size:12px;background:#fff;padding:2px 6px;border-radius:3px">'+record.vin+'</code></div>'+
+    '<div style="margin-bottom:12px;padding:8px 12px;background:#e6f4ff;border-radius:6px;font-size:12px"><span style="color:#1677ff;font-weight:500">VIN码：</span><code style="font-size:12px;background:#fff;padding:2px 6px;border-radius:3px">'+record.vin+'</code></div>'+
     '<div style="overflow-x:auto">'+
       '<table class="ant-table">'+
         '<thead><tr><th>#</th><th>牌照号</th><th>类型</th><th>开始日期</th><th>截止日期</th><th>状态</th></tr></thead>'+

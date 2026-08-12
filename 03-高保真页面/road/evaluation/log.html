@@ -31,7 +31,7 @@
   .readonly-table{width:100%;border-collapse:collapse}
   .readonly-table th,.readonly-table td{padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:12px;text-align:left}
   .readonly-table th{background:#fafafa;color:#00000073;font-weight:500}
-  .readonly-input{display:inline-block;min-width:70px;height:28px;padding:0 8px;border:1px solid #e8e8e8;border-radius:4px;font-size:12px;text-align:center;background:#f5f5f5;color:#00000073;line-height:26px;font-family:DIN,Consolas,monospace}
+  .readonly-input{display:inline-block;min-width:70px;height:28px;padding:0 8px;border:1px solid #e8e8e8;border-radius:4px;font-size:12px;text-align:center;background:#f5f5f5;color:#00000073;line-height:26px}
   .readonly-form-input{display:inline-block;height:32px;padding:0 12px;border:1px solid #e8e8e8;border-radius:6px;font-size:14px;color:#00000073;background:#f5f5f5;width:160px;line-height:30px}
   .readonly-form-unit{font-size:14px;color:#00000073}
   .readonly-form-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:6px 0}
@@ -377,7 +377,7 @@ window.openConfigHistory = function(version) {
     '<div class="readonly-meta">' +
       '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">配置版本</span><span class="readonly-version-tag">' + version + '</span></div>' +
       '<div class="readonly-meta-divider"></div>' +
-      '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">生效时间</span><span style="font-family:DIN,Consolas,monospace;font-size:13px">' + meta.effectiveTime + '</span></div>' +
+      '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">生效时间</span><span style="font-size:13px">' + meta.effectiveTime + '</span></div>' +
       '<div class="readonly-meta-divider"></div>' +
       '<div style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:13px;color:#00000073">操作人</span><span style="font-size:13px">' + meta.operator + '</span></div>' +
       (meta.current
@@ -434,7 +434,7 @@ function renderHistoryTab0(s) {
     { name: '信号灯完整度', val: s.cl5 }
   ];
   var rows = weights.map(function(w) {
-    return '<tr><td><strong>' + w.name + '</strong></td><td><span class="readonly-input">' + w.val + '</span></td><td class="text-[#00000073]" style="font-family:DIN,Consolas,monospace">' + parseFloat(w.val).toFixed(2) + '</td></tr>';
+    return '<tr><td><strong>' + w.name + '</strong></td><td><span class="readonly-input">' + w.val + '</span></td><td class="text-[#00000073]">' + parseFloat(w.val).toFixed(2) + '</td></tr>';
   }).join('');
   return '<div class="readonly-section">' +
       '<div class="readonly-section-title">权重配置</div>' +
@@ -513,7 +513,7 @@ function renderHistoryTab3(s) {
       '<div class="readonly-form-row"><span class="readonly-form-label">复杂度模型权重</span><span class="readonly-form-input">' + s.wComplexity + '</span></div>' +
       '<div class="readonly-form-row"><span class="readonly-form-label">风险模型权重</span><span class="readonly-form-input">' + s.wRisk + '</span></div>' +
       '<div class="readonly-form-row"><span class="readonly-form-label">场景适配模型权重</span><span class="readonly-form-input">' + s.wScene + '</span></div>' +
-      '<div style="margin-top:12px;padding:10px 12px;background:#fff;border:1px dashed #d9d9d9;border-radius:4px;font-family:DIN,Consolas,monospace;font-size:12px;color:#00000073">' +
+      '<div style="margin-top:12px;padding:10px 12px;background:#fff;border:1px dashed #d9d9d9;border-radius:4px;font-size:12px;color:#00000073">' +
         '综合得分 = (100 - 复杂度指数) × 复杂度权重 + (100 - 风险指数) × 风险权重 + 场景适配度得分 × 场景适配权重' +
       '</div>' +
     '</div>' +
