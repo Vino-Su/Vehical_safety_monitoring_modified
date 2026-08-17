@@ -1,6 +1,6 @@
 ---
 name: page-screenshot
-description: 当用户希望对 HTML 页面进行浏览器截图验证、预览页面渲染效果、查看页面实际展示结果时，调用全局 page-screenshot CLI 工具对指定页面截图，并展示截图结果。
+description: 页面视觉截图与留档。当用户希望查看页面外观效果(布局/配色/样式)、保存页面截图到 07-bugs 留档时，调用全局 page-screenshot CLI 对指定页面截图。仅做视觉记录，不检查组件挂载与 JS 报错——功能/报错验证请用 page-selftest skill。
 allowed-tools: PowerShell, Read, Glob, Grep
 ---
 
@@ -8,16 +8,28 @@ allowed-tools: PowerShell, Read, Glob, Grep
 
 ## 触发条件
 
-当用户提出以下任一意图时触发本 Skill：
+当用户提出以下任一意图时触发本 Skill（仅限视觉/留档意图）：
 
 - "截个图"
-- "截图验证一下"
-- "验证一下这个页面"
+- "截图验证一下"（指视觉外观）
 - "看一下页面效果"
-- "浏览器验证"
-- "页面渲染怎么样"
 - "对 XXX.html 截图"
 - "把 XXX 页面截个图"
+- "保存页面截图到 07-bugs"
+
+注意：若需求是"页面是否渲染成功""组件有没有挂载""有没有 JS 报错""页面为什么空白"
+等功能验证，属于 page-selftest skill 的范围，**不要用本 skill**。
+
+## 能力边界（与 page-selftest 的分工）
+
+| 需求 | 使用 skill |
+|---|---|
+| 视觉外观确认、截图留档给用户查看 | 本 skill（page-screenshot） |
+| 组件挂载、JS 报错、数据渲染等功能验证 | page-selftest |
+| 功能正确性 + 视觉留档 | 先 page-selftest 验证，再本 skill 截图 |
+
+注意：本环境 Read 工具无法显示图片，AI 无法直接"看"截图；截图主要用于留档与
+用户人工查看，AI 的功能性判断请依赖 page-selftest 的结构化结果。
 
 ## 执行步骤
 

@@ -38,13 +38,8 @@
     .status-dot.dot-pending::before{background:#ff4d4f;box-shadow:0 0 0 3px rgba(255,77,79,.15)}
     .status-dot.dot-processing::before{background:#1677ff;box-shadow:0 0 0 3px rgba(22,119,255,.15)}
     .status-dot.dot-success::before{background:#52c41a;box-shadow:0 0 0 3px rgba(82,196,26,.15)}
-    .status-dot.dot-default::before{background:#bfbfbf}
     /* 标题区下方的次级说明 */
     .page-subtitle{font-size:13px;color:#00000073;margin-top:4px}
-    /* 关闭弹窗强调 */
-    .close-warning{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#fff7e6;border:1px solid #ffe58f;border-radius:8px;margin-bottom:16px}
-    .close-warning svg{flex-shrink:0;color:#faad14;margin-top:1px}
-    .close-warning-text{font-size:13px;color:#874d00;line-height:1.6}
     /* 复选框列 */
     .ant-table th.col-checkbox, .ant-table td.col-checkbox{text-align:center !important;width:40px}
     .ant-table th.col-checkbox input[type="checkbox"], .ant-table td.col-checkbox input[type="checkbox"]{cursor:pointer;width:14px;height:14px;accent-color:#1677ff}
@@ -79,8 +74,7 @@
         <span class="ant-tab active" data-tab="all" onclick="switchTab(this,'all')">全部<span class="tab-count" id="cnt-all">0</span></span>
         <span class="ant-tab" data-tab="pending" onclick="switchTab(this,'pending')">待处理<span class="tab-count tab-count-urgent" id="cnt-pending">0</span></span>
         <span class="ant-tab" data-tab="processing" onclick="switchTab(this,'processing')">处理中<span class="tab-count" id="cnt-processing">0</span></span>
-        <span class="ant-tab" data-tab="done" onclick="switchTab(this,'done')">已处理<span class="tab-count" id="cnt-done">0</span></span>
-        <span class="ant-tab" data-tab="closed" onclick="switchTab(this,'closed')">已关闭<span class="tab-count" id="cnt-closed">0</span></span>
+        <span class="ant-tab" data-tab="done" onclick="switchTab(this,'done')">已完成<span class="tab-count" id="cnt-done">0</span></span>
       </div>
 
       <!-- 列表区 -->
@@ -196,21 +190,19 @@ var feedbackManageData=[
   },
   {
     id:'FB20260414001',title:'企业信息登记中联系人字段变更咨询',submitter:'张工',company:'F公司',
-    time:'2026-04-14 15:00',status:'closed',handler:'平台运营管理员',
+    time:'2026-04-14 15:00',status:'done',handler:'平台运营管理员',
     content:'我司联系人发生变更，请问是否需要重新提交营业执照扫描件？',
     replyList:[
-      {by:'平台运营管理员',role:'平台运营管理员',time:'2026-04-15 10:00',content:'仅修改联系人信息无需重新提交营业执照，登录后在企业信息登记页面直接修改保存即可。',status:'processing'}
-    ],
-    closedNote:'已办结后被用户反馈"已自行解决"，为减少重复沟通，由管理部门主动关闭'
+      {by:'平台运营管理员',role:'平台运营管理员',time:'2026-04-15 10:00',content:'仅修改联系人信息无需重新提交营业执照，登录后在企业信息登记页面直接修改保存即可。',status:'done'}
+    ]
   },
   {
     id:'FB20260412001',title:'关于车辆事故报告提交模板咨询',submitter:'周经理',company:'B公司',
-    time:'2026-04-12 14:30',status:'closed',handler:'第三方专业管理机构A',
+    time:'2026-04-12 14:30',status:'done',handler:'第三方专业管理机构A',
     content:'请问交通事故报告是否有标准模板？是否需要加盖公章？',
     replyList:[
-      {by:'第三方专业管理机构A',role:'第三方专业管理机构A',time:'2026-04-13 09:00',content:'事故报告需使用平台提供的标准模板，下载后填写完整，加盖公章上传即可。',status:'processing'}
-    ],
-    closedNote:'用户咨询后未在 7 日内补充事故相关信息，自动关闭'
+      {by:'第三方专业管理机构A',role:'第三方专业管理机构A',time:'2026-04-13 09:00',content:'事故报告需使用平台提供的标准模板，下载后填写完整，加盖公章上传即可。',status:'done'}
+    ]
   },
   {
     id:'FB20260410001',title:'申请材料上传大小限制咨询',submitter:'陈晨',company:'G公司',
@@ -245,8 +237,7 @@ var feedbackManageData=[
 var STATUS_MAP={
   pending:{label:'待处理',cls:'ant-tag-warning',dot:'dot-pending',tab:'pending'},
   processing:{label:'处理中',cls:'ant-tag-processing',dot:'dot-processing',tab:'processing'},
-  done:{label:'已处理',cls:'ant-tag-success',dot:'dot-success',tab:'done'},
-  closed:{label:'已关闭',cls:'ant-tag-default',dot:'dot-default',tab:'closed'}
+  done:{label:'已完成',cls:'ant-tag-success',dot:'dot-success',tab:'done'}
 };
 
 var currentTab='all';
@@ -265,7 +256,7 @@ function findById(id){return feedbackManageData.find(function(d){return d.id===i
 
 /* ========== 计数 ========== */
 function refreshCounts(){
-  var cnt={all:0,pending:0,processing:0,done:0,closed:0};
+  var cnt={all:0,pending:0,processing:0,done:0};
   feedbackManageData.forEach(function(d){
     cnt.all++;
     if(cnt[d.status]!==undefined) cnt[d.status]++;
@@ -306,10 +297,8 @@ function buildOps(d){
   html+='<button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">查看</button>';
   if(d.status==='pending'){
     html+='<button class="ant-btn-link" style="color:#1677ff" onclick="openReply(\''+d.id+'\',\'accept\')">受理回复</button>';
-    html+='<button class="ant-btn-link danger" onclick="confirmClose(\''+d.id+'\')">关闭</button>';
   } else if(d.status==='processing'){
-    html+='<button class="ant-btn-link" style="color:#1677ff" onclick="openReply(\''+d.id+'\',\'continue\')">继续回复</button>';
-    html+='<button class="ant-btn-link danger" onclick="confirmClose(\''+d.id+'\')">关闭</button>';
+    html+='<button class="ant-btn-link" style="color:#1677ff" onclick="openReply(\''+d.id+'\',\'reply\')">回复</button>';
   }
   html+='</div>';
   return html;
@@ -466,7 +455,7 @@ function openDetail(id){
     html+='<div class="reply-timeline">';
     d.replyList.forEach(function(r){
       var sCls=r.status==='done'?'s-success':'s-processing';
-      var sLabel=r.status==='done'?'已处理':'处理中';
+      var sLabel=r.status==='done'?'已完成':'处理中';
       html+='<div class="reply-item">'
         +'<div class="reply-head"><span><span class="reply-by">'+r.by+'</span>　<span class="text-[#00000073]">'+r.role+'</span><span class="reply-status '+sCls+'">'+sLabel+'</span></span><span>'+r.time+'</span></div>'
         +'<div class="reply-body">'+r.content+'</div>'
@@ -476,11 +465,6 @@ function openDetail(id){
   } else {
     html+='<h4 class="text-sm font-semibold text-[#000000d9] mt-4 mb-2 pb-2 border-b border-[#f0f0f0]">受理回复</h4>';
     html+='<div class="p-3 bg-[#fafafa] rounded text-sm text-[#00000073]">尚未受理，点击底部"受理回复"按钮开始处理</div>';
-  }
-
-  if(d.closedNote){
-    html+='<h4 class="text-sm font-semibold text-[#000000d9] mt-4 mb-2 pb-2 border-b border-[#f0f0f0]">关闭备注</h4>';
-    html+='<div class="p-3 bg-[#fff7e6] rounded text-sm text-[#874d00] leading-relaxed">'+d.closedNote+'</div>';
   }
 
   openModal('反馈详情 - '+d.id, html, {wide:true, footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
@@ -509,10 +493,10 @@ function renderAttachments(attachments){
   return html;
 }
 
-/* ========== 弹窗：受理回复/继续回复 ========== */
+/* ========== 弹窗：受理回复/回复 ========== */
 function openReply(id,mode){
   var d=findById(id); if(!d) return;
-  var title=(mode==='accept'?'受理回复':'继续回复')+' - '+d.id;
+  var title=(mode==='accept'?'受理回复':'回复')+' - '+d.id;
   var s=STATUS_MAP[d.status];
   var html='<div class="ant-descriptions" style="margin-bottom:16px">'
     +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">反馈编号</div><div class="ant-descriptions-value">'+d.id+'</div><div class="ant-descriptions-label">当前状态</div><div class="ant-descriptions-value"><span class="ant-tag '+s.cls+'">'+s.label+'</span></div></div>'
@@ -522,7 +506,7 @@ function openReply(id,mode){
   html+='<div class="p-3 bg-[#fafafa] rounded text-sm text-[#000000d9] whitespace-pre-line leading-relaxed">'+d.content+'</div>';
   html+=renderAttachments(d.attachments);
   html+='<div class="ant-form-item" style="margin-top:20px"><div class="ant-form-label"><span class="required">*</span>回复内容</div><div class="ant-form-control"><textarea class="ant-input" id="replyContent" rows="5" maxlength="2000" style="padding:8px 12px;height:auto;resize:vertical" placeholder="请输入回复内容，最长 2000 字" oninput="document.getElementById(\'replyCount\').textContent=this.value.length+\'/2000字\'"></textarea><div class="text-xs text-[#00000040] mt-1"><span id="replyCount">0/2000字</span></div></div></div>';
-  html+='<div class="ant-form-item"><div class="ant-form-label">处理状态</div><div class="ant-form-control"><div class="ant-select" id="replyStatus" style="width:200px">'+(mode==='accept'?'处理中':'处理中')+' <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div>';
+  html+='<div class="text-xs text-[#00000073] mt-2">提交后可继续处理，或将本次回复作为最终答复并完成反馈。</div>';
   html+='<div class="grid grid-cols-2 gap-4 text-xs text-[#00000073]">';
   html+='<div>受理机构：<span class="text-[#000000d9]">监管人员</span></div>';
   html+='<div>回复人：<span class="text-[#000000d9]">管理员</span></div>';
@@ -531,15 +515,14 @@ function openReply(id,mode){
   openModal(title, html, {
     wide:true,
     footer:'<button class="ant-btn" onclick="closeModal()">取消</button>'
-      +'<button class="ant-btn ant-btn-primary" onclick="submitReply(\''+d.id+'\',\''+mode+'\')">提交回复</button>'
+      +'<button class="ant-btn" onclick="submitReply(\''+d.id+'\',\''+mode+'\',\'processing\')">提交并继续处理</button>'
+      +'<button class="ant-btn ant-btn-primary" onclick="submitReply(\''+d.id+'\',\''+mode+'\',\'done\')">提交并完成</button>'
   });
 }
 
-function submitReply(id,mode){
+function submitReply(id,mode,nextStatus){
   var content=document.getElementById('replyContent').value.trim();
-  var status=document.getElementById('replyStatus').textContent.trim().split(/\s+/)[0];
   if(!content){showToast('请填写回复内容','warn');return;}
-  if(status!=='处理中' && status!=='已处理'){showToast('处理状态无效','warn');return;}
 
   var d=findById(id);
   var now=new Date();
@@ -551,48 +534,14 @@ function submitReply(id,mode){
     role:'监管人员',
     time:timeStr,
     content:content,
-    status:status==='已处理'?'done':'processing'
+    status:nextStatus
   });
-  if(mode==='accept' || status==='处理中'){
-    d.status='processing';
-    d.handler=d.handler==='—'?'监管人员':d.handler;
-  }
-  if(status==='已处理'){
-    d.status='done';
-  }
+  d.status=nextStatus;
+  d.handler=d.handler==='—'?'监管人员':d.handler;
   closeModal();
   refreshCounts();
   renderTable();
-  showToast(mode==='accept'?'已受理该反馈':'回复已提交');
-}
-
-/* ========== 弹窗：关闭确认 ========== */
-function confirmClose(id){
-  var d=findById(id); if(!d) return;
-  var html='<div class="close-warning">'
-    +'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>'
-    +'<div class="close-warning-text">关闭后用户不能再追加问题，管理部门仍可查看历史。该操作不可撤销，请确认。</div>'
-    +'</div>'
-    +'<div class="ant-descriptions">'
-    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">反馈编号</div><div class="ant-descriptions-value">'+d.id+'</div><div class="ant-descriptions-label">当前状态</div><div class="ant-descriptions-value"><span class="ant-tag '+STATUS_MAP[d.status].cls+'">'+STATUS_MAP[d.status].label+'</span></div></div>'
-    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">问题标题</div><div class="ant-descriptions-value" style="flex:3">'+d.title+'</div></div>'
-    +'<div class="ant-descriptions-row"><div class="ant-descriptions-label">提交人</div><div class="ant-descriptions-value">'+d.submitter+'</div><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">'+d.company+'</div></div>'
-    +'</div>';
-  openModal('关闭确认', html, {
-    width:520,
-    footer:'<button class="ant-btn" onclick="closeModal()">取消</button>'
-      +'<button class="ant-btn ant-btn-danger" onclick="doClose(\''+d.id+'\')">确认关闭</button>'
-  });
-}
-
-function doClose(id){
-  var d=findById(id); if(!d) return;
-  d.status='closed';
-  d.closedNote='由管理部门于 '+new Date().toISOString().substring(0,16).replace('T',' ')+' 关闭';
-  closeModal();
-  refreshCounts();
-  renderTable();
-  showToast('反馈已关闭');
+  showToast(nextStatus==='done'?'反馈已完成':(mode==='accept'?'已受理该反馈':'回复已提交'));
 }
 
 /* ========== Toast ========== */
