@@ -220,7 +220,7 @@ function openAddModal(index){
 function openDetailModal(index){
   var d = personData[index] || personData[0];
   var hasSafety = d.personType.indexOf('安全员') >= 0 || d.personType.indexOf('远程操控员') >= 0;
-  var html = '<div class="ant-descriptions">';
+  var html = '<div id="person-detail-content" class="ant-descriptions">' + personSnapshotMeta(personSnapshots[index][0]);
 
   html += '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">基本信息</h4>';
   html += '<div class="ant-descriptions-row"><div class="ant-descriptions-label">姓名</div><div class="ant-descriptions-value">' + d.name + '</div><div class="ant-descriptions-label">性别</div><div class="ant-descriptions-value">' + d.gender + '</div></div>';
@@ -254,7 +254,56 @@ function openDetailModal(index){
   }
 
   html += '</div>';
-  openModal('人员详情 - ' + d.name, html, {wide:true, width:900, maxHeight:'85vh', maskClosable:false, footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+  openModal(personDetailTitle(d.name, index), html, {wide:true, width:900, maxHeight:'85vh', maskClosable:false, footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>', onOpen: positionPersonSnapshotAction});
+}
+
+var personSnapshots = personData.map(function(person, index) {
+  return [
+    {id:'PER-' + String(index + 1).padStart(4, '0') + '-S003', time:'2026-08-10 14:20', editor:'张伟', data:Object.assign({}, person)},
+    {id:'PER-' + String(index + 1).padStart(4, '0') + '-S002', time:'2026-07-18 09:35', editor:'李四', data:Object.assign({}, person, {company:index === 0 ? 'B公司' : person.company})},
+    {id:'PER-' + String(index + 1).padStart(4, '0') + '-S001', time:person.regTime, editor:'王五', data:Object.assign({}, person)}
+  ];
+});
+
+function personDetailTitle(name, index) {
+  return '人员详情 - ' + name + ' <button type="button" class="ant-btn ant-btn-sm snapshot-header-action" onclick="showPersonSnapshots(' + index + ')">信息快照</button>';
+}
+
+function positionPersonSnapshotAction() {
+  var header = document.querySelector('#modal-mask .ant-modal-header');
+  if (!header) return;
+  var action = header.querySelector('.snapshot-header-action');
+  var headerRight = header.querySelector('.ant-modal-header-right');
+  if (action && headerRight) headerRight.insertBefore(action, headerRight.firstChild);
+}
+
+function personSnapshotMeta(item) {
+  return '<div class="mb-4 pb-3 border-b border-[#f0f0f0] text-sm"><span class="text-[#00000073]">快照编号：</span><span class="text-[#000000d9]">' + item.id + '</span><span class="ml-6 text-[#00000073]">快照时间：</span><span class="text-[#000000d9]">' + item.time + '</span><span class="ml-6 text-[#00000073]">修改人：</span><span class="text-[#000000d9]">' + item.editor + '</span></div>';
+}
+
+function showPersonSnapshots(index) {
+  var html = '<div class="text-sm text-[#00000073] mb-4">仅展示该人员每次信息保存时生成的只读快照。</div><div style="overflow-x:auto"><table class="ant-table"><thead><tr><th>快照编号</th><th>快照时间</th><th>修改人</th><th>操作</th></tr></thead><tbody>' + personSnapshots[index].map(function(item) {
+    return '<tr><td>' + item.id + '</td><td>' + item.time + '</td><td>' + item.editor + '</td><td><button class="ant-btn-link" onclick="openPersonSnapshot(' + index + ', \'' + item.id + '\')">查看</button></td></tr>';
+  }).join('') + '</tbody></table></div>';
+  openModal('信息快照', html, {width:760, footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+
+function openPersonSnapshot(index, id) {
+  var item = personSnapshots[index].filter(function(snapshot) { return snapshot.id === id; })[0];
+  if (!item) return;
+  var d = item.data;
+  var html = '<div class="ant-descriptions">' + personSnapshotMeta(item) +
+    '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">基本信息</h4>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">姓名</div><div class="ant-descriptions-value">' + d.name + '</div><div class="ant-descriptions-label">性别</div><div class="ant-descriptions-value">' + d.gender + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">身份证号</div><div class="ant-descriptions-value">' + d.idNumber + '</div><div class="ant-descriptions-label">所属企业</div><div class="ant-descriptions-value">' + d.company + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">人员类型</div><div class="ant-descriptions-value">' + personTypeTags(d.personType) + '</div><div class="ant-descriptions-label">身份证附件</div><div class="ant-descriptions-value"><a href="#" class="text-[#1677ff]">' + d.idCardFile + '</a></div></div>' +
+    '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">驾驶资质信息</h4>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">驾照类型</div><div class="ant-descriptions-value">' + d.licenseType + '</div><div class="ant-descriptions-label">初次领证日期</div><div class="ant-descriptions-value">' + d.firstLicenseDate + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">机动车驾驶证附件</div><div class="ant-descriptions-value"><a href="#" class="text-[#1677ff]">' + d.driverLicenseFile + '</a></div><div class="ant-descriptions-label">安全驾驶证明</div><div class="ant-descriptions-value"><a href="#" class="text-[#1677ff]">' + d.safeDriveFile + '</a></div></div>' +
+    '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">交通违法、事故与培训信息</h4>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">严重交通违法行为</div><div class="ant-descriptions-value">' + d.illegalRecord + '</div><div class="ant-descriptions-label">酒驾/醉驾/精神药品记录</div><div class="ant-descriptions-value">' + d.drinkDriveRecord + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">交通事故记录</div><div class="ant-descriptions-value">' + d.accidentRecord + '</div><div class="ant-descriptions-label">培训记录</div><div class="ant-descriptions-value"><a href="#" class="text-[#1677ff]">' + d.trainingRecord + '</a></div></div></div>';
+  openModal('人员详情 - ' + d.name, html, {wide:true, width:900, maxHeight:'85vh', footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
 }
 
 function toggleIllegalType(val) {

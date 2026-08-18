@@ -200,8 +200,11 @@
 <div class="ant-modal-mask" id="detailModal" style="display:none!important">
   <div class="ant-modal wide">
     <div class="ant-modal-header">
-      <h3>企业详情</h3>
-      <span class="ant-modal-close" onclick="closeDetailModal()">✕</span>
+      <h3 id="detailTitle">企业详情</h3>
+      <div class="ant-modal-header-right">
+        <button type="button" class="ant-btn ant-btn-sm" id="companySnapshotAction">信息快照</button>
+        <span class="ant-modal-close" onclick="closeDetailModal()">✕</span>
+      </div>
     </div>
     <div class="ant-modal-body">
       <div class="ant-descriptions" id="detailContent"></div>
@@ -222,6 +225,14 @@ let companyData = [
   {id:3, companyName:'C公司', creditCode:'91440300715286438Q', subjectType:'互联网服务商', registeredCapital:'10000', businessScope:'自动驾驶技术研发、智能交通解决方案', capabilityDesc:'全球领先的自动驾驶技术提供商，具备完整的自动驾驶软硬件开发能力', contactAddress:'北京市海淀区上地十街', contactPhone:'010-59928888', contactEmail:'apollo@baidu.com', contactPerson:'王小明', contactMobile:'13611112222', licenseFile:'营业执照.pdf', registerTime:'2026-04-20 09:15'},
   {id:4, companyName:'襄阳汽车零部件有限公司', creditCode:'91420600MA49C5RL2D', subjectType:'零部件制造商', registeredCapital:'8000', businessScope:'汽车零部件研发、生产与销售', capabilityDesc:'专注于智能网联汽车传感器、控制器的研发生产', contactAddress:'湖北省襄阳市襄州区', contactPhone:'0710-3566999', contactEmail:'sales@parts.com', contactPerson:'刘勇', contactMobile:'13733334444', licenseFile:'营业执照.pdf', registerTime:'2026-03-22 16:45'}
 ];
+
+var companySnapshots = companyData.map(function(company) {
+  return [
+    {id:'ENT-' + String(company.id).padStart(4, '0') + '-S003', time:'2026-08-10 14:20', editor:'张伟', data:Object.assign({}, company)},
+    {id:'ENT-' + String(company.id).padStart(4, '0') + '-S002', time:'2026-07-18 09:35', editor:'李四', data:Object.assign({}, company, {contactPerson:company.id === 1 ? '李四' : company.contactPerson})},
+    {id:'ENT-' + String(company.id).padStart(4, '0') + '-S001', time:company.registerTime, editor:'王五', data:Object.assign({}, company)}
+  ];
+});
 
 // PRD 3.1.3：默认按登记时间倒序排列
 companyData.sort(function(a, b) { return new Date(b.registerTime.replace(/-/g, '/')) - new Date(a.registerTime.replace(/-/g, '/')); });
@@ -504,7 +515,8 @@ function saveCompany() {
 function openDetailModal(id) {
   var data = companyData.find(function(item) { return item.id === id; });
   if (!data) return;
-  var html =
+  var snapshots = companySnapshots.filter(function(group) { return group[0].data.id === id; })[0] || [];
+  var html = '<div id="company-detail-content">' + companySnapshotMeta(snapshots[0]) +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">公司名称</div><div class="ant-descriptions-value">' + data.companyName + '</div></div>' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">统一信用代码</div><div class="ant-descriptions-value">' + data.creditCode + '</div><div class="ant-descriptions-label">申请主体类型</div><div class="ant-descriptions-value">' + data.subjectType + '</div></div>' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">注册资本</div><div class="ant-descriptions-value">' + (data.registeredCapital ? data.registeredCapital + '万元' : '-') + '</div><div class="ant-descriptions-label">登记时间</div><div class="ant-descriptions-value">' + data.registerTime + '</div></div>' +
@@ -512,9 +524,52 @@ function openDetailModal(id) {
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">研发、制造及试验能力说明</div><div class="ant-descriptions-value" style="flex:3">' + (data.capabilityDesc || '-') + '</div></div>' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">单位联系地址</div><div class="ant-descriptions-value">' + (data.contactAddress || '-') + '</div><div class="ant-descriptions-label">单位联系电话</div><div class="ant-descriptions-value">' + (data.contactPhone || '-') + '</div></div>' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">单位联系邮箱</div><div class="ant-descriptions-value">' + (data.contactEmail || '-') + '</div><div class="ant-descriptions-label">联系人</div><div class="ant-descriptions-value">' + data.contactPerson + '</div></div>' +
-    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">联系方式</div><div class="ant-descriptions-value">' + data.contactMobile + '</div><div class="ant-descriptions-label">营业执照</div><div class="ant-descriptions-value"><a href="#" style="color:#1677ff">' + data.licenseFile + '</a></div></div>';
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">联系方式</div><div class="ant-descriptions-value">' + data.contactMobile + '</div><div class="ant-descriptions-label">营业执照</div><div class="ant-descriptions-value"><a href="#" style="color:#1677ff">' + data.licenseFile + '</a></div></div></div>';
   document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailTitle').textContent = companyDetailTitle();
+  document.getElementById('companySnapshotAction').setAttribute('onclick', 'showCompanySnapshots(' + id + ')');
   document.getElementById('detailModal').style.setProperty('display', 'flex', 'important');
+}
+
+function companyDetailTitle(id) {
+  return '企业详情' + (id === undefined ? '' : ' <button type="button" class="ant-btn ant-btn-sm snapshot-header-action" onclick="showCompanySnapshots(' + id + ')">信息快照</button>');
+}
+
+function positionCompanySnapshotAction() {
+  var header = document.querySelector('#modal-mask .ant-modal-header');
+  if (!header) return;
+  var action = header.querySelector('.snapshot-header-action');
+  var headerRight = header.querySelector('.ant-modal-header-right');
+  if (action && headerRight) headerRight.insertBefore(action, headerRight.firstChild);
+}
+
+function companySnapshotMeta(item) {
+  return '<div class="mb-4 pb-3 border-b border-[#f0f0f0] text-sm"><span class="text-[#00000073]">快照编号：</span><span class="text-[#000000d9]">' + item.id + '</span><span class="ml-6 text-[#00000073]">快照时间：</span><span class="text-[#000000d9]">' + item.time + '</span><span class="ml-6 text-[#00000073]">修改人：</span><span class="text-[#000000d9]">' + item.editor + '</span></div>';
+}
+
+function showCompanySnapshots(id) {
+  var snapshots = companySnapshots.filter(function(group) { return group[0].data.id === id; })[0] || [];
+  var html = '<div class="text-sm text-[#00000073] mb-4">仅展示该企业每次信息保存时生成的只读快照。</div><div style="overflow-x:auto"><table class="ant-table"><thead><tr><th>快照编号</th><th>快照时间</th><th>修改人</th><th>操作</th></tr></thead><tbody>' + snapshots.map(function(item) {
+    return '<tr><td>' + item.id + '</td><td>' + item.time + '</td><td>' + item.editor + '</td><td><button class="ant-btn-link" onclick="showCompanySnapshotDetail(' + id + ', \'' + item.id + '\')">查看</button></td></tr>';
+  }).join('') + '</tbody></table></div>';
+  openModal('信息快照', html, {width:760, footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
+}
+
+function showCompanySnapshotDetail(id, snapshotId) {
+  var snapshots = companySnapshots.filter(function(group) { return group[0].data.id === id; })[0] || [];
+  var item = snapshots.filter(function(snapshot) { return snapshot.id === snapshotId; })[0];
+  if (!item) return;
+  var data = item.data;
+  var html = '<div class="ant-descriptions">' + companySnapshotMeta(item) +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">公司名称</div><div class="ant-descriptions-value">' + data.companyName + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">统一信用代码</div><div class="ant-descriptions-value">' + data.creditCode + '</div><div class="ant-descriptions-label">申请主体类型</div><div class="ant-descriptions-value">' + data.subjectType + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">注册资本</div><div class="ant-descriptions-value">' + (data.registeredCapital ? data.registeredCapital + '万元' : '-') + '</div><div class="ant-descriptions-label">登记时间</div><div class="ant-descriptions-value">' + data.registerTime + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">业务范围</div><div class="ant-descriptions-value" style="flex:3">' + (data.businessScope || '-') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">研发、制造及试验能力说明</div><div class="ant-descriptions-value" style="flex:3">' + (data.capabilityDesc || '-') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">单位联系地址</div><div class="ant-descriptions-value">' + (data.contactAddress || '-') + '</div><div class="ant-descriptions-label">单位联系电话</div><div class="ant-descriptions-value">' + (data.contactPhone || '-') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">单位联系邮箱</div><div class="ant-descriptions-value">' + (data.contactEmail || '-') + '</div><div class="ant-descriptions-label">联系人</div><div class="ant-descriptions-value">' + data.contactPerson + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">联系方式</div><div class="ant-descriptions-value">' + data.contactMobile + '</div><div class="ant-descriptions-label">营业执照</div><div class="ant-descriptions-value"><a href="#" style="color:#1677ff">' + data.licenseFile + '</a></div></div></div>';
+  openModal('企业详情', html, {width:720, maxHeight:'85vh', footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});
 }
 
 function closeDetailModal() {

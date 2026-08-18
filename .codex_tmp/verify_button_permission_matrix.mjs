@@ -1,0 +1,20 @@
+import fs from "node:fs/promises";
+import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
+
+const file = "04-交付文档/outputs/20260818_button_permission_matrix/智能网联汽车安全监测平台_按钮级权限矩阵.xlsx";
+const outDir = "04-交付文档/outputs/20260818_button_permission_matrix/verification";
+const input = await FileBlob.load(file);
+const workbook = await SpreadsheetFile.importXlsx(input);
+const matrix = await workbook.inspect({ kind: "table", range: "按钮权限矩阵!A1:P18", include: "values,formulas", tableMaxRows: 18, tableMaxCols: 16, maxChars: 14000 });
+const rules = await workbook.inspect({ kind: "table", range: "权限标识与判定规则!A1:E9", include: "values,formulas", tableMaxRows: 9, tableMaxCols: 5, maxChars: 8000 });
+const gaps = await workbook.inspect({ kind: "table", range: "覆盖与待补齐!A1:F8", include: "values,formulas", tableMaxRows: 8, tableMaxCols: 6, maxChars: 8000 });
+const errors = await workbook.inspect({ kind: "match", searchTerm: "#REF!|#DIV/0!|#VALUE!|#NAME\\?|#N/A", options: { useRegex: true, maxResults: 100 }, summary: "final formula error scan", maxChars: 3000 });
+console.log("MATRIX\n" + matrix.ndjson);
+console.log("RULES\n" + rules.ndjson);
+console.log("GAPS\n" + gaps.ndjson);
+console.log("ERRORS\n" + errors.ndjson);
+await fs.mkdir(outDir, { recursive: true });
+const preview = await workbook.render({ sheetName: "按钮权限矩阵", range: "A1:P20", scale: 1, format: "png" });
+const previewBytes = new Uint8Array(await preview.arrayBuffer());
+await fs.writeFile(`${outDir}/matrix.png`, previewBytes);
+console.log(`PREVIEW_BYTES=${previewBytes.length}`);

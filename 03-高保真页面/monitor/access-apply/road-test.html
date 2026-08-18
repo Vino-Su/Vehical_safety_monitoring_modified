@@ -8,7 +8,7 @@
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <script src="../../components/pagination-component.js"></script>
   <link rel="stylesheet" href="../../components/application-lineage.css?v=1">
-  <link rel="stylesheet" href="../../components/access-apply-framework.css?v=7">
+  <link rel="stylesheet" href="../../components/access-apply-framework.css?v=8">
   <style>.version-node{padding:8px 10px;border-left:2px solid #f0f0f0;margin-left:8px;position:relative}.version-node::before{content:'';position:absolute;left:-6px;top:12px;width:10px;height:10px;border-radius:50%;border:2px solid}.version-node.current{border-left-color:#1677ff;background:#f0f5ff}.version-node.current::before{border-color:#1677ff;background:#1677ff}.version-node.passed{border-left-color:#52c41a}.version-node.passed::before{border-color:#52c41a;background:#52c41a}.version-node.expired{border-left-color:#d9d9d9}.version-node.expired::before{border-color:#d9d9d9;background:#d9d9d9}.version-node.processing{border-left-color:#fa8c16}.version-node.processing::before{border-color:#fa8c16;background:#fa8c16}.version-node.changed{border-left-color:#1677ff}.version-node.changed::before{border-color:#1677ff;background:#1677ff;border-radius:2px;transform:rotate(45deg)}.version-node.add-vehicle{margin-left:24px;border-left-color:#13c2c2}.version-node.add-vehicle::before{border-color:#13c2c2;background:#13c2c2}.ant-tag-blue{color:#1677ff;background:#e6f4ff;border-color:#91caff}.change-highlight{background:#fff7e6;border-left:3px solid #fa8c16;padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:8px}.change-old{color:#00000073;text-decoration:line-through;font-size:12px}.change-new{color:#fa8c16;font-weight:500;font-size:13px}.multi-select{position:relative;display:inline-block}.multi-select-panel{display:none;position:absolute;top:100%;left:0;z-index:1000;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:8px 0;min-width:180px;max-height:260px;overflow-y:auto}.multi-select-panel label{display:flex;align-items:center;padding:5px 12px;cursor:pointer;font-size:13px;color:#000000d9}.multi-select-panel label:hover{background:#f5f5f5}.multi-select-panel input[type=checkbox]{margin-right:8px}.material-info{position:relative;display:inline-flex;vertical-align:middle}.material-info-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;padding:0;border:1px solid #91caff;border-radius:50%;background:#e6f4ff;color:#1677ff;font-size:11px;font-weight:600;line-height:1;cursor:pointer}.material-info-btn:hover,.material-info-btn:focus{border-color:#1677ff;outline:none}.material-tooltip{display:none;position:absolute;z-index:1200;top:22px;left:0;width:420px;max-width:calc(80vw);padding:10px 12px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.12);color:#000000d9;font-size:12px;font-weight:400;line-height:1.65;text-align:left;white-space:normal}.material-info:hover .material-tooltip,.material-info:focus-within .material-tooltip,.material-info.is-open .material-tooltip{display:block}.attachment-group{margin-top:16px;border:1px solid #f0f0f0;border-radius:6px;overflow:visible}.attachment-group-title{padding:10px 12px;background:#fafafa;border-bottom:1px solid #f0f0f0;color:#000000d9;font-size:14px;font-weight:600}.attachment-row{padding:12px;border-bottom:1px solid #f0f0f0}.attachment-row:last-child{border-bottom:0}.attachment-name{display:flex;align-items:center;gap:6px;margin-bottom:8px;color:#000000d9;font-size:14px}.attachment-subtitle{margin-left:auto;color:#00000073;font-size:12px;font-weight:400}.attachment-file-actions{display:flex;align-items:center;gap:8px;min-height:24px;flex-wrap:wrap}</style>
 <style>
 #modal-mask .detail-attachment-panel .attachment-group{margin:0 0 16px;border:0;border-radius:0;overflow:visible}
@@ -540,7 +540,7 @@ function getRelatedVersions(id){var f=veFamily(id),r=[];f.main.concat(f.attached
 function openVersionModal(id){var f=veFamily(id);if(!f.current)return;var h='<div class="ve-summary"><strong>申请活动版本演进</strong><div>展示当前申请所属的全部关联申请，主链按申请时间排序；新增车辆作为附属申请展示，不进入资格主链。</div><div class="ve-legend"><span><i class="ve-key active"></i>已生效</span><span><i class="ve-key processing"></i>审批中</span><span><i class="ve-key ended"></i>已结束</span><span><i class="ve-key terminated"></i>已终止</span></div></div><div class="ve-family">';if(!f.main.length){h+='<div class="ve-empty">暂无关联申请</div>';}else{f.main.forEach(function(a){h+=veNode(a,f.current,false);var children=f.attached.filter(function(c){return c.origId===a.id;});if(children.length){h+='<div class="ve-children">';children.forEach(function(c){h+=veNode(c,f.current,true);});h+='</div>';}});}h+='</div>';openModal('版本演进 - '+veEsc(id),h,{width:600,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});}
 </script>
 <script src="../../common.js"></script>
-<script src="../../components/access-apply-framework.js?v=13"></script>
+<script src="../../components/access-apply-framework.js?v=14"></script>
 <script>
 /* The shared change surface keeps this page's initial, renewal, and add-vehicle flows intact. */
 function roadTestFieldText(items, formatter) {
@@ -990,6 +990,35 @@ openRenewalPage = function (id) {
   }
   showToastMsg('延期申请组件加载失败，请刷新页面后重试');
 };
+</script>
+<script>
+(function () {
+  function snapshotMeta(kind, key) {
+    var record = (window.appData || []).filter(function (item) { return item.id === window.__applicationLineageCurrentId; })[0] || {};
+    var prefix = kind === 'vehicle' ? 'VEH' : 'PER';
+    var suffix = String(key || '').replace(/[^A-Za-z0-9]/g, '').slice(-6).toUpperCase() || '000001';
+    return { id: prefix + '-' + suffix + '-S001', time: record.time || '2026-08-10 14:20', editor: '张伟' };
+  }
+  function prependSnapshotMeta(kind, key) {
+    var body = document.querySelector('#modal-mask .ant-modal-body');
+    if (!body || body.querySelector('[data-application-snapshot-meta]')) return;
+    var meta = snapshotMeta(kind, key);
+    var panel = document.createElement('div');
+    panel.setAttribute('data-application-snapshot-meta', 'true');
+    panel.className = 'mb-4 pb-3 border-b border-[#f0f0f0] text-sm';
+    panel.innerHTML = '<span class="text-[#00000073]">快照编号：</span><span class="text-[#000000d9]">' + meta.id + '</span><span class="ml-6 text-[#00000073]">快照时间：</span><span class="text-[#000000d9]">' + meta.time + '</span><span class="ml-6 text-[#00000073]">修改人：</span><span class="text-[#000000d9]">' + meta.editor + '</span>';
+    body.insertBefore(panel, body.firstChild);
+  }
+  function wrapDetail(name, kind, keyIndex) {
+    var original = window[name];
+    if (typeof original !== 'function' || original.__applicationSnapshotWrapped) return;
+    function wrapped() { original.apply(this, arguments); prependSnapshotMeta(kind, arguments[keyIndex]); }
+    wrapped.__applicationSnapshotWrapped = true;
+    window[name] = wrapped;
+  }
+  wrapDetail('openVehicleDetailModal', 'vehicle', 0);
+  wrapDetail('openPersonDetailModal', 'person', 0);
+})();
 </script>
 <script src="../../components/application-lineage.js?v=1"></script>
 <script>
