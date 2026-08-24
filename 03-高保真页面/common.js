@@ -79,7 +79,7 @@
   }
   function installApplicationSceneGuards() {
     var path = String(location.pathname || '');
-    if (!/access-apply|access-approve/.test(path)) return;
+    if (!/access-apply|access-approve/.test(path) || /access-approve[\\/]terminate\.html$/.test(path)) return;
     var scene = window.getCurrentApplicationScene;
     if (/road-test/.test(path) && typeof window.confirmRoadSelect === 'function') {
       var roadConfirm = window.confirmRoadSelect;
@@ -139,7 +139,7 @@
         };
       }
     }
-    if ((/access-apply|access-approve/.test(path)) && typeof window.openDetail === 'function') {
+    if ((/access-apply|access-approve/.test(path)) && !/access-approve[\\/]terminate\.html$/.test(path) && typeof window.openDetail === 'function') {
       var detailOpen = window.openDetail;
       if (!detailOpen.__applicationSceneWrapped) {
         var wrappedDetail = function (id) {
