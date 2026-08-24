@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -614,11 +614,10 @@ buildDetailHtml=function(d){
     h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">照明等级</div><div class="ant-descriptions-value">'+(d.lighting||'—')+'</div><div class="ant-descriptions-label">信号灯数量</div><div class="ant-descriptions-value">'+(d.signals||'—')+'</div></div>';
     h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">RSU配置数量</div><div class="ant-descriptions-value">'+(d.rsu||'—')+'</div><div class="ant-descriptions-label">感知设备类型</div><div class="ant-descriptions-value">'+(d.sensors||r.facility)+'</div></div>';
     h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">感知设备数量</div><div class="ant-descriptions-value">'+(d.sensorCount||'—')+'</div><div class="ant-descriptions-label">边缘计算节点</div><div class="ant-descriptions-value">'+(d.edge||'—')+'</div></div>';
-    h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">测试场景信息</h4>';
-    h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">适用测试场景</div><div class="ant-descriptions-value">'+(d.scene||type||r.scene)+'</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>';
     h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">开放管控信息</h4>';
     h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">开放状态</div><div class="ant-descriptions-value"><span class="ant-tag '+(status==='开放'?'ant-tag-success':'ant-tag-default')+'">'+esc(status)+'</span></div><div class="ant-descriptions-label">开放时段</div><div class="ant-descriptions-value">'+(d.openPeriod||r.openPeriod)+'</div></div>';
-    h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">适用自动驾驶等级</div><div class="ant-descriptions-value">'+(d.availLevel||'—')+'</div><div class="ant-descriptions-label">适用业务类型</div><div class="ant-descriptions-value">'+(d.availBiz||'—')+'</div></div>';
+    h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">适用自动驾驶等级</div><div class="ant-descriptions-value">'+(d.availLevel||'—')+'</div><div class="ant-descriptions-label">适用应用场景</div><div class="ant-descriptions-value">'+(d.applicationScene||((window.APPLICATION_SCENE_OPTIONS||['无人物流','无人环卫','无人公交','无人出行'])[String(d.id||'').length%4])||'—')+'</div></div>';
+    h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">适用业务类型</div><div class="ant-descriptions-value">'+(d.businessType||'道路测试 / 示范应用')+'</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>';
     h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">管控要求说明</div><div class="ant-descriptions-value">'+(d.control||'按开放道路动态管控要求执行')+'</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>';
     h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">更新记录信息</h4>';
     h+='<div class="ant-descriptions-row"><div class="ant-descriptions-label">建档时间</div><div class="ant-descriptions-value">'+(d.createTime||r.createTime)+'</div><div class="ant-descriptions-label">最后修改时间</div><div class="ant-descriptions-value">'+(d.updateTime||r.updateTime)+'</div></div>';
