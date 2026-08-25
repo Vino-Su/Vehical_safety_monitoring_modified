@@ -273,7 +273,8 @@
     var logs = detailLogs(record);
     return '<div class="aaf-log-list">' + (logs.length ? logs.map(function (log) {
       var tone = log.tone || (log.status === '已退回' ? 'error' : log.status === '处理中' ? 'current' : 'done');
-      return '<article class="aaf-log-item ' + tone + '"><div class="aaf-log-marker">' + (tone === 'error' ? '×' : tone === 'done' ? '✓' : '●') + '</div><div class="aaf-log-content"><div class="aaf-log-head"><strong>' + esc(log.title || '-') + '</strong><span>' + esc(log.status || '-') + '</span></div><div class="aaf-log-meta">处理人：' + esc(log.handler || '-') + '　时间：' + esc(log.time || '-') + '</div>' + (log.opinion ? '<div class="aaf-log-opinion">' + esc(log.opinion).replace(/\n/g, '<br>') + '</div>' : '') + '</div></article>';
+      var issueList = log.title === '第三方初审' && record.status === 'rejected' && window.MaterialReviewComments ? window.MaterialReviewComments.renderIssueList(record, '第三方初审问题清单') : '';
+      return '<article class="aaf-log-item ' + tone + '"><div class="aaf-log-marker">' + (tone === 'error' ? '×' : tone === 'done' ? '✓' : '●') + '</div><div class="aaf-log-content"><div class="aaf-log-head"><strong>' + esc(log.title || '-') + '</strong><span>' + esc(log.status || '-') + '</span></div><div class="aaf-log-meta">处理人：' + esc(log.handler || '-') + '　时间：' + esc(log.time || '-') + '</div>' + (log.opinion ? '<div class="aaf-log-opinion">' + esc(log.opinion).replace(/\n/g, '<br>') + '</div>' : '') + issueList + '</div></article>';
     }).join('') : '<div class="aaf-empty-cell">暂无流程日志</div>') + '</div>';
   }
   function originalSource(record) {
@@ -684,7 +685,7 @@
       if (!state.record) return;
       state.files = Object.assign({}, state.record.attachments || {});
       var detailRecordId = state.record.id;
-      window.openModal(detailModalTitle('申请详情', state.record), detailHtml(state.record), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>', onOpen: function () { attachTitleVersionButton(detailRecordId); } });
+      window.openModal(detailModalTitle('申请详情', state.record), detailHtml(state.record), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>', onOpen: function () { attachTitleVersionButton(detailRecordId); if (window.MaterialReviewComments) window.MaterialReviewComments.decorateApplicant(document.querySelector('#modal-mask .ant-modal-body'), state.record); } });
     },
     openAddVehicleDetail: function (config, recordOrId) {
       if (!verifyModalSupport()) return;
@@ -692,7 +693,7 @@
       state.record = typeof recordOrId === 'object' ? recordOrId : getRecord(state.config, recordOrId);
       if (!state.record) return;
       var detailRecordId = state.record.id;
-      window.openModal(detailModalTitle('申请详情', state.record), addDetailHtml(state.record), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>', onOpen: function () { attachTitleVersionButton(detailRecordId); } });
+      window.openModal(detailModalTitle('申请详情', state.record), addDetailHtml(state.record), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>', onOpen: function () { attachTitleVersionButton(detailRecordId); if (window.MaterialReviewComments) window.MaterialReviewComments.decorateApplicant(document.querySelector('#modal-mask .ant-modal-body'), state.record); } });
     },
     openRenewalDetail: function (config, recordOrId) {
       if (!verifyModalSupport()) return;
@@ -701,7 +702,7 @@
       if (!state.record) return;
       var detailRecordId = state.record.id;
       var title = (state.config && state.config.renewalTitle) || '延期申请';
-      window.openModal(detailModalTitle('申请详情', state.record), renewalDetailHtml(state.record), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>', onOpen: function () { attachTitleVersionButton(detailRecordId); } });
+      window.openModal(detailModalTitle('申请详情', state.record), renewalDetailHtml(state.record), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>', onOpen: function () { attachTitleVersionButton(detailRecordId); if (window.MaterialReviewComments) window.MaterialReviewComments.decorateApplicant(document.querySelector('#modal-mask .ant-modal-body'), state.record); } });
     },
     openVersions: function (id) {
       if (!state.config || !verifyModalSupport()) return;

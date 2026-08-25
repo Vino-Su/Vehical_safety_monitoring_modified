@@ -1,0 +1,4 @@
+interface:
+  display_name: "功能 PRD 撰写"
+  short_description: "生成与原型配套、面向研发实现的精简功能PRD需求文档"
+  default_prompt: "使用 $write-functional-prd 根据需求材料和原型撰写一份面向研发实现的精简功能 PRD。"

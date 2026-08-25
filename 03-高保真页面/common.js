@@ -268,7 +268,8 @@
           children: [
             { key: 'monitor-map', label: '监控一张图', path: 'monitor/vehicle-monitor/monitor-map.html', roles: ['admin', 'enterprise', 'third-party', 'workgroup', 'traffic'] },
             { key: 'running', label: '车辆运行监控', path: 'monitor/vehicle-monitor/running.html', roles: ['admin', 'enterprise', 'third-party', 'workgroup', 'traffic'] },
-            { key: 'alarm', label: '异常状态事件', path: 'monitor/vehicle-monitor/alarm.html', roles: ['admin', 'enterprise', 'third-party', 'workgroup', 'traffic'] },
+            { key: 'alarm', label: '异常状态事件', path: 'monitor/vehicle-monitor/alarm.html', roles: ['admin', 'third-party', 'workgroup', 'traffic'] },
+            { key: 'alarm-handle', label: '异常事件处置', path: 'monitor/vehicle-monitor/alarm-handle.html', roles: ['admin', 'enterprise'] },
             { key: 'violation', label: '交通违法信息', path: 'monitor/vehicle-monitor/violation.html', roles: ['admin', 'enterprise', 'third-party', 'workgroup', 'traffic'] },
             { key: 'accident', label: '事故数据上报', path: 'monitor/vehicle-monitor/accident.html', roles: ['admin', 'enterprise'] },
             { key: 'accident-review', label: '事故审核', path: 'monitor/vehicle-monitor/accident-review.html', roles: ['admin', 'third-party', 'workgroup', 'traffic'] }

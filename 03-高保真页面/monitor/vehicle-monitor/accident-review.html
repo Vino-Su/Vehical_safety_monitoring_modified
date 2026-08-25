@@ -47,6 +47,15 @@
     .ant-form-label{display:block;margin-bottom:8px;font-size:14px;color:#000000d9}
     .ant-form-control{display:block}
     .ant-descriptions{font-size:14px}
+    .review-sticky-action{position:sticky;bottom:0;z-index:2;margin:16px -20px -16px;padding:12px 20px 16px;background:#fafcff;border-top:1px solid #d6e4ff;box-shadow:0 -4px 12px rgba(22,119,255,.05)}
+    .review-sticky-action.compact{margin:18px 0 0;padding:12px 0 0;background:#fff;border-color:#f0f0f0;box-shadow:none}
+    .review-action-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px;color:#00000073;font-size:12px;line-height:20px}
+    .review-action-form{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;align-items:start}
+    .review-action-field label{display:block;margin-bottom:6px;color:#000000d9;font-size:12px;font-weight:500;line-height:20px}
+    .review-result-options{display:flex;align-items:center;gap:16px;height:32px}
+    .review-action-field .ant-input{width:100%;height:32px}
+    .review-action-buttons{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+    @media(max-width:720px){.review-sticky-action{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}.review-sticky-action.compact{margin-left:0;margin-right:0;padding-left:0;padding-right:0}.review-action-form{grid-template-columns:1fr}.review-action-buttons{flex-wrap:wrap}}
     .ant-descriptions-row{display:flex;margin-bottom:12px;border-bottom:1px solid #f0f0f0;padding-bottom:8px}
     .ant-descriptions-label{width:140px;color:#00000073;font-weight:500;padding-right:12px}
     .ant-descriptions-value{flex:1;color:#000000d9}
@@ -117,23 +126,16 @@ function openReviewDetail(accId, step){
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">审核意见</h4>' +
     '<p class="text-sm text-[#000000d9]">'+(isTraffic?'本条交通事故报告由测试主体于事故发生3个工作日内上报。经初步核查，事故信息填报完整，符合《智能网联汽车道路测试安全管理规定》中关于事故上报的要求。建议通过本阶段审核。':isFirst?'事故分析报告数据来源可靠，结论合理有据，符合平台事故分析标准要求。建议通过初审。':isJoint?'第三方初审意见：同意进入联席审核阶段。建议重点关注行为因素中的制动响应延迟问题。':'')+'</p>' +
     makeAccidentFlowLog(accId,step) +
-    '<div style="position:sticky;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f0f0f0;padding:8px 16px 12px;margin:16px -20px -16px -20px">' +
-    '<div class="text-xs text-[#00000050] flex items-center gap-4 mb-3">' +
+    '<div class="review-sticky-action">' +
+    '<div class="review-action-meta">' +
       '<span><span class="text-[#00000030]">当前节点：</span><span class="ant-tag ant-tag-processing text-[10px]">'+currentNode+'</span></span>' +
       '<span><span class="text-[#00000030]">审批角色：</span>'+role+'</span>' +
     '</div>' +
-    '<div class="flex items-center gap-4">' +
-      '<div class="flex items-center gap-4 shrink-0">' +
-        '<label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="reviewResult" checked> 通过</label>' +
-        '<label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="reviewResult"> 退回</label>' +
-      '</div>' +
-      '<div class="w-px h-6 bg-[#e8e8e8]"></div>' +
-      '<input type="text" class="ant-input text-sm flex-1" id="reviewOpinionInput" placeholder="审批意见（选填）"/>' +
-      '<div class="flex items-center gap-2 shrink-0">' +
-        '<button class="ant-btn" onclick="closeModal()">取消</button>' +
-        '<button class="ant-btn ant-btn-primary" onclick="handleReviewSubmit()">确定</button>' +
-      '</div>' +
+    '<div class="review-action-form">' +
+      '<div class="review-action-field"><label>审核结论</label><div class="review-result-options"><label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="reviewResult" checked> 通过</label><label class="flex items-center gap-1.5 cursor-pointer text-sm"><input type="radio" name="reviewResult"> 退回</label></div></div>' +
+      '<div class="review-action-field"><label for="reviewOpinionInput">审批意见</label><input type="text" class="ant-input text-sm" id="reviewOpinionInput" placeholder="审批意见（选填）"/></div>' +
     '</div>' +
+    '<div class="review-action-buttons"><button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="handleReviewSubmit()">确定</button></div>' +
     '</div></div>';
   openModal('事故审核详情 - '+accId, content, {wide:true,footer:''});
 }
@@ -269,7 +271,7 @@ function openReviewDetail(id){
   var record=AccidentWorkflow.getRecord(id); if (!record) return;
   activeReviewId=id;
   var role=getReviewPageRole(); var reviewer=AccidentWorkflow.getReviewRole(record.status); var canAct=role === reviewer;
-  var actionArea=canAct ? '<div style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:12px 0 0;margin-top:18px"><div class="text-xs text-[#00000050] mb-3">当前审核角色：' + reviewRoleLabel(reviewer) + '</div><div class="flex items-center gap-4"><label class="text-sm"><input type="radio" name="reviewResult" value="pass" checked> 通过</label><label class="text-sm"><input type="radio" name="reviewResult" value="reject"> 退回</label><input type="text" class="ant-input flex-1" id="reviewOpinionInput" placeholder="审核意见（通过可选，退回必填）"><button class="ant-btn ant-btn-primary" onclick="handleReviewSubmit()">确定</button></div></div>' : '<div class="bg-[#fafafa] rounded p-3 mt-4 text-xs text-[#00000073]">当前为只读查看。该节点由' + reviewRoleLabel(reviewer) + '处理。</div>';
+  var actionArea=canAct ? '<div class="review-sticky-action compact"><div class="review-action-meta">当前审核角色：' + reviewRoleLabel(reviewer) + '</div><div class="review-action-form"><div class="review-action-field"><label>审核结论</label><div class="review-result-options"><label class="text-sm"><input type="radio" name="reviewResult" value="pass" checked> 通过</label><label class="text-sm"><input type="radio" name="reviewResult" value="reject"> 退回</label></div></div><div class="review-action-field"><label for="reviewOpinionInput">审核意见</label><input type="text" class="ant-input" id="reviewOpinionInput" placeholder="审核意见（通过可选，退回必填）"></div></div><div class="review-action-buttons"><button class="ant-btn ant-btn-primary" onclick="handleReviewSubmit()">确定</button></div></div>' : '<div class="bg-[#fafafa] rounded p-3 mt-4 text-xs text-[#00000073]">当前为只读查看。该节点由' + reviewRoleLabel(reviewer) + '处理。</div>';
   var body='<div class="ant-descriptions">' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">事故编号</div><div class="ant-descriptions-value">' + record.id + '</div><div class="ant-descriptions-label">事故上报状态</div><div class="ant-descriptions-value">' + reviewStatusTag(record.status) + '</div></div>' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">测试主体</div><div class="ant-descriptions-value">' + record.enterprise + '</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value">' + record.vin + '</div></div>' +

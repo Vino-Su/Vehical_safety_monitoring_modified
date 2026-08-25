@@ -62,6 +62,7 @@
           <div class="filter-actions">
             <button class="ant-btn ant-btn-primary" onclick="searchData()">查询</button>
             <button class="ant-btn" onclick="resetFilter()">重置</button>
+            <button class="ant-btn" onclick="openImportModal()">批量导入</button>
             <button class="ant-btn admin-only" onclick="exportTable()">导出</button>
           </div>
           <button type="button" class="filter-more-toggle" onclick="toggleProgressiveFilter(this)" aria-expanded="false"><span class="filter-more-text">展开更多</span><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>
@@ -286,6 +287,89 @@ function exportTable() {
   }
 }
 
+/* ========== 批量导入 ========== */
+var importFileSelected = null;
+
+function openImportModal() {
+  importFileSelected = null;
+  var body =
+    '<div class="mb-4">' +
+      '<p class="text-sm text-[#000000d9] mb-2">支持通过Excel模板批量导入交通违法信息数据，导入前请确保数据格式符合系统要求。</p>' +
+      '<div class="flex gap-2 mb-4">' +
+        '<button class="ant-btn ant-btn-sm" onclick="showToast(\'导入模板下载中\', \'#1677ff\')">下载导入模板</button>' +
+      '</div>' +
+      '<div id="importDropZone" class="border-2 border-dashed border-[#d9d9d9] rounded-lg p-8 text-center hover:border-[#1677ff] cursor-pointer transition-colors" onclick="document.getElementById(\'importFileInput\').click()">' +
+        '<div class="text-3xl mb-2">📁</div>' +
+        '<p class="text-sm text-[#00000073]">点击或拖拽文件到此处上传</p>' +
+        '<p class="text-xs text-[#00000040] mt-1">支持 Excel/CSV 格式，单次最大1000条</p>' +
+      '</div>' +
+      '<input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="onImportFileChange(this)">' +
+    '</div>' +
+    '<div class="bg-[#fafafa] rounded-lg p-4">' +
+      '<h4 class="text-sm font-semibold text-[#000000d9] mb-2">注意事项</h4>' +
+      '<ul class="text-xs text-[#00000073] space-y-1">' +
+        '<li>1. 请使用系统提供的标准模板填写数据，字段名称必须与模板一致</li>' +
+        '<li>2. 必填字段：违法记录编号、违法发生时间、临时车牌号、运营企业名称、车辆种类、违法行为代码、违法取证类型、文书开具日期</li>' +
+        '<li>3. 导入后数据将自动校验，不符合要求的数据将被标记并提示修正</li>' +
+      '</ul>' +
+    '</div>';
+  openModal('批量导入违法数据', body, {
+    footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="confirmImport()">确认导入</button>',
+    onOpen: function () { initImportDropZone(); }
+  });
+}
+
+function initImportDropZone() {
+  var zone = document.getElementById('importDropZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    zone.style.borderColor = '#1677ff';
+    zone.style.background = '#e6f7ff';
+  });
+  zone.addEventListener('dragleave', function () {
+    zone.style.borderColor = importFileSelected ? '#1677ff' : '#d9d9d9';
+    zone.style.background = '';
+  });
+  zone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      updateImportZone(e.dataTransfer.files[0]);
+    } else {
+      zone.style.borderColor = importFileSelected ? '#1677ff' : '#d9d9d9';
+      zone.style.background = '';
+    }
+  });
+}
+
+function onImportFileChange(input) {
+  if (input.files && input.files.length > 0) {
+    updateImportZone(input.files[0]);
+  }
+  input.value = '';
+}
+
+function updateImportZone(file) {
+  importFileSelected = file;
+  var zone = document.getElementById('importDropZone');
+  if (!zone) return;
+  var sizeText = file.size >= 1024 * 1024 ? (file.size / 1024 / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+  zone.innerHTML = '<div class="text-3xl mb-2">📄</div>' +
+    '<p class="text-sm text-[#1677ff]">' + file.name + '（' + sizeText + '）</p>' +
+    '<p class="text-xs text-[#00000040] mt-1">点击可重新选择文件</p>';
+  zone.style.borderColor = '#1677ff';
+  zone.style.background = '';
+}
+
+function confirmImport() {
+  if (!importFileSelected) {
+    showToast('请先选择导入文件', '#faad14');
+    return;
+  }
+  closeModal();
+  showToast('批量导入成功，数据校验结果请在列表中查看', '#52c41a');
+}
+
 /* ========== 详情弹窗 ========== */
 function showDetail(id) {
   var d = ALL_DATA.find(function (item) { return item.caseNo === id; });
@@ -366,6 +450,9 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   pager.setTotal(currentFilteredData.length);
   renderTable();
+
+  // 自测用：URL hash 触发弹窗 (#import=批量导入)
+  if (location.hash === '#import') setTimeout(openImportModal, 100);
 });
 </script>
 <script src="../../common.js"></script>

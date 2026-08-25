@@ -38,7 +38,9 @@
   function storedPlate(applicationId, vehicle) {
     return ((registry[applicationId] || {})[vehicle.vin]) || {
       plate: vehicle.plate && vehicle.plate !== '-' ? vehicle.plate : '',
-      plateExpiry: vehicle.plateExpiry && vehicle.plateExpiry !== '-' ? vehicle.plateExpiry : ''
+      plateValidFrom: vehicle.plateValidFrom && vehicle.plateValidFrom !== '-' ? vehicle.plateValidFrom : '',
+      plateExpiry: vehicle.plateExpiry && vehicle.plateExpiry !== '-' ? vehicle.plateExpiry : '',
+      photo: !!vehicle.platePhoto
     };
   }
 
@@ -72,7 +74,7 @@
         var vin = Array.prototype.slice.call(cells).map(function (cell) { return cell.textContent.trim(); }).find(function (text) { return values[text]; });
         if (!vin) return;
         cells[plateIndex].textContent = values[vin].plate;
-        cells[expiryIndex].textContent = values[vin].plateExpiry;
+        cells[expiryIndex].textContent = values[vin].plateValidFrom ? values[vin].plateValidFrom + ' 至 ' + values[vin].plateExpiry : values[vin].plateExpiry;
       });
     });
 
@@ -99,6 +101,35 @@
     heading.innerHTML = '<span>' + escapeHTML(text) + '</span><button type="button" class="ant-btn ant-btn-primary ant-btn-sm plate-registration-entry" onclick="openPlateRegistrationModal(\'' + escapeHTML(applicationId) + '\')">登记临时牌照</button>';
   }
 
+  function platePhotoSvg(plateText) {
+    var text = String(plateText || '鄂F·A0001');
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="440" height="140">'
+      + '<rect width="440" height="140" rx="10" fill="#1677ff"/>'
+      + '<rect x="8" y="8" width="424" height="124" rx="6" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"/>'
+      + '<text x="220" y="52" text-anchor="middle" font-size="20" fill="rgba(255,255,255,.85)" font-family="sans-serif">临 时 行 驶 车 牌 照</text>'
+      + '<text x="220" y="106" text-anchor="middle" font-size="44" font-weight="bold" fill="#ffffff" font-family="sans-serif">' + text + '</text>'
+      + '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  window.markPlateRegistrationPhoto = function (vin) {
+    var numberInput = document.querySelector('.plate-registration-number[data-vin="' + vin + '"]');
+    var plate = numberInput ? String(numberInput.value || '').trim() : '';
+    if (!plate) plate = '鄂F·A0001';
+    var cell = document.querySelector('.plate-registration-photo[data-vin="' + vin + '"]');
+    if (cell) {
+      cell.dataset.uploaded = 'true';
+      cell.dataset.plate = plate;
+      cell.innerHTML = '<img src="' + platePhotoSvg(plate) + '" alt="牌照照片" title="点击查看大图" style="width:56px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #f0f0f0;cursor:zoom-in;display:inline-block" onclick="previewPlatePhoto(\'' + escapeHTML(vin) + '\')">';
+    }
+  };
+
+  window.previewPlatePhoto = function (vin) {
+    var cell = document.querySelector('.plate-registration-photo[data-vin="' + vin + '"]');
+    var plate = cell && cell.dataset.plate ? cell.dataset.plate : '鄂F·A0001';
+    window.openModal('牌照照片 - ' + vin, '<div style="text-align:center"><img src="' + platePhotoSvg(plate) + '" alt="牌照照片" style="max-width:100%;border-radius:8px;border:1px solid #f0f0f0"><div style="margin-top:8px;font-size:12px;color:#00000073">牌照照片预览（演示图，实际以上传文件为准）</div></div>', { footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>' });
+  };
+
   window.openPlateRegistrationModal = function (applicationId) {
     var record = detailRecord(applicationId);
     var vehicles = registrationVehicles(record || {});
@@ -108,9 +139,12 @@
     }
     var rows = vehicles.map(function (vehicle, index) {
       var saved = storedPlate(applicationId, vehicle);
-      return '<tr><td class="col-code">' + (index + 1) + '</td><td class="text-xs col-code">' + escapeHTML(vehicle.vin) + '</td><td>' + escapeHTML(vehicle.manufacturer || vehicle.brand || '-') + '</td><td>' + escapeHTML(vehicle.model || '-') + '</td><td><input class="ant-input plate-registration-number" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plate) + '" placeholder="如：鄂F·A001" style="width:140px"></td><td><input type="date" class="ant-input plate-registration-expiry" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plateExpiry) + '" style="width:150px"></td></tr>';
+      var photoCell = saved.photo
+        ? '<img src="' + platePhotoSvg(saved.plate || '鄂F·A0001') + '" alt="牌照照片" title="点击查看大图" style="width:56px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #f0f0f0;cursor:zoom-in;display:inline-block" onclick="previewPlatePhoto(\'' + escapeHTML(vehicle.vin) + '\')">'
+        : '<span class="text-xs text-[#ff4d4f]">未上传</span> <button type="button" class="ant-btn-link ant-btn-sm" onclick="markPlateRegistrationPhoto(\'' + escapeHTML(vehicle.vin) + '\')">上传</button>';
+      return '<tr><td class="col-code">' + (index + 1) + '</td><td class="text-xs col-code">' + escapeHTML(vehicle.vin) + '</td><td>' + escapeHTML(vehicle.model || '-') + '</td><td><input class="ant-input plate-registration-number" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plate) + '" placeholder="如：鄂F·A001" style="width:140px"></td><td><input type="date" class="ant-input plate-registration-start" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plateValidFrom) + '" style="width:125px"> <span class="text-[#00000073]">至</span> <input type="date" class="ant-input plate-registration-end" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plateExpiry) + '" style="width:125px"></td><td><span class="plate-registration-photo" data-vin="' + escapeHTML(vehicle.vin) + '" data-uploaded="' + (saved.photo ? 'true' : 'false') + '" data-plate="' + escapeHTML(saved.plate || '') + '">' + photoCell + '</span></td></tr>';
     }).join('');
-    var html = '<div class="bg-[#fff7e6] border border-[#ffd591] rounded-md px-3 py-2 mb-4 text-sm text-[#000000d9]">请填写本次申请的 ' + vehicles.length + ' 辆车辆临时牌照号和有效期。全部填写并确认后，申请自动生效。</div><div style="overflow-x:auto"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th class="col-code">序号</th><th class="col-code">VIN码</th><th>生产企业/品牌</th><th>车辆型号</th><th>临时牌照号</th><th class="col-code">有效期至</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    var html = '<div class="bg-[#fff7e6] border border-[#ffd591] rounded-md px-3 py-2 mb-4 text-sm text-[#000000d9]">请填写本次申请的 ' + vehicles.length + ' 辆车辆临时牌照号、有效期（起止日期）并上传牌照照片。全部完成并确认后，申请自动生效。</div><div style="overflow-x:auto"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th class="col-code">序号</th><th class="col-code">VIN码</th><th>车辆型号</th><th>临时牌照号</th><th class="col-code">有效期</th><th class="col-code">牌照照片</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     window.openModal('登记临时牌照 - ' + applicationId, html, {
       wide: true,
       footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="confirmPlateRegistration(\'' + escapeHTML(applicationId) + '\')">确认登记</button>'
@@ -121,14 +155,26 @@
     var record = detailRecord(applicationId);
     var vehicles = registrationVehicles(record || {});
     var numbers = document.querySelectorAll('.plate-registration-number');
-    var expiries = document.querySelectorAll('.plate-registration-expiry');
+    var starts = document.querySelectorAll('.plate-registration-start');
+    var ends = document.querySelectorAll('.plate-registration-end');
+    var photos = document.querySelectorAll('.plate-registration-photo');
     var seen = {};
     var next = {};
     for (var index = 0; index < vehicles.length; index += 1) {
       var number = normalizePlate(numbers[index] && numbers[index].value);
-      var expiry = expiries[index] && expiries[index].value;
-      if (!number || !expiry) {
-        notify('请完整填写所有车辆的临时牌照号和有效期');
+      var start = starts[index] && starts[index].value;
+      var end = ends[index] && ends[index].value;
+      var photoUploaded = photos[index] && photos[index].dataset.uploaded === 'true';
+      if (!number || !start || !end) {
+        notify('请完整填写所有车辆的临时牌照号和有效期起止日期');
+        return;
+      }
+      if (start >= end) {
+        notify('有效期起须早于有效期止');
+        return;
+      }
+      if (!photoUploaded) {
+        notify('请上传所有车辆的牌照照片（JPG/PNG）');
         return;
       }
       if (!isPlateFormatValid(number)) {
@@ -140,7 +186,7 @@
         return;
       }
       seen[number] = true;
-      next[vehicles[index].vin] = { plate: number, plateExpiry: expiry };
+      next[vehicles[index].vin] = { plate: number, plateValidFrom: start, plateExpiry: end, photo: true };
     }
 
     registry[applicationId] = next;
