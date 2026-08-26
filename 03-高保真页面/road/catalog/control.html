@@ -28,6 +28,9 @@
     .config-multi-option { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 5px 12px; color: #000000d9; cursor: pointer; }
     .config-multi-option:hover { background: #f5f5f5; }
     .config-multi-option input { width: 14px; height: 14px; accent-color: #1677ff; }
+    .embedded-apply-detail-host { min-height: 520px; height: calc(100vh - 190px); overflow: hidden; background: #fff; }
+    .embedded-apply-detail-frame { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+    .embedded-apply-detail-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: #00000073; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -50,7 +53,6 @@
           <table class="ant-table">
             <thead>
               <tr>
-                <th style="width:110px">道路编号</th>
                 <th style="width:120px">道路名称</th>
                 <th style="width:80px">所属区域</th>
                 <th style="width:90px">道路等级</th>
@@ -193,7 +195,6 @@ function renderRoadTable(){
       ? '<button class="ant-btn-link" onclick="openApplyModal(\''+r.name+'\','+r.applies+')">'+r.applies+'个</button>'
       : '0';
     return '<tr>'+
-      '<td>'+r.code+'</td>'+
       '<td>'+r.name+'</td>'+
       '<td>'+r.district+'</td>'+
       '<td>'+r.level+'</td>'+
@@ -357,7 +358,8 @@ function makeFlowLog(applyId){
   return h+'</div>';
 }
 
-function openApplyDetail(applyId){
+/* 保留旧数据结构作为迁移参考，管控入口不再调用此实现。 */
+function legacyOpenApplyDetail(applyId){
   var a = applyData.find(function(d){return d.id===applyId;}) || applyData[0];
   var isRoadTest = a.type.indexOf('道路测试')>=0;
   var isDemoApply = a.type.indexOf('无人环卫')>=0;
@@ -429,6 +431,38 @@ function getStepStyle(status){
   if(status==='已通过') return {sc1:'#52c41a',sc2:'#52c41a',sc3:'#52c41a',sc4:'#52c41a',l1:'#52c41a',l2:'#52c41a',l3:'#52c41a',d1:'✓',d2:'✓',d3:'✓',d4:'✓'};
   if(status==='已退回') return {sc1:'#52c41a',sc2:'#52c41a',sc3:'#ff4d4f',sc4:'#d9d9d9',l1:'#52c41a',l2:'#52c41a',l3:'#d9d9d9',d1:'✓',d2:'✓',d3:'✕',d4:'○'};
   return {sc1:'#52c41a',sc2:'#1677ff',sc3:'#d9d9d9',sc4:'#d9d9d9',l1:'#52c41a',l2:'#d9d9d9',l3:'#d9d9d9',d1:'✓',d2:'●',d3:'○',d4:'○'};
+}
+
+/* 管控页只读复用准入申请详情：详情字段、流程和附件均由对应业务页维护。 */
+function getApplyDetailPage(applyId){
+  var prefix = String(applyId || '').substring(0, 2);
+  if(prefix === 'RT') return '../../monitor/access-apply/road-test.html';
+  if(prefix === 'DA') return '../../monitor/access-apply/demo-apply.html';
+  if(prefix === 'DO') return '../../monitor/access-apply/demo-operate.html';
+  return '';
+}
+function openApplyDetail(applyId){
+  var detailPage = getApplyDetailPage(applyId);
+  if(!detailPage){
+    if(window.showWorkflowToast) showWorkflowToast('未找到对应业务的申请详情');
+    return;
+  }
+  var hostHtml = '<div id="embeddedApplyDetailHost" class="embedded-apply-detail-host"><div class="embedded-apply-detail-loading">正在加载申请详情...</div></div>';
+  openModal('申请详情 - '+applyId, hostHtml, {
+    wide:true,
+    fullscreen:true,
+    footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>',
+    onOpen:function(){
+      var host = document.getElementById('embeddedApplyDetailHost');
+      if(!host) return;
+      var frame = document.createElement('iframe');
+      frame.className = 'embedded-apply-detail-frame';
+      frame.title = '申请详情';
+      host.innerHTML = '';
+      host.appendChild(frame);
+      frame.src = detailPage + '?embeddedDetail=1&id=' + encodeURIComponent(applyId);
+    }
+  });
 }
 
 function openStatusModal(action, hasTasks){
@@ -532,7 +566,7 @@ function openRoadDetail(roadId, roadName){
     '<div class="ant-descriptions">' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">基础标识信息</h4>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">道路编号</div><div class="ant-descriptions-value">'+r.code+'</div><div class="ant-descriptions-label">道路名称</div><div class="ant-descriptions-value">'+r.name+'</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属行政区域</div><div class="ant-descriptions-value">'+r.district+'</div><div class="ant-descriptions-label">道路等级</div><div class="ant-descriptions-value">'+r.level+'</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属区域</div><div class="ant-descriptions-value">'+r.district+'</div><div class="ant-descriptions-label">道路等级</div><div class="ant-descriptions-value">'+r.level+'</div></div>' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">空间属性信息</h4>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">路段长度(米)</div><div class="ant-descriptions-value">8,500</div><div class="ant-descriptions-label">车道数</div><div class="ant-descriptions-value">4 (单向)</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车道类型</div><div class="ant-descriptions-value">机动车道</div><div class="ant-descriptions-label">最小车道宽度(m)</div><div class="ant-descriptions-value">3.5</div></div>' +
@@ -541,7 +575,7 @@ function openRoadDetail(roadId, roadName){
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">交通运行信息</h4>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">交通流量等级</div><div class="ant-descriptions-value">高</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">基础设施信息</h4>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">照明等级</div><div class="ant-descriptions-value">3</div><div class="ant-descriptions-label">信号灯数量</div><div class="ant-descriptions-value">14</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">照明等级</div><div class="ant-descriptions-value">3级（良好照明）</div><div class="ant-descriptions-label">信号灯数量</div><div class="ant-descriptions-value">14</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">RSU配置数量</div><div class="ant-descriptions-value">8</div><div class="ant-descriptions-label">感知设备类型</div><div class="ant-descriptions-value">毫米波雷达/激光雷达/摄像头</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">感知设备数量</div><div class="ant-descriptions-value">24</div><div class="ant-descriptions-label">边缘计算节点</div><div class="ant-descriptions-value">已部署 (2个)</div></div>' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">开放管控信息</h4>' +

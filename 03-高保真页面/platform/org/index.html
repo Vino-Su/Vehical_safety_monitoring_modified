@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组织架构管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .org-layout{display:flex;gap:16px;align-items:stretch;max-height:calc(100vh - 170px);min-height:480px}
+    .org-tree-panel{width:300px;flex-shrink:0;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.03);display:flex;flex-direction:column;overflow:hidden}
+    .org-tree-head{padding:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .org-tree-title{font-size:14px;font-weight:600;color:#000000d9;margin-right:auto}
+    .org-tree-body{overflow:auto;flex:1;padding:8px}
+    .org-node{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;cursor:pointer;margin:1px 0;flex-wrap:wrap}
+    .org-node:hover{background:#f5f5f5}
+    .org-node.active{background:#e6f4ff;border:1px solid #91caff}
+    .org-node-name{font-size:14px;color:#000000d9}
+    .org-node-disabled .org-node-name{color:#00000040}
+    .org-children{margin-left:20px;border-left:1px dashed #e5e5e5;padding-left:8px}
+    .org-toggle{font-size:12px;color:#1677ff;cursor:pointer;background:none;border:none;padding:2px 4px;white-space:nowrap}
+    .org-member-panel{flex:1;min-width:0;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.03);display:flex;flex-direction:column;overflow:hidden;padding:16px}
+    .org-member-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px}
+    .org-member-scroll{overflow:auto;flex:1;min-height:0}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header">
+        <h2>组织架构管理</h2>
+      </div>
+      <div class="org-layout">
+        <aside class="org-tree-panel">
+          <div class="org-tree-head">
+            <span class="org-tree-title">组织树</span>
+            <button class="ant-btn ant-btn-primary ant-btn-sm" onclick="openAddModal()">+ 新增子部门</button>
+            <button class="ant-btn ant-btn-sm" onclick="toggleExpandAll(true)">展开</button>
+            <button class="ant-btn ant-btn-sm" onclick="toggleExpandAll(false)">收起</button>
+          </div>
+          <div class="org-tree-body" id="orgTree"></div>
+        </aside>
+        <section class="org-member-panel">
+          <div class="org-member-head" id="orgInfoHead"></div>
+          <div class="org-member-scroll">
+            <div class="ant-table-wrapper">
+              <div style="overflow-x:auto">
+                <table class="ant-table">
+                  <thead><tr><th>账号</th><th>姓名</th><th style="width:90px;text-align:center">状态</th><th>绑定角色</th><th style="width:160px;text-align:center">最后登录时间</th></tr></thead>
+                  <tbody id="memberBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='org-manage';
+
+// ========== 组织树数据 ==========
+var nextOrgId = 100;
+var orgTree = [
+  {id:1, name:'襄阳市智能网联汽车测试示范区管委会', status:'已启用', children:[
+    {id:2, name:'市工作专班', status:'已启用', children:[]},
+    {id:3, name:'市交通管理局', status:'已启用', children:[]},
+    {id:4, name:'第三方专业服务机构A', status:'已启用', children:[]},
+    {id:5, name:'第三方专业服务机构B', status:'已启用', children:[]},
+    {id:6, name:'A公司（襄阳智行科技）', status:'已启用', children:[
+      {id:8, name:'安全管理部', status:'已启用', children:[]},
+      {id:9, name:'测试运营部', status:'已启用', children:[]}
+    ]},
+    {id:7, name:'市智能网联汽车监测中心', status:'已启用', children:[
+      {id:10, name:'系统运维组', status:'已启用', children:[]},
+      {id:11, name:'数据分析组', status:'已停用', children:[]}
+    ]}
+  ]}
+];
+
+// 成员数据（账号 → 归属组织、角色）
+var memberData = [
+  {account:'admin', name:'系统管理员', org:'系统运维组', status:'启用', roles:'超级管理员', lastLogin:'2026-08-25 09:30'},
+  {account:'limin', name:'李敏', org:'市工作专班', status:'启用', roles:'市工作专班', lastLogin:'2026-08-24 17:42'},
+  {account:'wangqiang', name:'王强', org:'市工作专班', status:'启用', roles:'市工作专班、第三方专业服务机构', lastLogin:'2026-08-23 10:15'},
+  {account:'zhaolei', name:'赵磊', org:'市交通管理局', status:'启用', roles:'交通管理部门', lastLogin:'2026-08-24 14:20'},
+  {account:'qianyu', name:'钱宇', org:'市交通管理局', status:'禁用', roles:'交通管理部门', lastLogin:'2026-07-30 09:05'},
+  {account:'lisi', name:'李四', org:'第三方专业服务机构A', status:'启用', roles:'第三方专业服务机构、第三方审核专员', lastLogin:'2026-08-25 08:50'},
+  {account:'zhoujiu', name:'周九', org:'第三方专业服务机构A', status:'启用', roles:'第三方审核专员', lastLogin:'2026-08-22 16:30'},
+  {account:'kaijie', name:'凯杰', org:'第三方专业服务机构A', status:'启用', roles:'第三方专业服务机构', lastLogin:'2026-08-21 11:20'},
+  {account:'hepeng', name:'何鹏', org:'第三方专业服务机构B', status:'启用', roles:'第三方专业服务机构', lastLogin:'2026-08-20 15:45'},
+  {account:'zhangsan', name:'张三', org:'安全管理部', status:'启用', roles:'企业用户、企业安全管理员', lastLogin:'2026-08-25 09:10'},
+  {account:'chenqi', name:'陈七', org:'安全管理部', status:'启用', roles:'企业安全管理员', lastLogin:'2026-08-19 10:30'},
+  {account:'sunyang', name:'孙阳', org:'测试运营部', status:'启用', roles:'企业用户', lastLogin:'2026-08-24 13:25'},
+  {account:'linfeng', name:'林凤', org:'测试运营部', status:'启用', roles:'企业用户、数据分析专员', lastLogin:'2026-08-23 09:55'},
+  {account:'wushi', name:'吴十', org:'市工作专班', status:'启用', roles:'只读观察员', lastLogin:'2026-08-18 14:10'},
+  {account:'dingyi', name:'丁一', org:'测试运营部', status:'禁用', roles:'企业用户', lastLogin:'2026-06-30 17:00'}
+];
+
+var expandedOrg = {};
+var selectedOrgId = 1;
+
+// ========== 组织树工具 ==========
+function walkOrg(nodes, fn, parent) {
+  for (var i = 0; i < nodes.length; i++) {
+    if (fn(nodes[i], parent, nodes, i) === false) return false;
+    if (nodes[i].children.length && walkOrg(nodes[i].children, fn, nodes[i]) === false) return false;
+  }
+  return true;
+}
+function findOrg(id) {
+  var found = null;
+  walkOrg(orgTree, function(n) { if (n.id === id) { found = n; return false; } });
+  return found;
+}
+function findOrgParentList(id) {
+  var found = null;
+  walkOrg(orgTree, function(n, parent, list) { if (n.id === id) { found = {node:n, parent:parent, list:list}; return false; } });
+  return found;
+}
+function orgPath(node) {
+  var path = [node.name];
+  var walk = function(nodes, chain) {
+    for (var i = 0; i < nodes.length; i++) {
+      var next = chain.concat([nodes[i].name]);
+      if (nodes[i].id === node.id) { path = next; return false; }
+      if (nodes[i].children.length && walk(nodes[i].children, next) === false) return false;
+    }
+    return true;
+  };
+  walk(orgTree, []);
+  return path.join(' / ');
+}
+function isDescendantOrSelf(nodeId, target) {
+  var hit = false;
+  walkOrg([target], function(n) { if (n.id === nodeId) { hit = true; return false; } });
+  return hit;
+}
+function activeChildrenCount(node) {
+  return node.children.filter(function(c) { return c.status === '已启用'; }).length;
+}
+function activeMemberCount(orgName) {
+  return memberData.filter(function(m) { return m.org === orgName && m.status === '启用'; }).length;
+}
+function countMembers(node) {
+  var names = [];
+  walkOrg([node], function(n) { names.push(n.name); });
+  return memberData.filter(function(m) { return names.indexOf(m.org) !== -1; }).length;
+}
+
+// ========== 树渲染 ==========
+function renderTree() {
+  var html = orgTree.map(function(n) { return renderNode(n, 0); }).join('');
+  document.getElementById('orgTree').innerHTML = html;
+  renderMemberPanel();
+}
+
+function renderNode(node, level) {
+  var hasChildren = node.children.length > 0;
+  var open = expandedOrg[node.id] !== false;
+  var disabled = node.status === '已停用';
+  var active = node.id === selectedOrgId ? ' active' : '';
+  var toggleBtn = hasChildren
+    ? '<button class="org-toggle" onclick="event.stopPropagation();toggleOrg(' + node.id + ')">' + (open ? '收起 ▲' : '展开 ▼') + '</button>'
+    : '<span style="font-size:12px;color:#00000040;width:52px"></span>';
+  var statusTag = disabled ? '<span class="ant-tag ant-tag-default">停用</span>' : '';
+  var count = countMembers(node);
+  var html = '<div class="org-node' + active + (disabled ? ' org-node-disabled' : '') + '" style="padding-left:' + (8) + 'px" onclick="selectOrg(' + node.id + ')">' +
+    toggleBtn +
+    '<span class="org-node-name">' + node.name + '</span>' + statusTag +
+    '<span style="font-size:12px;color:#00000073">' + count + '人</span>' +
+    '</div>';
+  if (hasChildren && open) {
+    html += '<div class="org-children">' + node.children.map(function(c) { return renderNode(c, level + 1); }).join('') + '</div>';
+  }
+  return html;
+}
+
+function toggleOrg(id) { expandedOrg[id] = expandedOrg[id] === false ? true : false; renderTree(); }
+function toggleExpandAll(open) {
+  walkOrg(orgTree, function(n) { expandedOrg[n.id] = open; });
+  renderTree();
+}
+function selectOrg(id) { selectedOrgId = id; renderTree(); }
+
+// ========== 右侧成员面板 ==========
+function renderMemberPanel() {
+  var org = findOrg(selectedOrgId);
+  if (!org) { document.getElementById('orgInfoHead').innerHTML = ''; return; }
+  var disabled = org.status === '已停用';
+  var members = memberData.filter(function(m) { return m.org === org.name; });
+  var enableBtn = disabled
+    ? '<button class="ant-btn-link" style="color:#52c41a" onclick="openToggleModal()">启用</button>'
+    : '<button class="ant-btn-link danger" onclick="openToggleModal()">禁用</button>';
+  var isRoot = !findOrgParentList(selectedOrgId).parent;
+  var moveBtns = isRoot ? '' :
+    '<button class="ant-btn-link" onclick="moveOrg(-1)">上移</button>' +
+    '<button class="ant-btn-link" onclick="moveOrg(1)">下移</button>' +
+    '<button class="ant-btn-link" onclick="openMoveModal()">调整上级</button>';
+  document.getElementById('orgInfoHead').innerHTML =
+    '<span style="font-size:18px;font-weight:600;color:#000000d9">' + org.name + '</span>' +
+    '<span class="ant-tag ' + (disabled ? 'ant-tag-default' : 'ant-tag-success') + '">' + org.status + '</span>' +
+    '<span style="color:#00000073;font-size:13px">路径：' + orgPath(org) + '</span>' +
+    '<span style="color:#00000073;font-size:13px">成员：' + members.length + ' 人</span>' +
+    '<span style="display:inline-flex;gap:4px;margin-left:4px">' +
+      '<button class="ant-btn-link" onclick="openEditModal()">编辑</button>' +
+      moveBtns +
+      enableBtn +
+    '</span>';
+  document.getElementById('memberBody').innerHTML = members.map(function(m) {
+    var stClass = m.status === '启用' ? 'ant-tag-success' : 'ant-tag-default';
+    return '<tr><td>' + m.account + '</td><td>' + m.name + '</td>' +
+      '<td style="text-align:center"><span class="ant-tag ' + stClass + '">' + m.status + '</span></td>' +
+      '<td>' + m.roles + '</td><td style="text-align:center">' + m.lastLogin + '</td></tr>';
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:#00000040;padding:32px 0">该部门下暂无成员</td></tr>';
+}
+
+// ========== 组织维护弹窗 ==========
+function openAddModal() {
+  var parent = findOrg(selectedOrgId);
+  if (!parent) { alert('请先在左侧选择上级部门'); return; }
+  if (parent.status === '已停用') { alert('停用状态下不能新增子部门，请先启用'); return; }
+  openModal('新增子部门 - ' + parent.name,
+    '<div class="ant-form-item"><div class="ant-form-label">上级组织</div><div class="ant-form-control"><input class="ant-input" value="' + parent.name + '" disabled style="background:#f5f5f5"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>组织名称</div><div class="ant-form-control"><input class="ant-input" id="oName" placeholder="同一父级下名称需唯一"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">排序号</div><div class="ant-form-control"><input class="ant-input" id="oSort" type="number" value="' + (parent.children.length + 1) + '" style="width:120px"></div></div>',
+    {width:600,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitAdd()">确定</button>'});
+}
+
+function submitAdd() {
+  var parent = findOrg(selectedOrgId);
+  var name = document.getElementById('oName').value.trim();
+  if (!name) { alert('请输入组织名称'); return; }
+  if (parent.children.some(function(c) { return c.name === name; })) { alert('同一父级下已存在同名组织：' + name); return; }
+  parent.children.push({id:nextOrgId++, name:name, status:'已启用', children:[]});
+  expandedOrg[parent.id] = true;
+  expandedOrg[nextOrgId - 1] = true;
+  closeModal();
+  renderTree();
+}
+
+function openEditModal() {
+  var org = findOrg(selectedOrgId);
+  openModal('编辑组织 - ' + org.name,
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>组织名称</div><div class="ant-form-control"><input class="ant-input" id="oName" value="' + org.name + '"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">排序号</div><div class="ant-form-control"><input class="ant-input" id="oSort" type="number" value="1" style="width:120px"></div></div>' +
+    '<div style="color:#00000073;font-size:12px">上级组织与层级请通过「调整上级」操作变更。</div>',
+    {width:600,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitEdit()">确定</button>'});
+}
+
+function submitEdit() {
+  var loc = findOrgParentList(selectedOrgId);
+  var org = loc.node;
+  var name = document.getElementById('oName').value.trim();
+  if (!name) { alert('请输入组织名称'); return; }
+  if (loc.list.some(function(c) { return c.id !== org.id && c.name === name; })) { alert('同一父级下已存在同名组织：' + name); return; }
+  var oldName = org.name;
+  org.name = name;
+  memberData.forEach(function(m) { if (m.org === oldName) m.org = name; });
+  closeModal();
+  renderTree();
+}
+
+function moveOrg(dir) {
+  var loc = findOrgParentList(selectedOrgId);
+  var idx = loc.list.indexOf(loc.node);
+  var target = idx + dir;
+  if (target < 0 || target >= loc.list.length) { alert(dir === -1 ? '已是同级第一个' : '已是同级最后一个'); return; }
+  loc.list.splice(idx, 1);
+  loc.list.splice(target, 0, loc.node);
+  renderTree();
+}
+
+function openMoveModal() {
+  var org = findOrg(selectedOrgId);
+  var options = [];
+  walkOrg(orgTree, function(n) {
+    if (!isDescendantOrSelf(org.id, n) && n.status === '已启用') options.push('<option value="' + n.id + '">' + orgPath(n) + '</option>');
+  });
+  openModal('调整上级 - ' + org.name,
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>新上级组织</div><div class="ant-form-control"><select class="ant-input" id="oParent">' + options.join('') + '</select></div></div>' +
+    '<div class="p-3 text-sm" style="background:#e6f4ff;border:1px solid #91caff;border-radius:6px;color:#0958d9">调整后该组织及其全部下属节点将随迁至新上级之下，成员归属路径同步更新；不能移动到自身或其下属节点之下。</div>',
+    {width:600,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitMove()">确认调整</button>'});
+}
+
+function submitMove() {
+  var loc = findOrgParentList(selectedOrgId);
+  var newParentId = Number(document.getElementById('oParent').value);
+  var newParent = findOrg(newParentId);
+  if (newParent.name === loc.node.name) { alert('同一父级下已存在同名组织，无法迁移'); return; }
+  if (newParent.children.some(function(c) { return c.id !== loc.node.id && c.name === loc.node.name; })) { alert('同一父级下已存在同名组织，无法迁移'); return; }
+  loc.list.splice(loc.list.indexOf(loc.node), 1);
+  newParent.children.push(loc.node);
+  expandedOrg[newParentId] = true;
+  closeModal();
+  renderTree();
+}
+
+function openToggleModal() {
+  var org = findOrg(selectedOrgId);
+  if (org.status === '已启用') {
+    var children = activeChildrenCount(org);
+    var members = activeMemberCount(org.name);
+    if (children > 0 || members > 0) {
+      openModal('无法禁用组织',
+        '<div class="p-3 bg-[#fff2f0] border border-[#ffccc7] rounded text-sm text-[#ff4d4f]">组织「' + org.name + '」下仍存在 ' + children + ' 个启用状态的下属组织、' + members + ' 个启用状态的归属用户，请先转移或禁用后再执行禁用。</div>',
+        {width:520,footer:'<button class="ant-btn" onclick="closeModal()">知道了</button>'});
+      return;
+    }
+    openModal('确认禁用组织',
+      '<div class="text-sm text-[#000000d9] mb-3">确认禁用组织「' + org.name + '」吗？</div>' +
+      '<div class="p-3 bg-[#fff2f0] border border-[#ffccc7] rounded text-sm text-[#ff4d4f]">禁用后该组织不可再被选为用户归属与授权对象，历史数据保留；启用状态下方可重新启用。</div>',
+      {footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="toggleStatus()">确认禁用</button>'});
+  } else {
+    openModal('确认启用组织',
+      '<div class="text-sm text-[#000000d9]">确认启用组织「' + org.name + '」吗？启用后可重新作为用户归属与授权对象。</div>',
+      {footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="toggleStatus()">确认启用</button>'});
+  }
+}
+
+function toggleStatus() {
+  var org = findOrg(selectedOrgId);
+  org.status = org.status === '已启用' ? '已停用' : '已启用';
+  closeModal();
+  renderTree();
+}
+
+// ========== 初始化 ==========
+walkOrg(orgTree, function(n) { expandedOrg[n.id] = true; });
+renderTree();
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

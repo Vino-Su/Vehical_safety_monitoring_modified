@@ -37,7 +37,6 @@
             <thead>
               <tr>
                 <th><input type="checkbox" class="ant-checkbox"></th>
-                <th>道路编号</th>
                 <th>道路名称</th>
                 <th>所属区域</th>
                 <th>道路等级</th>
@@ -53,7 +52,6 @@
             <tbody>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604001</td>
                 <td>长虹北路</td>
                 <td>高新区</td>
                 <td>主干道</td>
@@ -66,7 +64,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604002</td>
                 <td>东风大道</td>
                 <td>樊城区</td>
                 <td>快速路</td>
@@ -79,7 +76,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604003</td>
                 <td>高新一路</td>
                 <td>高新区</td>
                 <td>次干道</td>
@@ -92,7 +88,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604004</td>
                 <td>襄阳高新技术产业园路</td>
                 <td>高新区</td>
                 <td>园区道路</td>
@@ -105,7 +100,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604005</td>
                 <td>东风大道南延</td>
                 <td>襄城区</td>
                 <td>主干道</td>
@@ -118,7 +112,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604006</td>
                 <td>人民路</td>
                 <td>樊城区</td>
                 <td>次干道</td>
@@ -131,7 +124,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604007</td>
                 <td>解放路</td>
                 <td>襄城区</td>
                 <td>主干道</td>
@@ -144,7 +136,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604008</td>
                 <td>长征路</td>
                 <td>高新区</td>
                 <td>支路</td>
@@ -157,7 +148,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604009</td>
                 <td>建设路</td>
                 <td>樊城区</td>
                 <td>快速路</td>
@@ -170,7 +160,6 @@
               </tr>
               <tr>
                 <td><input type="checkbox" class="ant-checkbox"></td>
-                <td>RD202604010</td>
                 <td>胜利街</td>
                 <td>襄城区</td>
                 <td>园区道路</td>
@@ -206,6 +195,18 @@ var ROAD_ROWS = [
 var BUSINESS_TYPE_OPTIONS = ['道路测试','示范应用','商业化试点'];
 var BUSINESS_TYPE_SAMPLES = ['道路测试 / 示范应用','道路测试 / 商业化试点','示范应用 / 商业化试点','道路测试','示范应用','道路测试','示范应用','商业化试点','道路测试 / 示范应用','示范应用 / 商业化试点'];
 ROAD_ROWS.forEach(function(row, index){ row.businessTypes = BUSINESS_TYPE_SAMPLES[index] || BUSINESS_TYPE_SAMPLES[0]; });
+var LIGHTING_LEVEL_OPTIONS = [
+  { value: '1', label: '1级（基础照明）' },
+  { value: '2', label: '2级（标准照明）' },
+  { value: '3', label: '3级（良好照明）' }
+];
+function renderLightingLevelSelect(value) {
+  var html = '<select class="ant-input" style="height:32px;padding:0 8px 0 12px;background:#fff;cursor:pointer"><option value="">请选择</option>';
+  LIGHTING_LEVEL_OPTIONS.forEach(function(option){
+    html += '<option value="' + option.value + '"' + (String(value) === option.value ? ' selected' : '') + '>' + option.label + '</option>';
+  });
+  return html + '</select>';
+}
 function renderSelect(options, value, placeholder, id) {
   if (placeholder && placeholder.indexOf('多选') !== -1) {
     return '<div class="ant-select" style="width:100%" onclick="return false" role="button" tabindex="0">' + (value || placeholder) + ' <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div>';
@@ -260,7 +261,7 @@ function openAddModal(row) {
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">基础标识信息</h4>' +
     '<div class="ant-form-item"><div class="ant-form-label">道路编号</div><div class="ant-form-control"><input class="ant-input" value="' + code + '" disabled><div class="text-xs text-[#00000073] mt-1">系统自动生成，不可修改</div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>道路名称</div><div class="ant-form-control"><input class="ant-input" value="' + name + '" placeholder="请输入道路名称，如长虹北路"></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>所属行政区域</div><div class="ant-form-control">' + renderSelect(['高新区','樊城区','襄城区','襄州区','南漳县','谷城县','老河口市','枣阳市','宜城市','保康县'], district) + '</div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>所属区域</div><div class="ant-form-control">' + renderSelect(['高新区','樊城区','襄城区','襄州区','南漳县','谷城县','老河口市','枣阳市','宜城市','保康县'], district) + '</div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>道路等级</div><div class="ant-form-control">' + renderSelect(['主干道','次干道','支路','快速路','园区道路'], level) + '</div></div>' +
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">空间属性信息</h4>' +
     '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>路段长度(米)</div><div class="ant-form-control"><input class="ant-input" value="' + length + '" placeholder="请输入路段长度" type="number"></div></div>' +
@@ -274,8 +275,8 @@ function openAddModal(row) {
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">交通运行信息</h4>' +
     '<div class="ant-form-item"><div class="ant-form-label">交通流量等级</div><div class="ant-form-control">' + renderSelect(['低','中','高'], trafficLevel) + '</div></div>' +
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">基础设施信息</h4>' +
-    '<div class="ant-form-item"><div class="ant-form-label">照明等级</div><div class="ant-form-control"><input class="ant-input" value="' + lightingLevel + '" placeholder="请输入照明等级（非负整数）" type="number" min="0"></div></div>' +
-    '<div class="ant-form-item"><div class="ant-form-label">信号灯数量</div><div class="ant-form-control"><input class="ant-input" value="' + signalCount + '" placeholder="请输入信号灯数量（非负整数）" type="number" min="0"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">照明等级</div><div class="ant-form-control">' + renderLightingLevelSelect(lightingLevel) + '</div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">信号灯组数量</div><div class="ant-form-control"><input class="ant-input" value="' + signalCount + '" placeholder="请输入已配置且正常运行的信号灯组数量" type="number" min="0"><div class="text-xs text-[#00000073] mt-1">按信号灯组统计，不按单个红黄绿灯头、灯杆或灯具数量统计</div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">RSU配置数量</div><div class="ant-form-control"><input class="ant-input" value="' + rsuCount + '" placeholder="请输入路侧单元部署数量" type="number"></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">感知设备类型</div><div class="ant-form-control">' + renderSelect(['摄像头','激光雷达','毫米波雷达','超声波雷达','GNSS'], sensorType, '请选择(多选)') + '</div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">感知设备数量</div><div class="ant-form-control"><input class="ant-input" value="' + sensorCount + '" placeholder="请输入各类感知设备总数" type="number"></div></div>' +
@@ -329,7 +330,7 @@ function openDetailModal() {
     '<div class="ant-descriptions">' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 pb-2 border-b border-[#f0f0f0]">基础标识信息</h4>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">道路编号</div><div class="ant-descriptions-value">RD202604001</div><div class="ant-descriptions-label">道路名称</div><div class="ant-descriptions-value">长虹北路</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属行政区域</div><div class="ant-descriptions-value">高新区</div><div class="ant-descriptions-label">道路等级</div><div class="ant-descriptions-value">主干道</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属区域</div><div class="ant-descriptions-value">高新区</div><div class="ant-descriptions-label">道路等级</div><div class="ant-descriptions-value">主干道</div></div>' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">空间属性信息</h4>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">路段长度(米)</div><div class="ant-descriptions-value">8,500</div><div class="ant-descriptions-label">车道数</div><div class="ant-descriptions-value">4 (单向)</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">车道类型</div><div class="ant-descriptions-value">多车道</div><div class="ant-descriptions-label">最小车道宽度(m)</div><div class="ant-descriptions-value">3.5</div></div>' +
@@ -339,7 +340,7 @@ function openDetailModal() {
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">交通运行信息</h4>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">交通流量等级</div><div class="ant-descriptions-value">高</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">基础设施信息</h4>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">照明等级</div><div class="ant-descriptions-value">3</div><div class="ant-descriptions-label">信号灯数量</div><div class="ant-descriptions-value">14</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">照明等级</div><div class="ant-descriptions-value">3级（良好照明）</div><div class="ant-descriptions-label">信号灯组数量</div><div class="ant-descriptions-value">14</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">RSU配置数量</div><div class="ant-descriptions-value">8</div><div class="ant-descriptions-label">感知设备类型</div><div class="ant-descriptions-value">毫米波雷达/激光雷达/摄像头</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">感知设备数量</div><div class="ant-descriptions-value">24</div><div class="ant-descriptions-label">边缘计算节点</div><div class="ant-descriptions-value">已部署 (2个)</div></div>' +
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">开放管控信息</h4>' +
@@ -369,7 +370,7 @@ function openImportModal() {
       '<h4 class="text-sm font-semibold text-[#000000d9] mb-2">注意事项</h4>' +
       '<ul class="text-xs text-[#00000073] space-y-1">' +
         '<li>1. 请使用系统提供的标准模板填写数据，字段名称必须与模板一致</li>' +
-        '<li>2. 必填字段：道路名称、所属行政区域、道路等级、开放状态、开放时段、适用自动驾驶等级、适用应用场景、适用业务类型</li>' +
+        '<li>2. 必填字段：道路名称、所属区域、道路等级、开放状态、开放时段、适用自动驾驶等级、适用应用场景、适用业务类型</li>' +
         '<li>3. 导入后数据将自动校验，不符合要求的数据将被标记并提示修正</li>' +
       '</ul>' +
     '</div>', { footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">确认导入</button>' });

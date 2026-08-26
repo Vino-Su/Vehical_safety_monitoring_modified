@@ -640,6 +640,23 @@ function validateSceneLighting(input) {
   if (v > 3) { input.value = 3; }
 }
 
+function lightingLabel(level) {
+  return ({1: '1级（基础照明）', 2: '2级（标准照明）', 3: '3级（良好照明）'})[Number(level)] || '未配置';
+}
+
+function upgradeLightingLevelInputs() {
+  document.querySelectorAll('#cfg2 tbody tr').forEach(function(row) {
+    var inputs = row.querySelectorAll('input[type="number"]');
+    var lightingInput = inputs[1];
+    if (!lightingInput) return;
+    var select = document.createElement('select');
+    select.className = 'config-input lighting-level-input';
+    select.innerHTML = '<option value="1">1级（基础照明）</option><option value="2">2级（标准照明）</option><option value="3">3级（良好照明）</option>';
+    select.value = lightingInput.value;
+    lightingInput.parentNode.replaceChild(select, lightingInput);
+  });
+}
+
 function validateSceneSlope(input) {
   var v = parseFloat(input.value);
   if (isNaN(v) || v < 0) { input.value = 0; }
@@ -966,11 +983,11 @@ function restoreDefaults() {
   defaultValues.scenes.forEach(function(s, i) {
     var row = sceneRows[i];
     if (!row) return;
-    row.querySelectorAll('input[type="number"]').forEach(function(){});
     var inputs = row.querySelectorAll('input[type="number"]');
     if (inputs[0]) inputs[0].value = s.lane;
-    if (inputs[1]) inputs[1].value = s.lighting;
-    if (inputs[2]) inputs[2].value = s.slope;
+    var lightingInput = row.querySelector('.lighting-level-input');
+    if (lightingInput) lightingInput.value = s.lighting;
+    if (inputs[1]) inputs[1].value = s.slope;
     var selectWrap = row.querySelector('.ad-select');
     if (selectWrap) {
       var trigger = selectWrap.querySelector('.ad-select-trigger');
@@ -1239,14 +1256,15 @@ function captureCurrentSnapshot(version, time) {
   sceneRows.forEach(function(row) {
     var nameEl = row.querySelector('td strong');
     var numInputs = row.querySelectorAll('input[type="number"]');
+    var lightingInput = row.querySelector('.lighting-level-input');
     var selectWrap = row.querySelector('.ad-select');
     var mixedVal = selectWrap ? (selectWrap.querySelector('.text') ? selectWrap.querySelector('.text').textContent : '') : '';
     s.scenes.push({
       name: nameEl ? nameEl.textContent.trim() : '',
       lane: numInputs[0] ? parseFloat(numInputs[0].value) : 0,
       mixed: mixedVal,
-      lighting: numInputs[1] ? parseFloat(numInputs[1].value) : 0,
-      slope: numInputs[2] ? parseFloat(numInputs[2].value) : 0
+      lighting: lightingInput ? parseFloat(lightingInput.value) : 0,
+      slope: numInputs[1] ? parseFloat(numInputs[1].value) : 0
     });
   });
   var sceneThresholdInput = document.querySelector('#cfg2 .config-form-input');
@@ -1338,7 +1356,7 @@ function diffSnapshots(oldS, newS) {
       if (!n) return;
       if (o.lane !== n.lane) changes.push('调整场景「' + o.name + '」最低车道数 ' + o.lane + '→' + n.lane);
       if (o.mixed !== n.mixed) changes.push('调整场景「' + o.name + '」机非混行 ' + o.mixed + '→' + n.mixed);
-      if (o.lighting !== n.lighting) changes.push('调整场景「' + o.name + '」最低照明等级 ' + o.lighting + '→' + n.lighting);
+      if (o.lighting !== n.lighting) changes.push('调整场景「' + o.name + '」最低照明等级 ' + lightingLabel(o.lighting) + '→' + lightingLabel(n.lighting));
       if (Math.abs(o.slope - n.slope) > 1e-6) changes.push('调整场景「' + o.name + '」最大坡度 ' + o.slope + '→' + n.slope + '%');
     });
   }
@@ -1636,7 +1654,7 @@ function renderHistoryTab1(s) {
 // Tab2 场景适配模型
 function renderHistoryTab2(s) {
   var sceneRows = (s.scenes || []).map(function(sc) {
-    return '<tr><td><strong>' + sc.name + '</strong></td><td><span class="readonly-input">' + sc.lane + '</span></td><td>' + chipHtml(sc.mixed === '是' ? '是' : '否', { checkedValues: [] }) + '</td><td><span class="readonly-input">' + sc.lighting + '</span></td><td><span class="readonly-input">' + sc.slope + '</span></td></tr>';
+    return '<tr><td><strong>' + sc.name + '</strong></td><td><span class="readonly-input">' + sc.lane + '</span></td><td>' + chipHtml(sc.mixed === '是' ? '是' : '否', { checkedValues: [] }) + '</td><td><span class="readonly-input">' + lightingLabel(sc.lighting) + '</span></td><td><span class="readonly-input">' + sc.slope + '</span></td></tr>';
   }).join('');
   return '<div class="readonly-section">' +
       '<div class="readonly-section-title">场景映射条件</div>' +
@@ -1698,6 +1716,8 @@ function renderHistoryTab4(s) {
       '<table class="readonly-table"><thead><tr><th style="width:100px">开放等级</th><th>适用自动驾驶等级</th><th>允许测试类型</th><th style="width:160px">限制时段</th><th>管控要求</th></tr></thead><tbody>' + rows + '</tbody></table>' +
     '</div>';
 }
+
+upgradeLightingLevelInputs();
 </script>
 <script src="../../common.js"></script>
 </body>

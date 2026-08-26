@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号用户管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <script src="../../components/pagination-component.js"></script>
+  <style>
+    .role-check-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;border:1px solid #f0f0f0;border-radius:6px;padding:8px 12px;max-height:180px;overflow:auto}
+    .role-check-item{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;color:#000000d9}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header">
+        <h2>账号用户管理</h2>
+        <div class="flex gap-2">
+          <button class="ant-btn" onclick="openExportModal()">导出</button>
+          <button class="ant-btn" onclick="openImportModal()">批量导入</button>
+          <button class="ant-btn ant-btn-primary" onclick="openUserModal(null)">+ 新增账号</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item"><label>所属组织</label><select class="ant-input" id="fOrg" style="width:170px"><option value="all">全部</option></select></div>
+          <div class="filter-item"><label>关键字</label><input class="ant-input" id="fName" placeholder="账号或姓名" style="width:140px"></div>
+          <div class="filter-item"><label>状态</label><select class="ant-input" id="fStatus" style="width:100px"><option value="all">全部</option><option>启用</option><option>禁用</option></select></div>
+          <div class="filter-item"><label>绑定角色</label><select class="ant-input" id="fRole" style="width:170px"><option value="all">全部</option></select></div>
+          <div class="flex gap-2 items-end"><button class="ant-btn ant-btn-primary" onclick="doQuery()">查询</button><button class="ant-btn" onclick="doReset()">重置</button></div>
+        </div>
+      </div>
+      <div class="ant-table-wrapper">
+        <div style="overflow-x:auto">
+          <table class="ant-table" style="width:auto;min-width:100%">
+            <thead>
+              <tr>
+                <th>账号</th>
+                <th>姓名</th>
+                <th>所属组织</th>
+                <th style="text-align:center">状态</th>
+                <th style="text-align:center">最后登录时间</th>
+                <th>绑定角色</th>
+                <th>备注</th>
+                <th style="text-align:center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+        <div id="paginationBar"></div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='user-manage';
+
+var roleOptions = [
+  {code:'super_admin', name:'超级管理员'},
+  {code:'readonly', name:'只读观察员'},
+  {code:'enterprise', name:'企业用户'},
+  {code:'third-party', name:'第三方专业服务机构'},
+  {code:'workgroup', name:'市工作专班'},
+  {code:'traffic', name:'交通管理部门'},
+  {code:'enterprise_admin', name:'企业安全管理员'},
+  {code:'third_auditor', name:'第三方审核专员'},
+  {code:'data_analyst', name:'数据分析专员'}
+];
+
+var orgOptions = ['系统运维组','数据分析组','市工作专班','市交通管理局','第三方专业服务机构A','第三方专业服务机构B','安全管理部','测试运营部'];
+
+var userData = [
+  {id:1, account:'admin', name:'系统管理员', phone:'13800000001', email:'admin@xy.gov.cn', org:'系统运维组', status:'启用', lastLogin:'2026-08-25 09:30', roles:['super_admin'], expireFrom:'', expireTo:'', remark:'平台超级管理员'},
+  {id:2, account:'zhangsan', name:'张三', phone:'13912340001', email:'zhangsan@xyzx.com', org:'安全管理部', status:'启用', lastLogin:'2026-08-25 09:10', roles:['enterprise','enterprise_admin'], expireFrom:'2026-04-01', expireTo:'2027-04-01', remark:'A公司安全管理负责人'},
+  {id:3, account:'lisi', name:'李四', phone:'13912340002', email:'lisi@third-a.com', org:'第三方专业服务机构A', status:'启用', lastLogin:'2026-08-25 08:50', roles:['third-party','third_auditor'], expireFrom:'', expireTo:'', remark:'材料初审岗'},
+  {id:4, account:'wangwu', name:'王五', phone:'13912340003', email:'wangwu@zhuaban.gov.cn', org:'市工作专班', status:'启用', lastLogin:'2026-08-24 17:42', roles:['workgroup'], expireFrom:'', expireTo:'', remark:'专班审批岗'},
+  {id:5, account:'zhaoliu', name:'赵六', phone:'13912340004', email:'zhaoliu@jtj.gov.cn', org:'市交通管理局', status:'启用', lastLogin:'2026-08-24 14:20', roles:['traffic'], expireFrom:'', expireTo:'', remark:'交通违法审核'},
+  {id:6, account:'chenqi', name:'陈七', phone:'13912340005', email:'chenqi@xyzx.com', org:'安全管理部', status:'启用', lastLogin:'2026-08-19 10:30', roles:['enterprise_admin'], expireFrom:'2026-05-01', expireTo:'2026-12-31', remark:''},
+  {id:7, account:'liuba', name:'刘八', phone:'13912340006', email:'liuba@bcompany.com', org:'测试运营部', status:'启用', lastLogin:'2026-08-23 16:05', roles:['enterprise'], expireFrom:'', expireTo:'', remark:'B公司借调'},
+  {id:8, account:'zhoujiu', name:'周九', phone:'13912340007', email:'zhoujiu@third-a.com', org:'第三方专业服务机构A', status:'启用', lastLogin:'2026-08-22 16:30', roles:['third_auditor'], expireFrom:'', expireTo:'', remark:'事故材料审核'},
+  {id:9, account:'wushi', name:'吴十', phone:'13912340008', email:'wushi@zhuaban.gov.cn', org:'市工作专班', status:'启用', lastLogin:'2026-08-18 14:10', roles:['readonly'], expireFrom:'', expireTo:'', remark:'监管观察'},
+  {id:10, account:'sunyang', name:'孙阳', phone:'13912340009', email:'sunyang@xyzx.com', org:'测试运营部', status:'启用', lastLogin:'2026-08-24 13:25', roles:['enterprise'], expireFrom:'', expireTo:'', remark:''},
+  {id:11, account:'hepeng', name:'何鹏', phone:'13912340010', email:'hepeng@third-b.com', org:'第三方专业服务机构B', status:'启用', lastLogin:'2026-08-20 15:45', roles:['third-party'], expireFrom:'', expireTo:'', remark:''},
+  {id:12, account:'linfeng', name:'林凤', phone:'13912340011', email:'linfeng@xyzx.com', org:'测试运营部', status:'启用', lastLogin:'2026-08-23 09:55', roles:['enterprise','data_analyst'], expireFrom:'', expireTo:'', remark:'兼数据分析'},
+  {id:13, account:'dingyi', name:'丁一', phone:'13912340012', email:'dingyi@dcompany.com', org:'测试运营部', status:'禁用', lastLogin:'2026-06-30 17:00', roles:['enterprise'], expireFrom:'2026-01-01', expireTo:'2026-06-30', remark:'账号有效期到期，系统自动禁用'},
+  {id:14, account:'qianyu', name:'钱宇', phone:'13912340013', email:'qianyu@jtj.gov.cn', org:'市交通管理局', status:'禁用', lastLogin:'2026-07-30 09:05', roles:['traffic'], expireFrom:'', expireTo:'', remark:'离职冻结'},
+  {id:15, account:'kaijie', name:'凯杰', phone:'13912340014', email:'kaijie@third-a.com', org:'第三方专业服务机构A', status:'启用', lastLogin:'2026-08-21 11:20', roles:['third-party'], expireFrom:'', expireTo:'', remark:''},
+  {id:16, account:'limin', name:'李敏', phone:'13912340015', email:'limin@zhuaban.gov.cn', org:'市工作专班', status:'启用', lastLogin:'2026-08-24 17:42', roles:['workgroup'], expireFrom:'2026-06-01', expireTo:'2027-06-01', remark:'轮岗专班'}
+];
+
+var filtered = userData.slice();
+var userPager;
+
+function findUser(id) {
+  for (var i = 0; i < userData.length; i++) if (userData[i].id === id) return userData[i];
+  return null;
+}
+function roleNames(codes) {
+  return codes.map(function(c) {
+    for (var i = 0; i < roleOptions.length; i++) if (roleOptions[i].code === c) return roleOptions[i].name;
+    return c;
+  }).join('、');
+}
+
+function renderUserTable() {
+  var cp = userPager ? userPager.getCurrentPage() : 1;
+  var ps = userPager ? userPager.getPageSize() : 10;
+  var pageData = filtered.slice((cp - 1) * ps, (cp - 1) * ps + ps);
+  var tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = pageData.map(function(item) {
+    var stClass = item.status === '启用' ? 'ant-tag-success' : 'ant-tag-default';
+    var toggleBtn = item.status === '启用'
+      ? '<button class="ant-btn-link danger" onclick="openToggleModal(' + item.id + ')">禁用</button>'
+      : '<button class="ant-btn-link" style="color:#52c41a" onclick="openToggleModal(' + item.id + ')">启用</button>';
+    return '<tr>' +
+      '<td>' + item.account + '</td>' +
+      '<td>' + item.name + '</td>' +
+      '<td>' + item.org + '</td>' +
+      '<td style="text-align:center"><span class="ant-tag ' + stClass + '">' + item.status + '</span></td>' +
+      '<td style="text-align:center">' + item.lastLogin + '</td>' +
+      '<td><div class="truncate" style="max-width:220px" title="' + roleNames(item.roles) + '">' + roleNames(item.roles) + '</div></td>' +
+      '<td><div class="truncate" style="max-width:180px" title="' + (item.remark || '') + '">' + (item.remark || '—') + '</div></td>' +
+      '<td style="text-align:center"><div class="flex gap-1 justify-center" style="white-space:nowrap">' +
+        '<button class="ant-btn-link" onclick="openUserModal(' + item.id + ')">编辑</button>' +
+        '<button class="ant-btn-link" onclick="openAssignModal(' + item.id + ')">分配角色</button>' +
+        '<button class="ant-btn-link" onclick="openResetModal(' + item.id + ')">重置密码</button>' +
+        toggleBtn +
+      '</div></td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#00000040;padding:32px 0">暂无数据</td></tr>';
+  if (userPager) userPager.setTotal(filtered.length);
+}
+
+function doQuery() {
+  var org = document.getElementById('fOrg').value;
+  var kw = document.getElementById('fName').value.trim();
+  var st = document.getElementById('fStatus').value;
+  var role = document.getElementById('fRole').value;
+  filtered = userData.filter(function(u) {
+    if (org !== 'all' && u.org !== org) return false;
+    if (kw && u.account.indexOf(kw) === -1 && u.name.indexOf(kw) === -1) return false;
+    if (st !== 'all' && u.status !== st) return false;
+    if (role !== 'all' && u.roles.indexOf(role) === -1) return false;
+    return true;
+  });
+  if (userPager) userPager.reset();
+  renderUserTable();
+}
+
+function doReset() {
+  document.getElementById('fOrg').value = 'all';
+  document.getElementById('fName').value = '';
+  document.getElementById('fStatus').value = 'all';
+  document.getElementById('fRole').value = 'all';
+  doQuery();
+}
+
+userPager = new Pagination({
+  container: 'paginationBar',
+  pageSize: 10,
+  pageSizeOptions: [10, 20, 50, 100],
+  onPageChange: function() { renderUserTable(); },
+  onPageSizeChange: function() { renderUserTable(); }
+});
+renderUserTable();
+
+// ========== 新增 / 编辑 ==========
+function roleCheckHtml(checkedRoles) {
+  return '<div class="role-check-grid">' + roleOptions.map(function(r) {
+    var ck = checkedRoles.indexOf(r.code) !== -1 ? ' checked' : '';
+    return '<label class="role-check-item"><input type="checkbox" class="ant-checkbox u-role-cb" value="' + r.code + '"' + ck + '><span>' + r.name + '</span></label>';
+  }).join('') + '</div>';
+}
+
+function openUserModal(id) {
+  var u = id ? findUser(id) : null;
+  var accountInput = u
+    ? '<input class="ant-input" value="' + u.account + '" disabled style="background:#f5f5f5">'
+    : '<input class="ant-input" id="uAccount" placeholder="字母开头，全局唯一">';
+  openModal(u ? '编辑账号 - ' + u.name : '新增账号',
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>账号</div><div class="ant-form-control">' + accountInput + '</div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>姓名</div><div class="ant-form-control"><input class="ant-input" id="uName" value="' + (u ? u.name : '') + '"></div></div>' +
+    '<div style="display:flex;gap:16px">' +
+      '<div class="ant-form-item" style="flex:1"><div class="ant-form-label">手机号</div><div class="ant-form-control"><input class="ant-input" id="uPhone" value="' + (u ? u.phone : '') + '" placeholder="11位手机号"></div></div>' +
+      '<div class="ant-form-item" style="flex:1"><div class="ant-form-label">邮箱</div><div class="ant-form-control"><input class="ant-input" id="uEmail" value="' + (u ? u.email : '') + '"></div></div>' +
+    '</div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>所属组织</div><div class="ant-form-control"><select class="ant-input" id="uOrg">' + orgOptions.map(function(o) { return '<option' + (u && u.org === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">账号有效期</div><div class="ant-form-control"><div style="display:flex;gap:4px;align-items:center"><input class="ant-input" type="date" id="uFrom" value="' + (u ? u.expireFrom : '') + '" style="width:150px"><span style="color:#00000040">~</span><input class="ant-input" type="date" id="uTo" value="' + (u ? u.expireTo : '') + '" style="width:150px"><span style="color:#00000073;font-size:12px;margin-left:8px">不填视为长期有效，到期次日自动禁用</span></div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>绑定角色（至少一个）</div><div class="ant-form-control">' + roleCheckHtml(u ? u.roles : []) + '</div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">备注</div><div class="ant-form-control"><input class="ant-input" id="uRemark" value="' + (u ? u.remark : '') + '"></div></div>' +
+    (u ? '<div class="ant-form-item"><div class="ant-form-label">状态</div><div class="ant-form-control"><select class="ant-input" id="uStatus"><option' + (u.status === '启用' ? ' selected' : '') + '>启用</option><option' + (u.status === '禁用' ? ' selected' : '') + '>禁用</option></select></div></div>' : ''),
+    {width:680,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitUser(' + (u ? u.id : 'null') + ')">确定</button>'});
+}
+
+function submitUser(id) {
+  var name = document.getElementById('uName').value.trim();
+  var phone = document.getElementById('uPhone').value.trim();
+  var email = document.getElementById('uEmail').value.trim();
+  var roles = [];
+  document.querySelectorAll('.u-role-cb').forEach(function(cb) { if (cb.checked) roles.push(cb.value); });
+  var from = document.getElementById('uFrom').value;
+  var to = document.getElementById('uTo').value;
+  if ((id === null || id === 'null') && !document.getElementById('uAccount').value.trim()) { alert('请输入账号'); return; }
+  if (!name) { alert('请输入姓名'); return; }
+  if (phone && !/^\d{11}$/.test(phone)) { alert('手机号需为11位数字'); return; }
+  if (email && email.indexOf('@') === -1) { alert('邮箱格式不正确'); return; }
+  if (from && to && to <= from) { alert('有效期止期需晚于起期'); return; }
+  if (roles.length === 0) { alert('请至少绑定一个角色，用户仅通过角色获得权限'); return; }
+  if (id === null || id === 'null') {
+    var account = document.getElementById('uAccount').value.trim();
+    for (var i = 0; i < userData.length; i++) {
+      if (userData[i].account === account) { alert('账号已存在：' + account); return; }
+    }
+    userData.unshift({id:Date.now(), account:account, name:name, phone:phone, email:email, org:document.getElementById('uOrg').value, status:'启用', lastLogin:'—', roles:roles, expireFrom:from, expireTo:to, remark:document.getElementById('uRemark').value.trim()});
+  } else {
+    var u = findUser(Number(id));
+    u.name = name; u.phone = phone; u.email = email;
+    u.org = document.getElementById('uOrg').value;
+    u.roles = roles; u.expireFrom = from; u.expireTo = to;
+    u.remark = document.getElementById('uRemark').value.trim();
+    u.status = document.getElementById('uStatus').value;
+  }
+  closeModal();
+  doQuery();
+}
+
+// ========== 分配角色 ==========
+function openAssignModal(id) {
+  var u = findUser(id);
+  openModal('分配角色 - ' + u.name + '（' + u.account + '）',
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>绑定角色</div><div class="ant-form-control">' + roleCheckHtml(u.roles) + '</div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">复制其他用户配置</div><div class="ant-form-control"><div style="display:flex;gap:8px"><select class="ant-input" id="copyFrom" style="flex:1">' + userData.filter(function(x) { return x.id !== id; }).map(function(x) { return '<option value="' + x.id + '">' + x.name + '（' + x.account + '）：' + roleNames(x.roles) + '</option>'; }).join('') + '</select><button class="ant-btn" onclick="copyRoles()">复制</button></div><div style="color:#00000073;font-size:12px;margin-top:4px">复制后将自动勾选所选用户的全部角色，可再手动调整</div></div></div>',
+    {width:680,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitAssign(' + id + ')">确定</button>'});
+}
+
+function copyRoles() {
+  var fromId = Number(document.getElementById('copyFrom').value);
+  var from = findUser(fromId);
+  document.querySelectorAll('.u-role-cb').forEach(function(cb) { cb.checked = from.roles.indexOf(cb.value) !== -1; });
+}
+
+function submitAssign(id) {
+  var u = findUser(id);
+  var roles = [];
+  document.querySelectorAll('.u-role-cb').forEach(function(cb) { if (cb.checked) roles.push(cb.value); });
+  if (roles.length === 0) { alert('请至少绑定一个角色'); return; }
+  u.roles = roles;
+  closeModal();
+  doQuery();
+}
+
+// ========== 重置密码 / 禁用 ==========
+function openResetModal(id) {
+  var u = findUser(id);
+  openModal('确认重置密码',
+    '<div class="text-sm text-[#000000d9] mb-3">确认重置「' + u.name + '（' + u.account + '）」的密码吗？</div>' +
+    '<div class="p-3 text-sm" style="background:#e6f4ff;border:1px solid #91caff;border-radius:6px;color:#0958d9">重置后密码恢复为初始密码，该账号<b>下次登录将被强制引导修改密码</b>；当前已登录会话不受影响。</div>',
+    {footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="confirmReset(' + id + ')">确认重置</button>'});
+}
+
+function confirmReset(id) {
+  closeModal();
+  var u = findUser(id);
+  openModal('重置成功', '<div class="text-sm text-[#000000d9]">账号「' + u.account + '」密码已重置为初始密码，已通知该用户下次登录时修改密码。</div>',
+    {footer:'<button class="ant-btn ant-btn-primary" onclick="closeModal()">知道了</button>'});
+}
+
+function openToggleModal(id) {
+  var u = findUser(id);
+  if (u.status === '启用') {
+    openModal('确认禁用账号',
+      '<div class="text-sm text-[#000000d9] mb-3">确认禁用「' + u.name + '（' + u.account + '）」吗？</div>' +
+      '<div class="p-3 bg-[#fff2f0] border border-[#ffccc7] rounded text-sm text-[#ff4d4f]">禁用后该账号立即失去登录能力，已绑定角色与历史操作日志保留；可随时重新启用。</div>',
+      {footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-danger" onclick="toggleStatus(' + id + ')">确认禁用</button>'});
+  } else {
+    openModal('确认启用账号',
+      '<div class="text-sm text-[#000000d9]">确认启用「' + u.name + '（' + u.account + '）」吗？启用后该账号恢复登录能力，权限随所绑定角色即时生效。</div>',
+      {footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="toggleStatus(' + id + ')">确认启用</button>'});
+  }
+}
+
+function toggleStatus(id) {
+  var u = findUser(id);
+  u.status = u.status === '启用' ? '禁用' : '启用';
+  closeModal();
+  doQuery();
+}
+
+// ========== 批量导入 / 导出 ==========
+function openImportModal() {
+  openModal('批量导入账号',
+    '<div class="text-sm text-[#000000d9] mb-3">请按以下步骤完成导入：</div>' +
+    '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px">' +
+      '<div style="flex:1;border:1px solid #f0f0f0;border-radius:6px;padding:12px"><div style="font-weight:600;margin-bottom:4px">1. 下载模板</div><div style="color:#00000073;font-size:12px">含账号、姓名、手机号、邮箱、所属组织、绑定角色、有效期列</div></div>' +
+      '<div style="flex:1;border:1px solid #f0f0f0;border-radius:6px;padding:12px"><div style="font-weight:600;margin-bottom:4px">2. 填写数据</div><div style="color:#00000073;font-size:12px">账号全局唯一，至少绑定一个已有角色</div></div>' +
+      '<div style="flex:1;border:1px solid #f0f0f0;border-radius:6px;padding:12px"><div style="font-weight:600;margin-bottom:4px">3. 上传文件</div><div style="color:#00000073;font-size:12px">逐行校验，合法行生效、非法行拒绝</div></div>' +
+    '</div>' +
+    '<div class="ant-form-item"><div class="ant-form-label">选择文件</div><div class="ant-form-control"><input type="file" class="ant-input" style="padding:6px 12px"></div></div>' +
+    '<div style="color:#00000073;font-size:12px">支持 .xlsx / .csv 文件，单次最多导入 500 条；部分行失败时仅拒绝该行，并将逐行反馈行号与原因。</div>',
+    {width:720,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn" onclick="alert(\'原型演示：模板下载为占位交互\')">下载模板</button><button class="ant-btn ant-btn-primary" onclick="submitImport()">开始导入</button>'});
+}
+
+function submitImport() {
+  closeModal();
+  openModal('导入完成',
+    '<div class="text-sm text-[#000000d9]">本次导入 20 个账号：成功 <b style="color:#52c41a">18</b> 个，失败 <b style="color:#ff4d4f">2</b> 个（第 3 行账号重复、第 9 行未绑定角色），成功账号已生效并默认为启用状态。</div>',
+    {footer:'<button class="ant-btn ant-btn-primary" onclick="closeModal();doQuery()">知道了</button>'});
+}
+
+function openExportModal() {
+  openModal('导出账号列表',
+    '<div class="text-sm text-[#000000d9]">将按当前查询条件导出账号列表（' + filtered.length + ' 条），导出字段与列表一致，含账号、姓名、所属组织、状态、绑定角色等。</div>',
+    {footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="closeModal();alert(\'原型演示：导出为占位交互\')">确认导出</button>'});
+}
+
+// ========== 筛选下拉初始化 ==========
+(function initFilters() {
+  document.getElementById('fOrg').innerHTML = '<option value="all">全部</option>' + orgOptions.map(function(o) { return '<option>' + o + '</option>'; }).join('');
+  document.getElementById('fRole').innerHTML = '<option value="all">全部</option>' + roleOptions.map(function(r) { return '<option value="' + r.code + '">' + r.name + '</option>'; }).join('');
+})();
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

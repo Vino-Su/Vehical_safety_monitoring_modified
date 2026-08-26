@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据权限管理 - 智能网联汽车安全监测平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
+  <style>
+    .dp-layout{display:flex;gap:16px;align-items:stretch;max-height:calc(100vh - 170px);min-height:480px}
+    .dp-side{width:250px;flex-shrink:0;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.03);display:flex;flex-direction:column;overflow:hidden}
+    .dp-side-head{padding:12px;border-bottom:1px solid #f0f0f0}
+    .dp-tabs{display:flex;border:1px solid #1677ff;border-radius:6px;overflow:hidden;margin-bottom:8px}
+    .dp-tab{flex:1;text-align:center;padding:4px 0;font-size:13px;cursor:pointer;background:#fff;color:#1677ff}
+    .dp-tab.active{background:#1677ff;color:#fff}
+    .dp-list{overflow:auto;flex:1;padding:8px}
+    .dp-item{padding:8px 10px;border-radius:6px;cursor:pointer;margin-bottom:2px;border:1px solid transparent}
+    .dp-item:hover{background:#f5f5f5}
+    .dp-item.active{background:#e6f4ff;border-color:#91caff}
+    .dp-item-name{font-size:14px;color:#000000d9;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .dp-item-sub{font-size:12px;color:#00000073;margin-top:2px}
+    .dp-tag{font-size:11px;color:#0958d9;border:1px solid #91caff;background:#e6f4ff;border-radius:4px;padding:0 4px;line-height:16px;white-space:nowrap}
+    .dp-main{flex:1;min-width:0;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.03);display:flex;flex-direction:column;overflow:hidden;padding:16px}
+    .dp-info{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px}
+    .dp-body{overflow:auto;flex:1;min-height:0}
+    .dp-scope-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #f0f0f0;border-radius:6px;margin-bottom:6px;cursor:pointer}
+    .dp-scope-item:hover{border-color:#4096ff}
+    .dp-scope-item.on{border-color:#1677ff;background:#e6f4ff}
+    .dp-scope-desc{font-size:12px;color:#00000073;margin-left:8px}
+    .dp-dept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;border:1px solid #f0f0f0;border-radius:6px;padding:8px 12px;margin-top:6px}
+    .dp-dept-item{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;color:#000000d9}
+    .dp-item-list{display:flex;flex-wrap:wrap;gap:4px}
+    .dp-item-chip{font-size:12px;color:#000000d9;background:#fafafa;border:1px solid #f0f0f0;border-radius:4px;padding:1px 6px}
+    .dp-preview{border:1px solid #bae0ff;background:#f0f7ff;border-radius:6px;padding:12px;margin-bottom:12px}
+  </style>
+</head>
+<body>
+<div id="app" class="flex h-screen overflow-hidden">
+  <aside id="sidebar"></aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topnav"></header>
+    <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
+      <div class="page-header">
+        <h2>数据权限管理</h2>
+        <div class="flex gap-2" id="headerActions"></div>
+      </div>
+      <div class="dp-layout">
+        <aside class="dp-side">
+          <div class="dp-side-head">
+            <div class="dp-tabs">
+              <div class="dp-tab active" id="tabRole" onclick="switchTab('role')">角色</div>
+              <div class="dp-tab" id="tabUser" onclick="switchTab('user')">用户</div>
+            </div>
+            <input class="ant-input" id="dpSearch" placeholder="搜索名称/编码/账号" style="width:100%" oninput="buildList()">
+          </div>
+          <div class="dp-list" id="dpList"></div>
+        </aside>
+        <section class="dp-main">
+          <div class="dp-info" id="dpInfo"></div>
+          <div id="dpTip"></div>
+          <div class="dp-body" id="dpBody"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+const PAGE_ID='data-permission-manage';
+
+// ========== 基础数据 ==========
+var SCOPES = ['仅本人数据','本部门数据','本部门及下级部门数据','指定多个部门','全部数据'];
+var SCOPE_RANK = {'全部数据':5,'本部门及下级部门数据':4,'指定多个部门':3,'本部门数据':2,'仅本人数据':1};
+var SCOPE_DESC = {
+  '仅本人数据':'仅可见自己创建或负责的数据',
+  '本部门数据':'可见归属本部门的数据',
+  '本部门及下级部门数据':'可见本部门及其全部下级部门的数据',
+  '指定多个部门':'可见手工指定的一个或多个部门的数据',
+  '全部数据':'可见平台全部数据'
+};
+var deptOptions = ['市工作专班','市交通管理局','第三方专业服务机构A','第三方专业服务机构B','A公司（襄阳智行科技）','市智能网联汽车监测中心','安全管理部','测试运营部','系统运维组','数据分析组'];
+var objOptions = {
+  '车辆':['鄂F·A001','鄂F·A002','鄂F·B003','鄂F·C005','鄂F·D008'],
+  '项目':['示范区道路测试项目','无人环卫示范项目','商业化试点项目','无人物流示范线'],
+  '申请单':['RT-2026-001','RT-2026-002','DM-2026-003','CO-2026-004']
+};
+
+var roleList = [
+  {code:'super_admin', name:'超级管理员', type:'系统内置', users:1},
+  {code:'readonly', name:'只读观察员', type:'系统内置', users:2},
+  {code:'enterprise', name:'企业用户', type:'自定义', users:5},
+  {code:'third-party', name:'第三方专业服务机构', type:'自定义', users:3},
+  {code:'workgroup', name:'市工作专班', type:'自定义', users:2},
+  {code:'traffic', name:'交通管理部门', type:'自定义', users:2},
+  {code:'enterprise_admin', name:'企业安全管理员', type:'自定义', users:3},
+  {code:'third_auditor', name:'第三方审核专员', type:'自定义', users:1},
+  {code:'data_analyst', name:'数据分析专员', type:'自定义', users:2}
+];
+var userList = [
+  {account:'admin', name:'系统管理员', org:'系统运维组', roles:['super_admin']},
+  {account:'zhangsan', name:'张三', org:'安全管理部', roles:['enterprise','enterprise_admin']},
+  {account:'lisi', name:'李四', org:'第三方专业服务机构A', roles:['third-party','third_auditor']},
+  {account:'wangwu', name:'王五', org:'市工作专班', roles:['workgroup']},
+  {account:'zhaoliu', name:'赵六', org:'市交通管理局', roles:['traffic']},
+  {account:'chenqi', name:'陈七', org:'安全管理部', roles:['enterprise_admin']},
+  {account:'liuba', name:'刘八', org:'测试运营部', roles:['enterprise']},
+  {account:'zhoujiu', name:'周九', org:'第三方专业服务机构A', roles:['third_auditor']},
+  {account:'wushi', name:'吴十', org:'市工作专班', roles:['readonly']},
+  {account:'sunyang', name:'孙阳', org:'测试运营部', roles:['enterprise']},
+  {account:'hepeng', name:'何鹏', org:'第三方专业服务机构B', roles:['third-party']},
+  {account:'linfeng', name:'林凤', org:'测试运营部', roles:['enterprise','data_analyst']},
+  {account:'limin', name:'李敏', org:'市工作专班', roles:['workgroup']}
+];
+
+// ========== 数据权限配置存储 ==========
+// {scope, depts:[], rules:[{name,obj,mode,items:[]}]}
+var dpStore = {
+  role: {
+    super_admin: {scope:'全部数据', depts:[], rules:[]},
+    readonly: {scope:'本部门数据', depts:[], rules:[]},
+    enterprise: {scope:'仅本人数据', depts:[], rules:[{name:'本企业车辆', obj:'车辆', mode:'指定清单可见', items:['鄂F·A001','鄂F·A002']}]},
+    'third-party': {scope:'指定多个部门', depts:['第三方专业服务机构A','第三方专业服务机构B'], rules:[]},
+    workgroup: {scope:'全部数据', depts:[], rules:[]},
+    traffic: {scope:'指定多个部门', depts:['市交通管理局'], rules:[{name:'指定项目数据', obj:'项目', mode:'指定清单可见', items:['示范区道路测试项目','商业化试点项目']}]},
+    enterprise_admin: {scope:'本部门及下级部门数据', depts:[], rules:[]},
+    third_auditor: {scope:'仅本人数据', depts:[], rules:[]},
+    data_analyst: {scope:'全部数据', depts:[], rules:[{name:'排除未结案事故', obj:'申请单', mode:'指定清单不可见', items:['RT-2026-001']}]}
+  },
+  user: {
+    zhangsan: {scope:'指定多个部门', depts:['安全管理部','测试运营部'], rules:[]},
+    lisi: {scope:'本部门及下级部门数据', depts:[], rules:[]}
+  }
+};
+
+// ========== 状态 ==========
+var curType = 'role';
+var curCode = 'super_admin';
+var EDIT_MODE = false;
+
+function findRole(code) { for (var i = 0; i < roleList.length; i++) if (roleList[i].code === code) return roleList[i]; return null; }
+function findUser(account) { for (var i = 0; i < userList.length; i++) if (userList[i].account === account) return userList[i]; return null; }
+function getConf(type, code) { return dpStore[type][code] || {scope:'仅本人数据', depts:[], rules:[]}; }
+function isSuperAdmin() { return curType === 'role' && curCode === 'super_admin'; }
+
+// ========== 左侧列表 ==========
+function switchTab(type) {
+  curType = type;
+  EDIT_MODE = false;
+  document.getElementById('tabRole').className = 'dp-tab' + (type === 'role' ? ' active' : '');
+  document.getElementById('tabUser').className = 'dp-tab' + (type === 'user' ? ' active' : '');
+  var first = type === 'role' ? roleList[0].code : userList[0].account;
+  selectItem(first);
+}
+
+function buildList() {
+  var kw = (document.getElementById('dpSearch').value || '').trim().toLowerCase();
+  var html;
+  if (curType === 'role') {
+    html = roleList.filter(function(r) { return !kw || r.name.toLowerCase().indexOf(kw) !== -1 || r.code.indexOf(kw) !== -1; }).map(function(r) {
+      var tag = r.type === '系统内置' ? '<span class="dp-tag">内置</span>' : '';
+      return '<div class="dp-item' + (curCode === r.code ? ' active' : '') + '" onclick="selectItem(\'' + r.code + '\')">' +
+        '<div class="dp-item-name">' + r.name + tag + '</div><div class="dp-item-sub">' + r.code + ' · ' + r.users + '人</div></div>';
+    }).join('');
+  } else {
+    html = userList.filter(function(u) { return !kw || u.name.toLowerCase().indexOf(kw) !== -1 || u.account.indexOf(kw) !== -1; }).map(function(u) {
+      var roleNames = u.roles.map(function(c) { return findRole(c) ? findRole(c).name : c; }).join('、');
+      return '<div class="dp-item' + (curCode === u.account ? ' active' : '') + '" onclick="selectItem(\'' + u.account + '\')">' +
+        '<div class="dp-item-name">' + u.name + (dpStore.user[u.account] ? '<span class="dp-tag">用户级</span>' : '') + '</div><div class="dp-item-sub">' + u.account + ' · ' + roleNames + '</div></div>';
+    }).join('');
+  }
+  document.getElementById('dpList').innerHTML = html || '<div style="color:#00000040;font-size:12px;padding:8px 10px">未找到匹配对象</div>';
+}
+
+function selectItem(code) {
+  if (EDIT_MODE && code !== curCode) { if (!confirm('当前编辑未保存，切换对象将放弃修改，是否继续？')) return; }
+  curCode = code;
+  EDIT_MODE = false;
+  refreshPanel();
+}
+
+// ========== 右侧面板 ==========
+function objectLabel() {
+  if (curType === 'role') { var r = findRole(curCode); return r.name + '（角色）'; }
+  var u = findUser(curCode); return u.name + '（用户 · ' + u.account + '）';
+}
+
+function refreshPanel() {
+  var locked = isSuperAdmin();
+  // 信息头
+  var subInfo;
+  if (curType === 'role') {
+    var r = findRole(curCode);
+    subInfo = '<span class="ant-tag ' + (r.type === '系统内置' ? 'ant-tag-processing' : 'ant-tag-default') + '">' + r.type + '角色</span><span style="color:#00000073;font-size:13px">绑定用户 ' + r.users + ' 人</span>';
+  } else {
+    var u = findUser(curCode);
+    subInfo = '<span class="ant-tag ant-tag-default">用户级配置</span><span style="color:#00000073;font-size:13px">' + u.org + ' · 角色继承：' + u.roles.map(function(c) { return findRole(c).name; }).join('、') + '</span>';
+  }
+  document.getElementById('dpInfo').innerHTML =
+    '<span style="font-size:18px;font-weight:600;color:#000000d9">' + objectLabel() + '</span>' +
+    (EDIT_MODE ? '<span class="ant-tag" style="border-color:#ffd591;background:#fff7e6;color:#d46b08">编辑中</span>' : '') + subInfo;
+
+  // 提示条
+  var tip = '';
+  if (locked) {
+    tip = '<div class="p-3 mb-3 text-sm" style="background:#e6f4ff;border:1px solid #91caff;border-radius:6px;color:#0958d9">超级管理员固定为全部数据权限，不可配置。</div>';
+  } else if (EDIT_MODE) {
+    tip = '<div class="p-3 mb-3 text-sm" style="background:#fff7e6;border:1px solid #ffd591;border-radius:6px;color:#d46b08">编辑模式：修改需点击「保存配置」后才生效；自定义规则与预置范围同时生效时，最终可见数据为二者<b>交集</b>。</div>';
+  } else if (curType === 'user') {
+    tip = '<div class="p-3 mb-3 text-sm" style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:6px;color:#389e0d">用户级配置优先于其角色配置；未配置用户级时，按全部绑定角色的数据范围取并集（最大范围）生效。</div>';
+  }
+  document.getElementById('dpTip').innerHTML = tip;
+
+  // 顶部按钮
+  document.getElementById('headerActions').innerHTML = locked || !EDIT_MODE
+    ? '<button class="ant-btn" onclick="location.href=\'index.html\'">返回角色列表</button>'
+    : '<button class="ant-btn" onclick="cancelEdit()">取消编辑</button><button class="ant-btn ant-btn-primary" onclick="saveConf()">保存配置</button>';
+
+  renderBody();
+  buildList();
+  injectEditButton();
+}
+
+function renderBody() {
+  var conf = getConf(curType, curCode);
+  var readonly = isSuperAdmin() || !EDIT_MODE;
+  var html = '<h4 style="font-size:14px;font-weight:600;color:#000000d9;margin-bottom:8px">生效范围预览</h4><div class="dp-preview">' + previewHtml() + '</div>';
+  html += '<h4 style="font-size:14px;font-weight:600;color:#000000d9;margin:12px 0 8px">数据范围</h4>';
+  html += SCOPES.map(function(s) {
+    var on = conf.scope === s ? ' on' : '';
+    var radio = readonly
+      ? '<input type="radio"' + (conf.scope === s ? ' checked' : '') + ' disabled>'
+      : '<input type="radio" name="dpScope"' + (conf.scope === s ? ' checked' : '') + ' onchange="onScopeChange(\'' + s + '\')">';
+    return '<div class="dp-scope-item' + on + '">' + radio + '<span style="color:#000000d9">' + s + '</span><span class="dp-scope-desc">' + SCOPE_DESC[s] + '</span></div>';
+  }).join('');
+  if (conf.scope === '指定多个部门') {
+    html += '<div style="margin:6px 0 4px;font-size:13px;color:#000000d9">指定部门（' + conf.depts.length + '）</div><div class="dp-dept-grid">' + deptOptions.map(function(d) {
+      var ck = conf.depts.indexOf(d) !== -1 ? ' checked' : '';
+      var dis = readonly ? ' disabled' : '';
+      return '<label class="dp-dept-item"><input type="checkbox" class="ant-checkbox dp-dept-cb" value="' + d + '"' + ck + dis + ' onchange="onDeptChange(this)"><span>' + d + '</span></label>';
+    }).join('') + '</div>';
+  }
+  html += '<h4 style="font-size:14px;font-weight:600;color:#000000d9;margin:16px 0 8px">自定义数据规则（' + conf.rules.length + '）' + (readonly ? '' : '<button class="ant-btn ant-btn-sm ant-btn-primary" style="margin-left:8px" onclick="openRuleModal()">+ 添加规则</button>') + '</h4>';
+  html += conf.rules.length ? '<table class="ant-table" style="width:auto;min-width:100%"><thead><tr><th>规则名称</th><th style="width:80px;text-align:center">业务对象</th><th style="width:120px;text-align:center">过滤方式</th><th>对象清单</th>' + (readonly ? '' : '<th style="width:60px;text-align:center">操作</th>') + '</tr></thead><tbody>' +
+    conf.rules.map(function(r, idx) {
+      return '<tr><td>' + r.name + '</td><td style="text-align:center">' + r.obj + '</td><td style="text-align:center">' + r.mode + '</td>' +
+        '<td><div class="dp-item-list">' + r.items.map(function(i) { return '<span class="dp-item-chip">' + i + '</span>'; }).join('') + '</div></td>' +
+        (readonly ? '' : '<td style="text-align:center"><button class="ant-btn-link danger" onclick="removeRule(' + idx + ')">删除</button></td>') + '</tr>';
+    }).join('') + '</tbody></table>'
+    : '<div style="color:#00000040;font-size:13px;border:1px dashed #f0f0f0;border-radius:6px;padding:16px;text-align:center">暂无自定义规则；自定义规则与预置范围同时生效时取交集（收窄可见数据）</div>';
+  document.getElementById('dpBody').innerHTML = html;
+}
+
+// ========== 编辑交互（直接修改 dpStore，取消时回退快照） ==========
+var editSnapshot = null;
+function enterEdit() {
+  if (isSuperAdmin()) return;
+  editSnapshot = JSON.stringify(getConf(curType, curCode));
+  EDIT_MODE = true;
+  refreshPanel();
+}
+function cancelEdit() {
+  dpStore[curType][curCode] = JSON.parse(editSnapshot);
+  EDIT_MODE = false;
+  refreshPanel();
+}
+function saveConf() {
+  var conf = getConf(curType, curCode);
+  if (conf.scope === '指定多个部门' && conf.depts.length === 0) { alert('选择「指定多个部门」时需至少勾选一个部门'); return; }
+  if (conf.rules.some(function(r) { return r.items.length === 0; })) { alert('自定义规则需包含至少一个对象'); return; }
+  EDIT_MODE = false;
+  refreshPanel();
+  openModal('保存成功',
+    '<div class="text-sm text-[#000000d9]">' + objectLabel() + '的数据权限配置已保存，并<b>即时生效</b>：该对象在各业务模块查询列表与统计数据时即按新范围过滤。</div>',
+    {footer:'<button class="ant-btn ant-btn-primary" onclick="closeModal()">知道了</button>'});
+}
+function onScopeChange(scope) {
+  var conf = getConf(curType, curCode);
+  conf.scope = scope;
+  if (scope !== '指定多个部门') conf.depts = [];
+  renderBody();
+}
+function onDeptChange(cb) {
+  var conf = getConf(curType, curCode);
+  conf.depts = [];
+  document.querySelectorAll('.dp-dept-cb').forEach(function(el) { if (el.checked) conf.depts.push(el.value); });
+  renderBody();
+}
+function removeRule(idx) {
+  getConf(curType, curCode).rules.splice(idx, 1);
+  renderBody();
+}
+function openRuleModal() {
+  openModal('添加自定义数据规则',
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>规则名称</div><div class="ant-form-control"><input class="ant-input" id="rName" placeholder="如：本企业车辆"></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>业务对象</div><div class="ant-form-control"><select class="ant-input" id="rObj" onchange="renderRuleItems()">' + Object.keys(objOptions).map(function(o) { return '<option>' + o + '</option>'; }).join('') + '</select></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>过滤方式</div><div class="ant-form-control"><div style="display:flex;gap:16px"><label style="display:flex;gap:6px;align-items:center"><input type="radio" name="rMode" class="ant-checkbox" checked>指定清单可见</label><label style="display:flex;gap:6px;align-items:center"><input type="radio" name="rMode" class="ant-checkbox">指定清单不可见</label></div></div></div>' +
+    '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>对象清单</div><div class="ant-form-control" id="rItems"></div></div>',
+    {width:600,footer:'<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitRule()">确定</button>'});
+  renderRuleItems();
+}
+function renderRuleItems() {
+  var obj = document.getElementById('rObj').value;
+  document.getElementById('rItems').innerHTML = '<div class="dp-dept-grid">' + objOptions[obj].map(function(i) {
+    return '<label class="dp-dept-item"><input type="checkbox" class="ant-checkbox r-item-cb" value="' + i + '"><span>' + i + '</span></label>';
+  }).join('') + '</div>';
+}
+function submitRule() {
+  var name = document.getElementById('rName').value.trim();
+  var obj = document.getElementById('rObj').value;
+  var mode = document.querySelector('input[name="rMode"]:checked').parentNode.textContent.trim();
+  var items = [];
+  document.querySelectorAll('.r-item-cb').forEach(function(cb) { if (cb.checked) items.push(cb.value); });
+  if (!name) { alert('请输入规则名称'); return; }
+  if (items.length === 0) { alert('请至少选择一个对象'); return; }
+  getConf(curType, curCode).rules.push({name:name, obj:obj, mode:mode, items:items});
+  closeModal();
+  renderBody();
+}
+
+// ========== 生效范围预览 ==========
+function mergeScopes(scopes) {
+  var best = '仅本人数据';
+  scopes.forEach(function(s) { if (SCOPE_RANK[s] > SCOPE_RANK[best]) best = s; });
+  return best;
+}
+function previewHtml() {
+  var conf, source;
+  if (curType === 'role') {
+    conf = getConf('role', curCode);
+    source = '来自角色配置';
+    if (curCode === 'super_admin') source = '超级管理员固定权限，不可修改';
+  } else {
+    var u = findUser(curCode);
+    if (dpStore.user[curCode]) {
+      conf = dpStore.user[curCode];
+      source = '来自<b>用户级配置</b>（优先于角色配置）';
+    } else {
+      var roleConfs = u.roles.map(function(c) { return getConf('role', c); });
+      var scope = mergeScopes(roleConfs.map(function(c) { return c.scope; }));
+      var rules = [];
+      roleConfs.forEach(function(c) { rules = rules.concat(c.rules); });
+      conf = {scope:scope, depts:[], rules:rules};
+      source = '来自角色并集：' + u.roles.map(function(c) { return findRole(c).name; }).join('、');
+    }
+  }
+  var deptText = conf.scope === '指定多个部门' ? '（' + (conf.depts.join('、') || '未选择') + '）' : '';
+  var ruleText = conf.rules.length
+    ? conf.rules.map(function(r) { return r.name + '：' + r.obj + ' ' + r.mode + '（' + r.items.join('、') + '）'; }).join('<br>')
+    : '无自定义规则';
+  return '<div style="font-size:13px;color:#000000d9;line-height:22px">' +
+    '<div><b>最终生效范围：</b>' + conf.scope + deptText + '　<span style="color:#00000073">（来源：' + source + '）</span></div>' +
+    '<div><b>叠加规则（取交集）：</b><br>' + ruleText + '</div></div>';
+}
+
+// ========== 初始化 ==========
+(function init() {
+  refreshPanel();
+})();
+
+function injectEditButton() {
+  if (isSuperAdmin() || EDIT_MODE) return;
+  var info = document.getElementById('dpInfo');
+  var span = document.createElement('span');
+  span.style.marginLeft = 'auto';
+  span.innerHTML = '<button class="ant-btn ant-btn-primary" onclick="enterEdit()">编辑</button>';
+  info.appendChild(span);
+}
+</script>
+<script src="../../common.js"></script>
+</body>
+</html>

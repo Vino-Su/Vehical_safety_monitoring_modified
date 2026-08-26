@@ -373,6 +373,19 @@
           children: [
             { key: 'log-manage', label: '日志查询', path: 'platform/log/index.html', roles: ['admin'] }
           ]
+        },
+        {
+          key: 'perm',
+          label: '权限管理',
+          roles: ['admin'],
+          children: [
+            { key: 'user-manage', label: '账号用户管理', path: 'platform/user/index.html', roles: ['admin'] },
+            { key: 'org-manage', label: '组织架构管理', path: 'platform/org/index.html', roles: ['admin'] },
+            { key: 'role-manage', label: '角色管理', path: 'platform/role/index.html', roles: ['admin'] },
+            { key: 'role-authorize', label: '角色授权', path: 'platform/role/authorize.html', roles: ['admin'] },
+            { key: 'permission-manage', label: '权限资源管理', path: 'platform/permission/index.html', roles: ['admin'] },
+            { key: 'data-permission-manage', label: '数据权限管理', path: 'platform/data-permission/index.html', roles: ['admin'] }
+          ]
         }
       ]
     }

@@ -485,9 +485,13 @@ function renderHistoryTab1(s) {
 }
 
 // Tab2 场景适配模型
+function lightingLabel(level) {
+  return ({1: '1级（基础照明）', 2: '2级（标准照明）', 3: '3级（良好照明）'})[Number(level)] || '未配置';
+}
+
 function renderHistoryTab2(s) {
   var sceneRows = (s.scenes || []).map(function(sc) {
-    return '<tr><td><strong>' + sc.name + '</strong></td><td><span class="readonly-input">' + sc.lane + '</span></td><td>' + chipHtml(sc.mixed === '是' ? '是' : '否', { checkedValues: [] }) + '</td><td><span class="readonly-input">' + sc.lighting + '</span></td><td><span class="readonly-input">' + sc.slope + '</span></td></tr>';
+    return '<tr><td><strong>' + sc.name + '</strong></td><td><span class="readonly-input">' + sc.lane + '</span></td><td>' + chipHtml(sc.mixed === '是' ? '是' : '否', { checkedValues: [] }) + '</td><td><span class="readonly-input">' + lightingLabel(sc.lighting) + '</span></td><td><span class="readonly-input">' + sc.slope + '</span></td></tr>';
   }).join('');
   return '<div class="readonly-section">' +
       '<div class="readonly-section-title">场景映射条件</div>' +

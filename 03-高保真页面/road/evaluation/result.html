@@ -27,7 +27,7 @@
   <div class="flex-1 flex flex-col overflow-hidden">
     <header id="topnav"></header>
     <main class="flex-1 overflow-auto bg-[#f0f2f5] p-6">
-      <div class="page-header"><h2>评估结果管理</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openManualEvalConfirm()">+ 手动发起评估</button><button class="ant-btn" onclick="handleExport()">导出Excel</button></div></div>
+      <div class="page-header"><h2>评估结果管理</h2><div class="flex gap-2"><button class="ant-btn ant-btn-primary" onclick="openManualEvalConfirm()">+ 手动发起评估</button><button class="ant-btn" onclick="handleExport()">导出</button></div></div>
       <div class="filter-bar">
         <div class="filter-row">
           <div class="filter-item"><label>道路名称</label><input class="ant-input" placeholder="模糊搜索" id="filterRoad"></div>
@@ -41,7 +41,7 @@
       <div class="ant-table-wrapper">
         <div style="overflow-x:auto">
           <table class="ant-table">
-            <thead><tr><th><input type="checkbox" class="ant-checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th><th>道路编号</th><th>道路名称</th><th>所属区域</th><th>复杂度等级</th><th>风险等级</th><th>最佳适配场景</th><th>建议开放等级</th><th>综合得分</th><th>触发方式</th><th>评估时间</th><th>操作</th></tr></thead>
+            <thead><tr><th><input type="checkbox" class="ant-checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th><th>道路名称</th><th>所属区域</th><th>复杂度等级</th><th>风险等级</th><th>最佳适配场景</th><th>建议开放等级</th><th>综合得分</th><th>触发方式</th><th>评估时间</th><th>操作</th></tr></thead>
             <tbody id="listBody"></tbody>
           </table>
         </div>
@@ -77,6 +77,9 @@ const W_SCENE = 0.33;
 // 各子模型内部权重（交付文档默认值）
 const CL_WEIGHTS = [0.25, 0.25, 0.20, 0.15, 0.15]; // 车道复杂度, 交叉口密度, 混合交通比例, 坡度/曲率, 信号灯完整度
 const RK_WEIGHTS = [0.35, 0.35, 0.20, 0.10]; // 事故频率, 事故严重度, 交通事件频率, 流量修正系数
+function lightingLabel(level) {
+  return ({1: '1级（基础照明）', 2: '2级（标准照明）', 3: '3级（良好照明）'})[Number(level)] || '未配置';
+}
 
 // 道路基础属性（模拟道路建档数据）
 const roadBaseAttrs = roadNames.map(function(name, i) {
@@ -161,7 +164,7 @@ const evalData = roadNames.map((name, i) => {
     dims[3] = attrs.maxSlope <= req[3] ? 25 : 0;
     var total = dims[0] + dims[1] + dims[2] + dims[3];
     var fit = total >= 60 ? '适用' : '不适用';
-    return { name: sn, fit: fit, score: total, threshold: 60, dims: dims };
+    return { name: sn, fit: fit, score: total, threshold: 60, dims: dims, lightingLevel: attrs.lightingLevel, lightingRequired: req[2] };
   });
 
   // 最佳适配场景
@@ -317,10 +320,10 @@ function renderList() {
 
   var html = '';
   if (pageData.length === 0) {
-    html = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#999;">暂无匹配评估结果</td></tr>';
+    html = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">暂无匹配评估结果</td></tr>';
   }
   pageData.forEach(function(r) {
-    html += '<tr><td><input type="checkbox" class="ant-checkbox row-checkbox" data-id="'+r.id+'"></td><td>'+r.id+'</td><td><strong>'+r.name+'</strong></td><td>'+r.district+'</td>' +
+    html += '<tr><td><input type="checkbox" class="ant-checkbox row-checkbox" data-id="'+r.id+'"></td><td><strong>'+r.name+'</strong></td><td>'+r.district+'</td>' +
       '<td>'+levelTag(r.complexity)+'</td><td>'+levelTag(r.risk)+'</td><td>'+r.bestScene+'</td>' +
       '<td>'+levelTag(r.openLevel)+'</td><td><strong style="color:'+(r.score>=85?'#52c41a':r.score>=70?'#fa8c16':r.score>=50?'#1677ff':'#ff4d4f')+'">'+r.score+'</strong></td>' +
       '<td>'+r.trigger+'</td><td>'+r.time+'</td>' +
@@ -461,7 +464,7 @@ window.openDetailModal = function(code) {
   (r.sceneFits || []).forEach(function(s) {
     var dims = s.dims || [0,0,0,0];
     html += '<tr><td><strong>' + s.name + '</strong></td>' +
-      '<td>' + dims[0] + '</td><td>' + dims[1] + '</td><td>' + dims[2] + '</td><td>' + dims[3] + '</td>' +
+      '<td>' + dims[0] + '</td><td>' + dims[1] + '</td><td>' + lightingLabel(s.lightingLevel) + ' / 最低要求：' + lightingLabel(s.lightingRequired) + '</td><td>' + dims[3] + '</td>' +
       '<td><strong>' + s.score + '</strong></td>' +
       '<td>' + (s.fit === '适用' ? '<span class="ant-tag ant-tag-success">适用</span>' : '<span class="ant-tag ant-tag-error">不适用</span>') + '</td></tr>';
   });
