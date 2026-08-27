@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>评估指标配置 - 智能网联汽车安全监测平台</title>
@@ -21,12 +19,13 @@
     .config-form-label .required{color:#ff4d4f;margin-right:4px}
     .config-form-input{height:32px;padding:0 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:14px;color:#000000d9;outline:none;width:160px}
     .config-form-input:focus{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.1)}
-    .limit-time-picker{display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:260px;white-space:nowrap}
+    .limit-time-picker{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:210px}
     .limit-time-picker input[type=time]{height:32px;padding:0 8px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;color:#000000d9;background:#fff;outline:none}
     .limit-time-picker input[type=time]:focus{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.1)}
-    .limit-time-picker input[type=time]:disabled,.limit-time-picker input[type=text]:disabled{background:#f5f5f5;color:#00000040;cursor:not-allowed}
+    .limit-time-picker input[type=time]:disabled{background:#f5f5f5;color:#00000040;cursor:not-allowed}
     .limit-time-picker .time-separator{color:#00000073}
     .limit-time-unlimited{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#00000073;white-space:nowrap;cursor:pointer}
+    .limit-time-picker.is-unlimited .time-range-inputs{display:none}
     .limit-time-picker.is-unlimited .limit-time-unlimited{color:#1677ff}
     .limit-time-picker.is-disabled{opacity:.55}
     .config-form-unit{font-size:14px;color:#00000073}
@@ -109,7 +108,7 @@
     }
     .config-footer-actions{display:flex;align-items:center;gap:8px}
   </style>
-</head>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-4{margin-top:1rem}.flex{display:flex}.hidden{display:none}.h-screen{height:100vh}.flex-1{flex:1 1 0%}.flex-col{flex-direction:column}.overflow-auto{overflow:auto}.overflow-hidden{overflow:hidden}.rounded{border-radius:0.25rem}.rounded-lg{border-radius:0.5rem}.border{border-width:1px}.border-\[\#e8eaec\]{--tw-border-opacity:1;border-color:rgb(232 234 236 / var(--tw-border-opacity, 1))}.border-\[\#f0f0f0\]{--tw-border-opacity:1;border-color:rgb(240 240 240 / var(--tw-border-opacity, 1))}.bg-\[\#f0f2f5\]{--tw-bg-opacity:1;background-color:rgb(240 242 245 / var(--tw-bg-opacity, 1))}.bg-\[\#f6f8fa\]{--tw-bg-opacity:1;background-color:rgb(246 248 250 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.p-3{padding:0.75rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-semibold{font-weight:600}.text-\[\#00000073\]{color:#00000073}.text-\[\#000000d9\]{color:#000000d9}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}</style></head>
 <body>
 <div id="app" class="flex h-screen overflow-hidden">
   <aside id="sidebar"></aside>
@@ -134,7 +133,7 @@
             <span class="dot"></span>有未保存修改
           </div>
           <div class="config-meta-history" onclick="openHistoryListModal()" title="查看历史版本">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path></svg>
             <span>查看历史版本</span>
           </div>
         </div>
@@ -283,10 +282,10 @@
             <table class="ant-table config-table">
               <thead><tr><th style="width:160px">场景名称</th><th>最低车道数</th><th>允许机非混行</th><th>最低照明等级</th><th>允许最大坡度(%)</th></tr></thead>
               <tbody>
-                <tr><td><strong>无人出行</strong></td><td><input type="number" class="config-input" value="4" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed='{"val":"否"}'><div class="ad-select-trigger ad-tag-error" onclick="toggleMixedSelect(this)"><span class="text">否</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="ad-select-dropdown"><div class="ad-select-option" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option active" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><input type="number" class="config-input" value="2" min="1" max="3" step="1" onchange="validateSceneLighting(this)"></td><td><input type="number" class="config-input" value="8" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
-                <tr><td><strong>无人环卫</strong></td><td><input type="number" class="config-input" value="2" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed='{"val":"是"}'><div class="ad-select-trigger ad-tag-success" onclick="toggleMixedSelect(this)"><span class="text">是</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="ad-select-dropdown"><div class="ad-select-option active" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><input type="number" class="config-input" value="1" min="1" max="3" step="1" onchange="validateSceneLighting(this)"></td><td><input type="number" class="config-input" value="12" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
-                <tr><td><strong>无人物流</strong></td><td><input type="number" class="config-input" value="2" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed='{"val":"是"}'><div class="ad-select-trigger ad-tag-success" onclick="toggleMixedSelect(this)"><span class="text">是</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="ad-select-dropdown"><div class="ad-select-option active" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><input type="number" class="config-input" value="1" min="1" max="3" step="1" onchange="validateSceneLighting(this)"></td><td><input type="number" class="config-input" value="10" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
-                <tr><td><strong>无人公交</strong></td><td><input type="number" class="config-input" value="2" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed='{"val":"否"}'><div class="ad-select-trigger ad-tag-error" onclick="toggleMixedSelect(this)"><span class="text">否</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div><div class="ad-select-dropdown"><div class="ad-select-option" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option active" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><input type="number" class="config-input" value="2" min="1" max="3" step="1" onchange="validateSceneLighting(this)"></td><td><input type="number" class="config-input" value="8" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
+                <tr><td><strong>无人出行</strong></td><td><input type="number" class="config-input" value="4" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed="{&quot;val&quot;:&quot;否&quot;}"><div class="ad-select-trigger ad-tag-error" onclick="toggleMixedSelect(this)"><span class="text">否</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"></path></svg></div><div class="ad-select-dropdown"><div class="ad-select-option" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option active" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><select class="config-input lighting-level-input"><option value="1">1级（基础照明）</option><option value="2">2级（标准照明）</option><option value="3">3级（良好照明）</option></select></td><td><input type="number" class="config-input" value="8" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
+                <tr><td><strong>无人环卫</strong></td><td><input type="number" class="config-input" value="2" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed="{&quot;val&quot;:&quot;是&quot;}"><div class="ad-select-trigger ad-tag-success" onclick="toggleMixedSelect(this)"><span class="text">是</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"></path></svg></div><div class="ad-select-dropdown"><div class="ad-select-option active" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><select class="config-input lighting-level-input"><option value="1">1级（基础照明）</option><option value="2">2级（标准照明）</option><option value="3">3级（良好照明）</option></select></td><td><input type="number" class="config-input" value="12" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
+                <tr><td><strong>无人物流</strong></td><td><input type="number" class="config-input" value="2" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed="{&quot;val&quot;:&quot;是&quot;}"><div class="ad-select-trigger ad-tag-success" onclick="toggleMixedSelect(this)"><span class="text">是</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"></path></svg></div><div class="ad-select-dropdown"><div class="ad-select-option active" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><select class="config-input lighting-level-input"><option value="1">1级（基础照明）</option><option value="2">2级（标准照明）</option><option value="3">3级（良好照明）</option></select></td><td><input type="number" class="config-input" value="10" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
+                <tr><td><strong>无人公交</strong></td><td><input type="number" class="config-input" value="2" min="1" step="1" onchange="validateSceneLane(this)"></td><td><div class="ad-select" data-mixed="{&quot;val&quot;:&quot;否&quot;}"><div class="ad-select-trigger ad-tag-error" onclick="toggleMixedSelect(this)"><span class="text">否</span><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"></path></svg></div><div class="ad-select-dropdown"><div class="ad-select-option" data-val="是" onclick="pickMixed(this,'是')">是</div><div class="ad-select-option active" data-val="否" onclick="pickMixed(this,'否')">否</div></div></div></td><td><select class="config-input lighting-level-input"><option value="1">1级（基础照明）</option><option value="2">2级（标准照明）</option><option value="3">3级（良好照明）</option></select></td><td><input type="number" class="config-input" value="8" min="0" max="100" step="0.1" onchange="validateSceneSlope(this)"></td></tr>
               </tbody>
             </table>
           </div>
@@ -361,9 +360,9 @@
             <table class="ant-table config-table">
               <thead><tr><th style="width:60px">启用</th><th style="width:200px">准入条件</th><th style="width:160px">阈值</th><th style="width:80px">运算符</th><th>说明</th></tr></thead>
               <tbody>
-                <tr><td><input type="checkbox" class="ant-checkbox" checked></td><td>最小车道宽度</td><td><input type="number" class="config-input" value="3.0" step="0.1"> m</td><td>≥</td><td class="text-[#00000073]">数据缺失时视为满足</td></tr>
-                <tr><td><input type="checkbox" class="ant-checkbox" checked></td><td>最大坡度</td><td><input type="number" class="config-input" value="6" step="0.1"> %</td><td>≤</td><td class="text-[#00000073]">数据缺失时视为满足</td></tr>
-                <tr><td><input type="checkbox" class="ant-checkbox" checked></td><td>交通信号覆盖率</td><td><input type="number" class="config-input" value="80" step="1"> %</td><td>≥</td><td class="text-[#00000073]">覆盖率数据缺失时视为满足</td></tr>
+                <tr><td><input type="checkbox" class="ant-checkbox" checked=""></td><td>最小车道宽度</td><td><input type="number" class="config-input" value="3.0" step="0.1"> m</td><td>≥</td><td class="text-[#00000073]">数据缺失时视为满足</td></tr>
+                <tr><td><input type="checkbox" class="ant-checkbox" checked=""></td><td>最大坡度</td><td><input type="number" class="config-input" value="6" step="0.1"> %</td><td>≤</td><td class="text-[#00000073]">数据缺失时视为满足</td></tr>
+                <tr><td><input type="checkbox" class="ant-checkbox" checked=""></td><td>交通信号覆盖率</td><td><input type="number" class="config-input" value="80" step="1"> %</td><td>≥</td><td class="text-[#00000073]">覆盖率数据缺失时视为满足</td></tr>
               </tbody>
             </table>
           </div>
@@ -373,10 +372,10 @@
             <table class="ant-table config-table">
               <thead><tr><th style="width:60px">启用</th><th style="width:80px">优先级</th><th>条件描述</th><th>动作</th></tr></thead>
               <tbody>
-                <tr><td><input type="checkbox" class="ant-checkbox" checked></td><td><span class="ant-tag">1</span></td><td>风险等级 = 高</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
-                <tr><td><input type="checkbox" class="ant-checkbox" checked></td><td><span class="ant-tag">2</span></td><td>道路类型 = 高速公路 / 城市快速路</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
-                <tr><td><input type="checkbox" class="ant-checkbox" checked></td><td><span class="ant-tag">3</span></td><td>复杂度 = 高 AND 风险 = 高</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
-                <tr><td><input type="checkbox" class="ant-checkbox" checked></td><td><span class="ant-tag">4</span></td><td>风险 = 中 AND 场景适配 &lt; 60</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
+                <tr><td><input type="checkbox" class="ant-checkbox" checked=""></td><td><span class="ant-tag">1</span></td><td>风险等级 = 高</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
+                <tr><td><input type="checkbox" class="ant-checkbox" checked=""></td><td><span class="ant-tag">2</span></td><td>道路类型 = 高速公路 / 城市快速路</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
+                <tr><td><input type="checkbox" class="ant-checkbox" checked=""></td><td><span class="ant-tag">3</span></td><td>复杂度 = 高 AND 风险 = 高</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
+                <tr><td><input type="checkbox" class="ant-checkbox" checked=""></td><td><span class="ant-tag">4</span></td><td>风险 = 中 AND 场景适配 &lt; 60</td><td><span class="ant-tag ant-tag-error">禁止开放</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -401,20 +400,20 @@
                   <td><span class="ant-tag ant-tag-success">完全开放</span></td>
                   <td>
                     <div class="ad-checkbox-group" data-field="autoLevels">
-                      <div class="ad-checkbox-item" data-val="L2" onclick="toggleMappingChip(this)">L2</div>
-                      <div class="ad-checkbox-item" data-val="L3" onclick="toggleMappingChip(this)">L3</div>
-                      <div class="ad-checkbox-item" data-val="L4" onclick="toggleMappingChip(this)">L4</div>
+                      <div class="ad-checkbox-item checked" data-val="L2" onclick="toggleMappingChip(this)">L2</div>
+                      <div class="ad-checkbox-item checked" data-val="L3" onclick="toggleMappingChip(this)">L3</div>
+                      <div class="ad-checkbox-item checked" data-val="L4" onclick="toggleMappingChip(this)">L4</div>
                     </div>
                   </td>
                   <td>
                     <div class="ad-checkbox-group" data-field="testTypes">
-                      <div class="ad-checkbox-item" data-val="无人出行" onclick="toggleMappingChip(this)">无人出行</div>
-                      <div class="ad-checkbox-item" data-val="无人环卫" onclick="toggleMappingChip(this)">无人环卫</div>
-                      <div class="ad-checkbox-item" data-val="无人物流" onclick="toggleMappingChip(this)">无人物流</div>
-                      <div class="ad-checkbox-item" data-val="无人公交" onclick="toggleMappingChip(this)">无人公交</div>
+                      <div class="ad-checkbox-item checked" data-val="无人出行" onclick="toggleMappingChip(this)">无人出行</div>
+                      <div class="ad-checkbox-item checked" data-val="无人环卫" onclick="toggleMappingChip(this)">无人环卫</div>
+                      <div class="ad-checkbox-item checked" data-val="无人物流" onclick="toggleMappingChip(this)">无人物流</div>
+                      <div class="ad-checkbox-item checked" data-val="无人公交" onclick="toggleMappingChip(this)">无人公交</div>
                     </div>
                   </td>
-                  <td><div class="limit-time-picker is-unlimited" data-field="limitTime" data-unlimited="true"><label class="limit-time-unlimited"><input type="checkbox" checked onchange="toggleLimitTime(this)"> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" aria-label="开始时间" onchange="syncLimitTime(this)"><span class="time-separator">至</span><input type="time" class="time-end" aria-label="结束时间" onchange="syncLimitTime(this)"></div></div></td>
+                  <td><div class="limit-time-picker is-unlimited" data-field="limitTime" data-unlimited="true"><label class="limit-time-unlimited"><input type="checkbox" checked="" onchange="toggleLimitTime(this)"> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" aria-label="开始时间" onchange="syncLimitTime(this)"><span class="time-separator">至</span><input type="time" class="time-end" aria-label="结束时间" onchange="syncLimitTime(this)"></div></div></td>
                   <td><input type="text" class="config-form-input" data-field="control" style="width:100%" value="无特殊要求" placeholder="管控要求说明"></td>
                 </tr>
                 <!-- 条件开放 -->
@@ -423,19 +422,19 @@
                   <td>
                     <div class="ad-checkbox-group" data-field="autoLevels">
                       <div class="ad-checkbox-item" data-val="L2" onclick="toggleMappingChip(this)">L2</div>
-                      <div class="ad-checkbox-item" data-val="L3" onclick="toggleMappingChip(this)">L3</div>
-                      <div class="ad-checkbox-item" data-val="L4" onclick="toggleMappingChip(this)">L4</div>
+                      <div class="ad-checkbox-item checked" data-val="L3" onclick="toggleMappingChip(this)">L3</div>
+                      <div class="ad-checkbox-item checked" data-val="L4" onclick="toggleMappingChip(this)">L4</div>
                     </div>
                   </td>
                   <td>
                     <div class="ad-checkbox-group" data-field="testTypes">
                       <div class="ad-checkbox-item" data-val="无人出行" onclick="toggleMappingChip(this)">无人出行</div>
-                      <div class="ad-checkbox-item" data-val="无人环卫" onclick="toggleMappingChip(this)">无人环卫</div>
-                      <div class="ad-checkbox-item" data-val="无人物流" onclick="toggleMappingChip(this)">无人物流</div>
-                      <div class="ad-checkbox-item" data-val="无人公交" onclick="toggleMappingChip(this)">无人公交</div>
+                      <div class="ad-checkbox-item checked" data-val="无人环卫" onclick="toggleMappingChip(this)">无人环卫</div>
+                      <div class="ad-checkbox-item checked" data-val="无人物流" onclick="toggleMappingChip(this)">无人物流</div>
+                      <div class="ad-checkbox-item checked" data-val="无人公交" onclick="toggleMappingChip(this)">无人公交</div>
                     </div>
                   </td>
-                  <td><div class="limit-time-picker" data-field="limitTime"><label class="limit-time-unlimited"><input type="checkbox" onchange="toggleLimitTime(this)"> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" value="06:00" aria-label="开始时间" onchange="syncLimitTime(this)"><span class="time-separator">至</span><input type="time" class="time-end" value="22:00" aria-label="结束时间" onchange="syncLimitTime(this)"></div></div></td>
+                  <td><div class="limit-time-picker" data-field="limitTime" data-unlimited="false"><label class="limit-time-unlimited"><input type="checkbox" onchange="toggleLimitTime(this)"> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" value="06:00" aria-label="开始时间" onchange="syncLimitTime(this)"><span class="time-separator">至</span><input type="time" class="time-end" value="22:00" aria-label="结束时间" onchange="syncLimitTime(this)"></div></div></td>
                   <td><input type="text" class="config-form-input" data-field="control" style="width:100%" value="需额外提交安全评估" placeholder="管控要求说明"></td>
                 </tr>
                 <!-- 限制开放 -->
@@ -445,18 +444,18 @@
                     <div class="ad-checkbox-group" data-field="autoLevels">
                       <div class="ad-checkbox-item" data-val="L2" onclick="toggleMappingChip(this)">L2</div>
                       <div class="ad-checkbox-item" data-val="L3" onclick="toggleMappingChip(this)">L3</div>
-                      <div class="ad-checkbox-item" data-val="L4" onclick="toggleMappingChip(this)">L4</div>
+                      <div class="ad-checkbox-item checked" data-val="L4" onclick="toggleMappingChip(this)">L4</div>
                     </div>
                   </td>
                   <td>
                     <div class="ad-checkbox-group" data-field="testTypes">
                       <div class="ad-checkbox-item" data-val="无人出行" onclick="toggleMappingChip(this)">无人出行</div>
-                      <div class="ad-checkbox-item" data-val="无人环卫" onclick="toggleMappingChip(this)">无人环卫</div>
-                      <div class="ad-checkbox-item" data-val="无人物流" onclick="toggleMappingChip(this)">无人物流</div>
+                      <div class="ad-checkbox-item checked" data-val="无人环卫" onclick="toggleMappingChip(this)">无人环卫</div>
+                      <div class="ad-checkbox-item checked" data-val="无人物流" onclick="toggleMappingChip(this)">无人物流</div>
                       <div class="ad-checkbox-item" data-val="无人公交" onclick="toggleMappingChip(this)">无人公交</div>
                     </div>
                   </td>
-                  <td><div class="limit-time-picker" data-field="limitTime"><label class="limit-time-unlimited"><input type="checkbox" onchange="toggleLimitTime(this)"> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" value="09:00" aria-label="开始时间" onchange="syncLimitTime(this)"><span class="time-separator">至</span><input type="time" class="time-end" value="17:00" aria-label="结束时间" onchange="syncLimitTime(this)"></div></div></td>
+                  <td><div class="limit-time-picker" data-field="limitTime" data-unlimited="false"><label class="limit-time-unlimited"><input type="checkbox" onchange="toggleLimitTime(this)"> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" value="09:00" aria-label="开始时间" onchange="syncLimitTime(this)"><span class="time-separator">至</span><input type="time" class="time-end" value="17:00" aria-label="结束时间" onchange="syncLimitTime(this)"></div></div></td>
                   <td><input type="text" class="config-form-input" data-field="control" style="width:100%" value="需安全员全程监控" placeholder="管控要求说明"></td>
                 </tr>
                 <!-- 禁止开放（自动驾驶等级 / 测试类型不可选，置灰） -->
@@ -477,7 +476,7 @@
                       <div class="ad-checkbox-item disabled" data-val="无人公交">无人公交</div>
                     </div>
                   </td>
-                  <td><div class="limit-time-picker is-disabled" data-field="limitTime" data-disabled="true"><label class="limit-time-unlimited"><input type="checkbox" disabled> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" disabled aria-label="开始时间"><span class="time-separator">至</span><input type="time" class="time-end" disabled aria-label="结束时间"></div></div></td>
+                  <td><div class="limit-time-picker is-disabled is-unlimited" data-field="limitTime" data-disabled="true" data-unlimited="true"><label class="limit-time-unlimited"><input type="checkbox" disabled=""> 全天</label><div class="time-range-inputs"><input type="time" class="time-start" disabled="" aria-label="开始时间"><span class="time-separator">至</span><input type="time" class="time-end" disabled="" aria-label="结束时间"></div></div></td>
                   <td><input type="text" class="config-form-input" data-field="control" style="width:100%" value="禁止任何测试活动" placeholder="管控要求说明"></td>
                 </tr>
               </tbody>
@@ -750,34 +749,8 @@ window.toggleMappingChip = function(item) {
 function toggleLimitTime(checkbox) {
   var picker = checkbox.closest('.limit-time-picker');
   if (!picker || picker.getAttribute('data-disabled') === 'true') return;
-  setLimitTimeUnlimited(picker, checkbox.checked);
-}
-
-function setLimitTimeUnlimited(picker, isUnlimited) {
-  if (!picker) return;
-  var start = picker.querySelector('.time-start');
-  var end = picker.querySelector('.time-end');
-  if (!start || !end) return;
-  if (isUnlimited) {
-    picker.dataset.previousStart = start.value && start.value !== '00:00' ? start.value : (picker.dataset.previousStart || '06:00');
-    picker.dataset.previousEnd = end.value && end.value !== '24:00' ? end.value : (picker.dataset.previousEnd || '22:00');
-    start.value = '00:00';
-    start.disabled = true;
-    end.dataset.timeType = end.type;
-    end.type = 'text';
-    end.value = '24:00';
-    end.readOnly = true;
-    end.disabled = true;
-  } else {
-    start.disabled = false;
-    end.disabled = false;
-    end.readOnly = false;
-    end.type = end.dataset.timeType || 'time';
-    start.value = picker.dataset.previousStart || '06:00';
-    end.value = picker.dataset.previousEnd || '22:00';
-  }
-  picker.classList.toggle('is-unlimited', isUnlimited);
-  picker.setAttribute('data-unlimited', isUnlimited ? 'true' : 'false');
+  picker.classList.toggle('is-unlimited', checkbox.checked);
+  picker.setAttribute('data-unlimited', checkbox.checked ? 'true' : 'false');
 }
 
 function syncLimitTime(input) {
@@ -809,14 +782,15 @@ function writeLimitTime(picker, value) {
   var end = picker.querySelector('.time-end');
   var isUnlimited = value === '无限制' || value === '---' || !value;
   if (unlimited) unlimited.checked = isUnlimited;
+  picker.classList.toggle('is-unlimited', isUnlimited);
+  picker.setAttribute('data-unlimited', isUnlimited ? 'true' : 'false');
   if (!isUnlimited) {
     var parts = String(value).split('-');
     if (start) start.value = parts[0] || '';
     if (end) end.value = parts[1] || '';
-    picker.dataset.previousStart = parts[0] || '';
-    picker.dataset.previousEnd = parts[1] || '';
   } else {
-    setLimitTimeUnlimited(picker, true);
+    if (start) start.value = '';
+    if (end) end.value = '';
   }
 }
 
@@ -1822,5 +1796,6 @@ function renderHistoryTab4(s) {
 upgradeLightingLevelInputs();
 </script>
 <script src="../../common.js"></script>
-</body>
-</html>
+
+
+</body></html>

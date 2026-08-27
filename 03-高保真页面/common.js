@@ -859,6 +859,9 @@
       '.top-module-active{color:#1677ff!important;border-bottom-color:#1677ff!important;background:#e6f4ff!important}',
       '.top-module-icon{display:inline-flex;align-items:center;justify-content:center}',
       '.topnav-right{display:flex;align-items:center;gap:16px}',
+      '.topnav-tool-link{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:4px;color:#00000073;text-decoration:none;transition:all .2s}',
+      '.topnav-tool-link:hover{color:#1677ff;background:#e6f4ff}',
+      '.topnav-tool-link:focus{outline:2px solid #91caff;outline-offset:1px}',
       '.topnav-right .notification{position:relative;cursor:pointer;color:#00000073}',
       '.topnav-right .notification .badge{position:absolute;top:-4px;right:-4px;background:#ff4d4f;color:#fff;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:8px;padding:0 4px}',
       '.user-menu{position:relative;display:flex;align-items:center}',
@@ -1372,6 +1375,9 @@
           '<nav class="top-module-nav" aria-label="一级模块导航">' + renderGlobalNavigation(filteredMenu, basePath, activeModuleKey) + '</nav>' +
         '</div>' +
         '<div class="topnav-right" style="padding:0 24px">' +
+          '<a class="topnav-tool-link" href="' + basePath + '流程图/page-relation-map.html?role=' + USER_ROLE + '" aria-label="打开页面关系图" title="页面关系图">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"></rect><rect x="15" y="3" width="6" height="6" rx="1"></rect><rect x="9" y="15" width="6" height="6" rx="1"></rect><path d="M9 6h6M12 9v6"></path></svg>' +
+          '</a>' +
           '<span class="notification"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg><span class="badge">3</span></span>' +
           renderRoleSwitcher() +
           renderUserMenu(cfg) +

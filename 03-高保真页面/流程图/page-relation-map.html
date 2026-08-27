@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>平台页面关系图 - 智能网联汽车安全监测平台</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./page-relation-map.css">
+</head>
+<body class="relation-page">
+  <div id="app">
+    <header id="topnav"></header>
+    <div id="admin-body">
+      <aside id="sidebar"></aside>
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <main class="relation-main">
+          <section class="relation-heading">
+            <div><h1>平台核心业务链路与页面关系</h1><p>以业务对象为线索，查看页面之间的导航、数据、流程和状态联动关系</p></div>
+            <div class="heading-meta"><span>核心节点</span><strong id="nodeCount">0</strong><span>·</span><span>关系</span><strong id="edgeCount">0</strong></div>
+          </section>
+          <section class="toolbar" aria-label="关系图筛选">
+            <label for="roleFilter">角色</label><select id="roleFilter"></select>
+            <label for="moduleFilter">模块</label><select id="moduleFilter"><option value="all">全部模块</option><option value="monitor">测试示范监管</option><option value="road">开放道路管理</option><option value="analysis">监测数据分析</option></select>
+            <label for="typeFilter">关系</label><select id="typeFilter"><option value="all">全部关系</option><option value="navigation">页面跳转</option><option value="data">数据引用</option><option value="state">状态联动</option><option value="process">流程上下游</option><option value="analysis">分析消费</option></select>
+            <input id="searchInput" type="search" placeholder="搜索页面名称或业务对象" aria-label="搜索页面名称或业务对象">
+            <button class="reset" id="resetFilters" type="button">重置筛选</button>
+          </section>
+          <section id="canvasPanel" class="canvas-panel">
+          <div class="canvas-toolbar"><div class="legend" aria-label="关系图例"><span class="legend-item"><i class="legend-line navigation"></i>页面跳转</span><span class="legend-item"><i class="legend-line data"></i>数据引用</span><span class="legend-item"><i class="legend-line state thick"></i>状态联动</span><span class="legend-item"><i class="legend-line process"></i>流程上下游</span><span class="legend-item"><i class="legend-line analysis dashed"></i>分析消费</span></div><div class="canvas-controls" aria-label="画布控制"><button id="zoomOut" type="button" title="缩小">−</button><span id="zoomReadout" class="zoom-readout">100%</span><button id="zoomIn" type="button" title="放大">+</button><button id="fitCanvas" class="fit" type="button" title="适配画布">适配</button><button id="resetCanvas" class="fit" type="button" title="恢复默认布局">复位</button><button id="fullscreenCanvas" type="button" title="画布全屏" aria-label="画布全屏"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"></path></svg></button></div></div>
+          <section class="canvas-shell" id="canvasShell">
+            <div class="canvas-grid"></div>
+            <div class="canvas-world" id="canvasWorld"><svg class="connector-layer" id="connectorLayer" aria-hidden="true"></svg><div id="stageGrid"></div><div id="supportItems"></div></div>
+            <div class="canvas-hint">滚轮缩放 · 拖拽空白处平移 · 拖拽节点自由排布</div>
+          </section>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+  <aside class="detail-panel" id="detailPanel" aria-label="页面关系详情"><button class="detail-close" id="detailClose" aria-label="关闭详情">×</button><div id="detailContent"></div></aside>
+  <script>var PAGE_ID = 'page-relation-map';</script>
+  <script src="./page-relation-data.js"></script>
+  <script>
+  (function(){
+    'use strict';
+    var data=window.PAGE_RELATION_DATA, state={role:'all',module:'all',type:'all',search:'',selected:null,scale:1,panX:0,panY:0};
+    var stageGrid=document.getElementById('stageGrid'), layer=document.getElementById('connectorLayer'), world=document.getElementById('canvasWorld'), shell=document.getElementById('canvasShell'), canvasPanel=document.getElementById('canvasPanel'), fullscreenButton=document.getElementById('fullscreenCanvas');
+    var moduleLabels={monitor:'测试示范监管',road:'开放道路管理',analysis:'监测数据分析'};
+    var zones={profile:{x:70,y:100,w:420,h:1120},road:{x:550,y:100,w:420,h:1120},access:{x:1030,y:70,w:560,h:1200},monitor:{x:1650,y:70,w:620,h:1200},analysis:{x:2330,y:100,w:460,h:1120}};
+    var defaults={}, positions={}, dragging=null, panning=null;
+    data.nodes.forEach(function(n){var index=data.nodes.filter(function(item){return item.stage===n.stage;}).indexOf(n), z=zones[n.stage], cols=(n.stage==='access'||n.stage==='monitor')?2:1;defaults[n.id]={x:z.x+25+(index%cols)*255,y:z.y+82+Math.floor(index/cols)*118};positions[n.id]={x:defaults[n.id].x,y:defaults[n.id].y};});
+    function visibleNode(n){var q=state.search.toLowerCase();return(state.role==='all'||n.roles.indexOf(state.role)!==-1)&&(state.module==='all'||n.module===state.module)&&(!q||n.label.toLowerCase().indexOf(q)!==-1||String(n.object).toLowerCase().indexOf(q)!==-1);}
+    function visibleEdge(e){return state.type==='all'||e.type===state.type;}
+    function renderFilters(){var role=document.getElementById('roleFilter');role.innerHTML=Object.keys(data.roles).map(function(k){return '<option value="'+k+'">'+data.roles[k]+'</option>';}).join('');role.value=state.role;}
+    function nodeType(type){return({form:'表单',list:'列表',detail:'详情',map:'地图',analysis:'分析'}[type]||type);}
+    function render(){var counts=0;stageGrid.innerHTML=data.stages.map(function(s){var z=zones[s.id];return '<section class="stage-zone stage-'+s.tone+'" style="left:'+z.x+'px;top:'+z.y+'px;width:'+z.w+'px;height:'+z.h+'px"><div class="stage-zone-head"><span class="stage-zone-label">'+s.label+'</span><span class="stage-zone-caption">'+s.caption+'</span></div></section>';}).join('');data.nodes.forEach(function(n){var p=positions[n.id],v=visibleNode(n);if(v)counts++;stageGrid.innerHTML+='<article class="node'+(state.selected===n.id?' is-selected':'')+(v?'':' is-dim')+'" data-node="'+n.id+'" tabindex="0" aria-label="'+n.label+'" style="left:'+p.x+'px;top:'+p.y+'px"><span class="node-title">'+n.label+'</span><span class="node-arrow">›</span><div class="node-meta"><span class="node-tag">'+(moduleLabels[n.module]||n.module)+'</span><span class="node-tag type-'+n.type+'">'+nodeType(n.type)+'</span></div><div class="node-hint">'+n.object+' · '+n.downstream+'</div></article>';});document.getElementById('supportItems').innerHTML=data.support.map(function(s,i){return '<div class="support-node" data-support="'+i+'" style="left:'+(220+i*380)+'px;top:1320px"><strong>'+s.label+'</strong><span>'+s.detail+'</span></div>';}).join('');document.getElementById('nodeCount').textContent=counts;document.getElementById('edgeCount').textContent=data.edges.filter(visibleEdge).length;bindNodes();bindSupport();drawEdges();}
+    function drawEdges(){layer.setAttribute('width','2860');layer.setAttribute('height','1480');layer.setAttribute('viewBox','0 0 2860 1480');var html='';data.edges.forEach(function(e){if(!visibleEdge(e))return;var a=positions[e.source],b=positions[e.target],an=data.nodes.filter(function(n){return n.id===e.source;})[0],bn=data.nodes.filter(function(n){return n.id===e.target;})[0],forward=b.x>=a.x,x1=forward?a.x+220:a.x,y1=a.y+45,x2=forward?b.x:b.x+220,y2=b.y+45,dx=Math.max(56,Math.abs(x2-x1)*.42),cp1=forward?x1+dx:x1-dx,cp2=forward?x2-dx:x2+dx,path='M '+x1+' '+y1+' C '+cp1+' '+y1+', '+cp2+' '+y2+', '+x2+' '+y2,muted=!visibleNode(an)||!visibleNode(bn);html+='<path class="connector '+e.type+(muted?' is-muted':'')+'" d="'+path+'" marker-end="url(#arrow-'+e.type+')"></path>'+(Math.abs(y2-y1)>34?'<text class="connector-label'+(muted?' is-muted':'')+'" x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-6)+'" text-anchor="middle">'+e.label+'</text>':'');});layer.innerHTML='<defs>'+['navigation','data','state','process','analysis'].map(function(t){return '<marker id="arrow-'+t+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="'+({navigation:'#1677ff',data:'#52c41a',state:'#fa8c16',process:'#2f54eb',analysis:'#722ed1'}[t])+'"></path></marker>';}).join('')+'</defs>'+html;}
+    function bindNodes(){document.querySelectorAll('.node').forEach(function(el){el.addEventListener('pointerdown',startNodeDrag);el.addEventListener('click',function(){if(!el.dataset.moved)openDetail(el.dataset.node);delete el.dataset.moved;});el.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openDetail(el.dataset.node);}});});}
+    function bindSupport(){document.querySelectorAll('.support-node').forEach(function(el){el.addEventListener('click',function(){location.href=data.support[Number(el.dataset.support)].path;});});}
+    function openDetail(id){var n=data.nodes.filter(function(x){return x.id===id;})[0];if(!n)return;state.selected=id;document.getElementById('detailContent').innerHTML='<div class="detail-kicker">'+(moduleLabels[n.module]||n.module)+' · '+nodeType(n.type)+'页</div><h2>'+n.label+'</h2><div class="detail-row"><dt>页面用途</dt><dd>'+n.desc+'</dd></div><div class="detail-row"><dt>上游输入</dt><dd>'+n.upstream+'</dd></div><div class="detail-row"><dt>下游页面</dt><dd>'+n.downstream+'</dd></div><div class="detail-row"><dt>关联业务对象</dt><dd>'+n.object+'</dd></div><div class="detail-row"><dt>可见角色</dt><dd>'+n.roles.map(function(r){return data.roles[r];}).join('、')+'</dd></div><a class="detail-link" href="'+n.path+'">打开高保真页面 →</a>';document.getElementById('detailPanel').classList.add('is-open');render();}
+    function transform(){world.style.transform='translate('+state.panX+'px,'+state.panY+'px) scale('+state.scale+')';document.getElementById('zoomReadout').textContent=Math.round(state.scale*100)+'%';}
+    function setScale(next,cx,cy){var clamped=Math.max(.28,Math.min(1.5,next)),rect=shell.getBoundingClientRect(),px=cx===undefined?rect.width/2:cx-rect.left,py=cy===undefined?rect.height/2:cy-rect.top,wx=(px-state.panX)/state.scale,wy=(py-state.panY)/state.scale;state.scale=clamped;state.panX=px-wx*clamped;state.panY=py-wy*clamped;transform();}
+    function fit(){var rect=shell.getBoundingClientRect(),scale=Math.min((rect.width-44)/2860,(rect.height-44)/1480);state.scale=Math.max(.28,Math.min(.7,scale));state.panX=(rect.width-2860*state.scale)/2;state.panY=(rect.height-1480*state.scale)/2;transform();}
+    function fullscreenIcon(exit){return exit?'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v5H3M16 3v5h5M21 16h-5v5M3 16h5v5"></path></svg>':'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"></path></svg>';}
+    function updateFullscreen(){var active=document.fullscreenElement===canvasPanel;fullscreenButton.title=active?'退出全屏':'画布全屏';fullscreenButton.setAttribute('aria-label',active?'退出全屏':'画布全屏');fullscreenButton.innerHTML=fullscreenIcon(active);setTimeout(fit,0);}
+    function startNodeDrag(ev){if(ev.button!==0)return;var el=ev.currentTarget,id=el.dataset.node;dragging={id:id,el:el,startX:ev.clientX,startY:ev.clientY,base:{x:positions[id].x,y:positions[id].y},moved:false};el.setPointerCapture(ev.pointerId);el.classList.add('is-dragging');ev.stopPropagation();}
+    function onMove(ev){if(dragging){var dx=(ev.clientX-dragging.startX)/state.scale,dy=(ev.clientY-dragging.startY)/state.scale;if(Math.abs(dx)>2||Math.abs(dy)>2)dragging.moved=true;positions[dragging.id].x=Math.max(10,Math.min(2630,dragging.base.x+dx));positions[dragging.id].y=Math.max(10,Math.min(1370,dragging.base.y+dy));dragging.el.style.left=positions[dragging.id].x+'px';dragging.el.style.top=positions[dragging.id].y+'px';drawEdges();return;}if(panning){state.panX=panning.baseX+ev.clientX-panning.startX;state.panY=panning.baseY+ev.clientY-panning.startY;transform();}}
+    function onUp(){if(dragging){if(dragging.moved)dragging.el.dataset.moved='true';dragging.el.classList.remove('is-dragging');dragging=null;}if(panning){panning=null;shell.classList.remove('is-panning');}}
+    shell.addEventListener('wheel',function(ev){ev.preventDefault();setScale(state.scale*(ev.deltaY<0?1.12:.89),ev.clientX,ev.clientY);},{passive:false});shell.addEventListener('pointerdown',function(ev){if(ev.button!==0||ev.target.closest('.node')||ev.target.closest('.support-node'))return;panning={startX:ev.clientX,startY:ev.clientY,baseX:state.panX,baseY:state.panY};shell.classList.add('is-panning');});window.addEventListener('pointermove',onMove);window.addEventListener('pointerup',onUp);
+    document.getElementById('detailClose').addEventListener('click',function(){state.selected=null;document.getElementById('detailPanel').classList.remove('is-open');render();});['roleFilter','moduleFilter','typeFilter'].forEach(function(id){document.getElementById(id).addEventListener('change',function(){state[id.replace('Filter','')]=this.value;render();});});document.getElementById('searchInput').addEventListener('input',function(){state.search=this.value.trim();render();});document.getElementById('resetFilters').addEventListener('click',function(){state.role='all';state.module='all';state.type='all';state.search='';state.selected=null;document.getElementById('roleFilter').value='all';document.getElementById('moduleFilter').value='all';document.getElementById('typeFilter').value='all';document.getElementById('searchInput').value='';document.getElementById('detailPanel').classList.remove('is-open');render();});document.getElementById('zoomIn').addEventListener('click',function(){setScale(state.scale*1.18);});document.getElementById('zoomOut').addEventListener('click',function(){setScale(state.scale*.84);});document.getElementById('fitCanvas').addEventListener('click',fit);document.getElementById('resetCanvas').addEventListener('click',function(){Object.keys(defaults).forEach(function(id){positions[id]={x:defaults[id].x,y:defaults[id].y};});render();fit();});fullscreenButton.addEventListener('click',function(){if(document.fullscreenElement===canvasPanel){document.exitFullscreen();}else if(canvasPanel.requestFullscreen){canvasPanel.requestFullscreen();}});document.addEventListener('fullscreenchange',updateFullscreen);window.addEventListener('resize',fit);renderFilters();render();fit();
+  })();
+  </script>
+  <script src="../common.js"></script>
+</body>
+</html>

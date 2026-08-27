@@ -1,0 +1,21 @@
+{
+  "url": "http://127.0.0.1:64365/config.html",
+  "verdict": "check_errors",
+  "title": "评估指标配置 - 智能网联汽车安全监测平台",
+  "htmlLen": 105556,
+  "bodyChildren": 3,
+  "selector": "#mappingTbody",
+  "selectorFound": true,
+  "selectorCount": 1,
+  "pageTextPreview": "评估指标配置\n当前配置版本\nV3.2\n最后修改\n2026-05-08 14:30\n查看历史版本\n复杂度模型 风险模型 场景适配模型 融合模型 映射关系表\n权重配置\n五项权重之和必须等于 1.0，修改任意权重后系统自动校验总和\n指标名称\t权重(0-1)\t当前值\t说明\n车道复杂度\t\t0.25\t道路车道数量对复杂度的影响权重\n交叉口密度\t\t0.25\t单位长度内交叉口数量权重\n混合交通比例\t\t0.20\t机",
+  "errorCount": 1,
+  "errors": [
+    {
+      "kind": "exception",
+      "text": "SyntaxError: Unexpected token '<'"
+    }
+  ],
+  "domFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-config\\dom.html",
+  "resultFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-config\\result.json",
+  "shotFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-config\\shot.png"
+}

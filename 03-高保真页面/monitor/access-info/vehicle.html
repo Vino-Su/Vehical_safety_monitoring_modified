@@ -7,6 +7,31 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <script src="../../components/pagination-component.js"></script>
+  <style>
+    /* Keep vehicle data readable while letting the table share extra space evenly. */
+    .vehicle-table {
+      width: 100% !important;
+      min-width: 1359px;
+      table-layout: auto !important;
+    }
+    .vehicle-table th,
+    .vehicle-table td {
+      white-space: nowrap !important;
+    }
+    .vehicle-table th { width: auto !important; }
+    .vehicle-table th:nth-child(1), .vehicle-table td:nth-child(1) { min-width: 56px; width: 56px !important; text-align: center !important; }
+    .vehicle-table th:nth-child(2), .vehicle-table td:nth-child(2) { min-width: 180px; }
+    .vehicle-table th:nth-child(3), .vehicle-table td:nth-child(3) { min-width: 130px; }
+    .vehicle-table th:nth-child(4), .vehicle-table td:nth-child(4) { min-width: 120px; }
+    .vehicle-table th:nth-child(5), .vehicle-table td:nth-child(5) { min-width: 168px; }
+    .vehicle-table th:nth-child(6), .vehicle-table td:nth-child(6) { min-width: 120px; }
+    .vehicle-table th:nth-child(7), .vehicle-table td:nth-child(7) { min-width: 120px; }
+    .vehicle-table th:nth-child(8), .vehicle-table td:nth-child(8) { min-width: 145px; }
+    .vehicle-table th:nth-child(9), .vehicle-table td:nth-child(9) { min-width: 168px; }
+    .vehicle-table th:nth-child(10), .vehicle-table td:nth-child(10) { min-width: 152px; text-align: center !important; }
+    .vehicle-table td:nth-child(10) { display: table-cell !important; }
+    .vehicle-table td:nth-child(10) > button { margin: 0 3px; }
+  </style>
 </head>
 <body>
 <div id="app" class="flex h-screen overflow-hidden">
@@ -25,14 +50,14 @@
       </div>
       <div class="ant-table-wrapper">
         <div style="overflow-x:auto">
-          <table class="ant-table">
+          <table class="ant-table vehicle-table">
             <thead><tr><th style="width:40px"><input type="checkbox" class="ant-checkbox"></th><th style="width:160px">VIN码</th><th style="width:180px">生产企业</th><th style="width:120px">所属企业</th><th style="width:120px">车辆种类</th><th style="width:120px">车辆型号</th><th style="width:100px">自动驾驶级别</th><th style="width:120px">临牌号（最新）</th><th style="width:160px">登记时间</th><th style="width:120px">操作</th></tr></thead>
             <tbody>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012345</td><td>A公司</td><td>A公司</td><td>乘用车</td><td>Model 3</td><td>L3</td><td>鄂F·D12345</td><td>2026-03-20 10:30</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012346</td><td>A公司</td><td>A公司</td><td>乘用车</td><td>Model Y</td><td>L3</td><td>鄂F·D12346</td><td>2026-03-20 11:00</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012347</td><td>B公司</td><td>E公司</td><td>乘用车</td><td>ES6</td><td>L4</td><td>鄂F·D12347</td><td>2026-03-25 09:15</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012348</td><td>C公司</td><td>D公司</td><td>乘用车</td><td>阿尔法T</td><td>L3</td><td>鄂F·D12348</td><td>2026-04-01 14:20</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
-              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012349</td><td>D公司</td><td>A公司</td><td>功能型低速无人车</td><td>T5</td><td>L4</td><td>鄂F·D12349</td><td>2026-04-05 16:45</td><td class="flex gap-1"><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012345</td><td>A公司</td><td>A公司</td><td>乘用车</td><td>Model 3</td><td>L3</td><td>鄂F·D12345</td><td>2026-03-20 10:30</td><td><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012346</td><td>A公司</td><td>A公司</td><td>乘用车</td><td>Model Y</td><td>L3</td><td>鄂F·D12346</td><td>2026-03-20 11:00</td><td><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012347</td><td>B公司</td><td>E公司</td><td>乘用车</td><td>ES6</td><td>L4</td><td>鄂F·D12347</td><td>2026-03-25 09:15</td><td><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012348</td><td>C公司</td><td>D公司</td><td>乘用车</td><td>阿尔法T</td><td>L3</td><td>鄂F·D12348</td><td>2026-04-01 14:20</td><td><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
+              <tr><td><input type="checkbox" class="ant-checkbox"></td><td>LSVAU2180N2012349</td><td>D公司</td><td>A公司</td><td>功能型低速无人车</td><td>T5</td><td>L4</td><td>鄂F·D12349</td><td>2026-04-05 16:45</td><td><button class="ant-btn-link" onclick="openDetailModal()">查看</button><button class="ant-btn-link" onclick="openAddModal('编辑车辆信息')">编辑</button><button class="ant-btn-link danger">删除</button></td></tr>
             </tbody>
           </table>
         </div>

@@ -1,0 +1,16 @@
+{
+  "url": "http://127.0.0.1:56945/result.html",
+  "verdict": "ok",
+  "title": "评估结果管理 - 智能网联汽车安全监测平台",
+  "htmlLen": 445,
+  "bodyChildren": 0,
+  "selector": "#listBody",
+  "selectorFound": false,
+  "selectorCount": 0,
+  "pageTextPreview": "",
+  "errorCount": 0,
+  "errors": [],
+  "domFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-result\\dom.html",
+  "resultFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-result\\result.json",
+  "shotFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-result\\shot.png"
+}

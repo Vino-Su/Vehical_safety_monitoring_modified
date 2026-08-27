@@ -61,7 +61,7 @@ const PAGE_ID='eval-result';
 const districts = ['樊城区', '襄城区', '高新区', '襄州区', '南漳县', '谷城县'];
 const riskLevels = ['低', '中', '高'];
 const complexityLevels = ['低', '中', '高'];
-const scenes = ['城区道路', '园区道路', '环卫作业道路', '物流配送道路', '公交运营'];
+const scenes = ['无人出行', '无人环卫', '无人物流', '无人公交'];
 const triggerTypes = ['自动触发', '手动触发'];
 const configVersions = ['V3.3', 'V3.2', 'V3.1'];
 
@@ -77,6 +77,13 @@ const W_SCENE = 0.33;
 // 各子模型内部权重（交付文档默认值）
 const CL_WEIGHTS = [0.25, 0.25, 0.20, 0.15, 0.15]; // 车道复杂度, 交叉口密度, 混合交通比例, 坡度/曲率, 信号灯完整度
 const RK_WEIGHTS = [0.35, 0.35, 0.20, 0.10]; // 事故频率, 事故严重度, 交通事件频率, 流量修正系数
+// 交通违法信息中的道路事件总数（统一计数，不区分违法类别）
+const TRAFFIC_EVENT_COUNTS = {
+  '长虹路': 18, '檀溪路': 12, '航空路': 9, '人民路': 7, '建设路': 15,
+  '金源路': 4, '中原路': 11, '春园路': 6, '前进路': 8, '大庆东路': 5,
+  '汉江路': 10, '襄阳大道': 13, '环城南路': 3, '邓城大道': 16, '航天路': 2,
+  '胜利路': 6, '解放路': 14, '琵琶山路': 4, '卧龙大道': 17, '钻石大道': 8
+};
 function lightingLabel(level) {
   return ({1: '1级（基础照明）', 2: '2级（标准照明）', 3: '3级（良好照明）'})[Number(level)] || '未配置';
 }
@@ -90,7 +97,6 @@ const roadBaseAttrs = roadNames.map(function(name, i) {
     maxSlope: [3,5,7,10][Math.floor(Math.random()*4)], // 最大坡度%
     laneWidth: [2.8,3.0,3.2,3.5][Math.floor(Math.random()*4)], // 最小车道宽度m
     signalCoverage: [72,85,92,100][Math.floor(Math.random()*4)], // 交通信号覆盖率%
-    poorSightRatio: [3,8,12][Math.floor(Math.random()*3)], // 视距严重不足路段占比%
     hasMissingData: i < 3 // 前3条道路部分数据缺失
   };
 });
@@ -115,7 +121,7 @@ function calcComplexitySubScores(attrs) {
   return [laneScore, crossScore, mixedScore, slopeScore, signalScore];
 }
 
-function calcRiskSubScores() {
+function calcRiskSubScores(roadName) {
   // 事故频率 - 模拟时间衰减后事故数
   var nDecayed = Math.random() * 8;
   var freqScore = nDecayed >= 5 ? Math.min(100, 90 + (nDecayed-5)*2)
@@ -125,15 +131,19 @@ function calcRiskSubScores() {
   var severityLevels = ['高', '中', '低'];
   var sevLevel = randomItem(severityLevels);
   var sevScore = sevLevel === '高' ? 90 : sevLevel === '中' ? 60 : 20;
-  // 交通事件频率 - 分类
-  var eventLevels = ['频发', '偶发', '极少'];
-  var evtLevel = randomItem(eventLevels);
-  var evtScore = evtLevel === '频发' ? 90 : evtLevel === '偶发' ? 60 : 20;
+  // 交通事件频率 - 仅统计交通违法信息中的道路事件总数，统一计数
+  var eventCount = TRAFFIC_EVENT_COUNTS[roadName] || 0;
+  var months = 24;
+  var eventRate = eventCount / months;
+  var evtScore = eventRate >= 0.5 ? 90 : eventRate >= 0.25 ? 60 : 20;
   // 流量修正系数 - 分类
   var flowLevels = ['高', '中', '低'];
   var flowLevel = randomItem(flowLevels);
   var flowScore = flowLevel === '高' ? 90 : flowLevel === '中' ? 60 : 20;
-  return [freqScore, sevScore, evtScore, flowScore];
+  var scores = [freqScore, sevScore, evtScore, flowScore];
+  scores.eventCount = eventCount;
+  scores.eventRate = eventRate;
+  return scores;
 }
 
 const evalData = roadNames.map((name, i) => {
@@ -149,14 +159,14 @@ const evalData = roadNames.map((name, i) => {
   var complexity = clScore >= 70 ? '高' : clScore >= 40 ? '中' : '低';
 
   // 风险子指标得分
-  var rkSubScores = calcRiskSubScores();
+  var rkSubScores = calcRiskSubScores(name);
   var rlScore = Math.round(rkSubScores.reduce(function(s, v, j) { return s + v * RK_WEIGHTS[j]; }, 0) * 10) / 10;
   var risk = rlScore >= 70 ? '高' : rlScore >= 40 ? '中' : '低';
 
   // 场景适配各场景得分
   const sceneFits = scenes.map(function(sn) {
     var dims = [0, 0, 0, 0]; // 车道数, 机非混行, 照明等级, 最大坡度
-    var reqs = { '城区道路': [4, false, 2, 8], '园区道路': [2, true, 1, 12], '环卫作业道路': [2, true, 1, 10], '物流配送道路': [2, false, 2, 8], '公交运营': [4, false, 3, 6] };
+    var reqs = { '无人出行': [4, false, 2, 8], '无人环卫': [2, true, 1, 12], '无人物流': [2, true, 1, 10], '无人公交': [2, false, 2, 8] };
     var req = reqs[sn];
     dims[0] = attrs.laneCount >= req[0] ? 25 : 0;
     dims[1] = attrs.hasMixedTraffic ? (req[1] ? 25 : 0) : 25;
@@ -184,8 +194,7 @@ const evalData = roadNames.map((name, i) => {
   var accessChecks = [
     {name:'最小车道宽度', threshold:'≥ 3.0 m', actual: attrs.laneWidth.toFixed(1) + ' m', passed: attrs.laneWidth >= 3.0, missing: false},
     {name:'最大坡度', threshold:'≤ 6%', actual: attrs.maxSlope + '%', passed: attrs.maxSlope <= 6, missing: false},
-    {name:'交通信号覆盖率', threshold:'≥ 80%', actual: attrs.hasMissingData ? '数据缺失' : attrs.signalCoverage + '%', passed: attrs.hasMissingData ? true : attrs.signalCoverage >= 80, missing: attrs.hasMissingData},
-    {name:'视距严重不足路段占比', threshold:'< 10%', actual: attrs.poorSightRatio + '%', passed: attrs.poorSightRatio < 10, missing: false}
+    {name:'交通信号覆盖率', threshold:'≥ 80%', actual: attrs.hasMissingData ? '数据缺失' : attrs.signalCoverage + '%', passed: attrs.hasMissingData ? true : attrs.signalCoverage >= 80, missing: attrs.hasMissingData}
   ];
   var failedAccessItems = accessChecks.filter(function(c) { return !c.passed; });
   var accessPassed = failedAccessItems.length === 0;
@@ -224,9 +233,9 @@ const evalData = roadNames.map((name, i) => {
 
   // 业务规则映射
   var mappingTable = {
-    '完全开放': { autoLevel: 'L2/L3/L4', testTypes: '载人、载货、环卫、物流', limitTime: '无限制', control: '无特殊要求' },
-    '条件开放': { autoLevel: 'L3/L4', testTypes: '载货、环卫、物流', limitTime: '06:00-22:00', control: '需额外提交安全评估' },
-    '限制开放': { autoLevel: 'L4', testTypes: '环卫、物流', limitTime: '09:00-17:00', control: '需安全员全程监控' },
+    '完全开放': { autoLevel: 'L2/L3/L4', testTypes: '无人出行、无人环卫、无人物流、无人公交', limitTime: '无限制', control: '无特殊要求' },
+    '条件开放': { autoLevel: 'L3/L4', testTypes: '无人物流、无人环卫、无人公交', limitTime: '06:00-22:00', control: '需额外提交安全评估' },
+    '限制开放': { autoLevel: 'L4', testTypes: '无人环卫、无人物流', limitTime: '09:00-17:00', control: '需安全员全程监控' },
     '禁止开放': { autoLevel: '—', testTypes: '—', limitTime: '—', control: '禁止任何测试活动' }
   };
   var mapping = mappingTable[openLevel];
@@ -247,6 +256,7 @@ const evalData = roadNames.map((name, i) => {
     clScore: clScore, rlScore: rlScore,
     clSubScores: clSubScores, clWeights: CL_WEIGHTS,
     rkSubScores: rkSubScores, rkWeights: RK_WEIGHTS,
+    trafficEventCount: rkSubScores.eventCount, trafficEventRate: rkSubScores.eventRate,
     sceneFits: sceneFits, rules: rules,
     autoLevel: mapping.autoLevel, testTypes: mapping.testTypes,
     limitTime: mapping.limitTime, control: mapping.control,
@@ -262,7 +272,6 @@ const evalData = roadNames.map((name, i) => {
     lightingLevel: attrs.lightingLevel,
     maxSlope: attrs.maxSlope,
     signalCoverage: attrs.signalCoverage,
-    poorSightRatio: attrs.poorSightRatio,
     hasMissingData: attrs.hasMissingData
   };
 });
@@ -273,13 +282,13 @@ const evalData = roadNames.map((name, i) => {
 //      accessPassed 命中硬性准入条件 / rulesDesc 命中融合规则
 const historyVersions = [
   {trigger:'自动触发', time:'2026-05-08 02:00', configVersion:'V3.3', score:72.5, level:'条件开放',
-    complexity:72, risk:68, bestScene:'城区道路', sceneScore:78, accessPassed:true,
+    complexity:72, risk:68, bestScene:'无人出行', sceneScore:78, accessPassed:true,
     rulesDesc:'高风险限制(优先级6)→禁止开放'},
   {trigger:'自动触发', time:'2026-04-01 02:00', configVersion:'V3.2', score:78.2, level:'完全开放',
-    complexity:65, risk:55, bestScene:'城区道路、园区道路', sceneScore:82, accessPassed:true,
+    complexity:65, risk:55, bestScene:'无人出行、无人环卫', sceneScore:82, accessPassed:true,
     rulesDesc:'综合得分映射→完全开放'},
   {trigger:'手动触发', time:'2026-03-01 02:00', configVersion:'V3.1', score:75.0, level:'条件开放',
-    complexity:70, risk:60, bestScene:'物流配送道路', sceneScore:76, accessPassed:false,
+    complexity:70, risk:60, bestScene:'无人物流', sceneScore:76, accessPassed:false,
     rulesDesc:'准入拦截(信号灯覆盖率缺失)→禁止开放'}
 ];
 
@@ -431,7 +440,7 @@ window.openDetailModal = function(code) {
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">复杂度得分</div><div class="ant-descriptions-value">' + r.clScore + ' (' + levelTag(r.complexity) + ')</div><div class="ant-descriptions-label">转换后得分</div><div class="ant-descriptions-value">' + (100 - r.clScore).toFixed(1) + ' × ' + W_COMPLEXITY + ' = ' + cScore.toFixed(1) + '</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">风险得分</div><div class="ant-descriptions-value">' + r.rlScore + ' (' + levelTag(r.risk) + ')</div><div class="ant-descriptions-label">转换后得分</div><div class="ant-descriptions-value">' + (100 - r.rlScore).toFixed(1) + ' × ' + W_RISK + ' = ' + rkScore.toFixed(1) + '</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">场景适配得分</div><div class="ant-descriptions-value">' + (scScore/W_SCENE).toFixed(0) + '</div><div class="ant-descriptions-label">转换后得分</div><div class="ant-descriptions-value">' + (scScore/W_SCENE).toFixed(0) + ' × ' + W_SCENE + ' = ' + scScore.toFixed(1) + '</div></div>' +
-      '<div class="ant-descriptions-row mt-2"><div class="ant-descriptions-label">适用自动驾驶等级</div><div class="ant-descriptions-value">' + r.autoLevel + '</div><div class="ant-descriptions-label">允许测试类型</div><div class="ant-descriptions-value">' + r.testTypes + '</div></div>' +
+      '<div class="ant-descriptions-row mt-2"><div class="ant-descriptions-label">适用自动驾驶等级</div><div class="ant-descriptions-value">' + r.autoLevel + '</div><div class="ant-descriptions-label">适配场景</div><div class="ant-descriptions-value">' + r.testTypes + '</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">限制时段</div><div class="ant-descriptions-value">' + r.limitTime + '</div><div class="ant-descriptions-label">管控说明</div><div class="ant-descriptions-value">' + r.control + '</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">评估时间</div><div class="ant-descriptions-value">' + r.time + '</div><div class="ant-descriptions-label">触发方式</div><div class="ant-descriptions-value">' + r.trigger + '</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">限制条件来源</div><div class="ant-descriptions-value">' + (r.decisionSource === '准入条件拦截' ? '硬性准入条件：' + r.failedAccessItems.map(function(c){return c.name + '实际' + c.actual;}).join('；') : (r.rules[0] && r.rules[0].source !== '兜底规则' ? '融合规则' + r.rules[0].priority + '：' + r.rules[0].cond : '综合得分映射')) + '</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
@@ -453,9 +462,10 @@ window.openDetailModal = function(code) {
     '<div class="ant-descriptions">' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">风险指数</div><div class="ant-descriptions-value"><strong>' + r.rlScore + '</strong> ' + levelTag(r.risk) + '</div><div class="ant-descriptions-label">计算方式</div><div class="ant-descriptions-value" style="font-size:12px;color:#00000073">Σ（指标标准化得分 × 指标权重）</div></div>' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + rkNames[0] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[0]) + ' / 权重: ' + RK_WEIGHTS[0].toFixed(2) + '</div><div class="ant-descriptions-label">' + rkNames[1] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[1]) + ' / 权重: ' + RK_WEIGHTS[1].toFixed(2) + '</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + rkNames[2] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[2]) + ' / 权重: ' + RK_WEIGHTS[2].toFixed(2) + '</div><div class="ant-descriptions-label">' + rkNames[3] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[3]) + ' / 权重: ' + RK_WEIGHTS[3].toFixed(2) + '</div></div>' +
-      '<div class="mt-3 p-3 bg-[#fafafa] rounded-lg"><p class="text-sm"><strong>事故时间衰减说明：</strong></p>' +
-        '<p class="text-xs text-[#00000073] mt-1">采用近24个月历史数据，事故频率计算引入时间衰减加权：近6个月=1.0、6-12个月=0.7、12-24个月=0.4、>24个月=0.2。越近期的事故对风险得分影响越大。</p>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">' + rkNames[2] + '</div><div class="ant-descriptions-value">' + r.trafficEventCount + ' 起 / ' + r.trafficEventRate.toFixed(2) + ' 起/月，得分: ' + Math.round(r.rkSubScores[2]) + ' / 权重: ' + RK_WEIGHTS[2].toFixed(2) + '</div><div class="ant-descriptions-label">' + rkNames[3] + '</div><div class="ant-descriptions-value">得分: ' + Math.round(r.rkSubScores[3]) + ' / 权重: ' + RK_WEIGHTS[3].toFixed(2) + '</div></div>' +
+      '<div class="mt-3 p-3 bg-[#fafafa] rounded-lg"><p class="text-sm"><strong>交通事件频率说明：</strong></p>' +
+        '<p class="text-xs text-[#00000073] mt-1">唯一数据源为交通违法信息，统计该道路时间窗内的事件总数，不区分违法类别；频率 = 事件总数 ÷ 统计月数，单位为起/月。无法匹配道路的违法记录不计入。</p>' +
+        '<p class="text-xs text-[#00000073] mt-1">事故频率另行采用近24个月时间衰减加权：近6个月=1.0、6-12个月=0.7、12-24个月=0.4、>24个月=0.2。</p>' +
       '</div>' +
     '</div></div>';
 

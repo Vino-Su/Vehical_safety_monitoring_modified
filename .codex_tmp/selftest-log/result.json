@@ -1,0 +1,25 @@
+{
+  "url": "http://127.0.0.1:58481/log.html",
+  "verdict": "check_errors",
+  "title": "评估日志管理 - 智能网联汽车安全监测平台",
+  "htmlLen": 44021,
+  "bodyChildren": 3,
+  "selector": "#listBody",
+  "selectorFound": true,
+  "selectorCount": 1,
+  "pageTextPreview": "评估日志管理\n导出\n道路名称\n评估时间—\n触发方式\n全部\n自动触发\n手动触发\n建议开放等级\n全部\n完全开放\n条件开放\n限制开放\n禁止开放\n查询\n重置\n\t日志ID\t道路名称\t评估时间\t触发方式\t操作人\t综合得分\t建议开放等级\t操作",
+  "errorCount": 2,
+  "errors": [
+    {
+      "kind": "exception",
+      "text": "SyntaxError: Unexpected token '<'"
+    },
+    {
+      "kind": "exception",
+      "text": "ReferenceError: Pagination is not defined\n    at http://127.0.0.1:58481/log.html:613:1"
+    }
+  ],
+  "domFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-log\\dom.html",
+  "resultFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-log\\result.json",
+  "shotFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-log\\shot.png"
+}
