@@ -72,6 +72,8 @@
               <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_expert','待专家评审')">待专家评审</div>
               <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_meeting','待专题会审议')">待专题会审议</div>
               <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_plate','待上传牌照')">待上传牌照</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('pending_plate_review','待牌照审核')">待牌照审核</div>
+              <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('plate_rejected','牌照审核退回')">牌照审核退回</div>
               <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('active','已生效')">已生效</div>
               <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('expired','已过期')">已过期</div>
               <div class="dropdown-item" style="padding:5px 12px;cursor:pointer;font-size:13px" onclick="selectStatus('rejected','已退回')">已退回</div>
@@ -127,7 +129,7 @@ var statusMap={
   pending_expert:{label:'待专家评审',cls:'ant-tag-processing'},
   pending_meeting:{label:'待专题会审议',cls:'ant-tag-processing'},
   pending_committee_confirm:{label:'待专班审核确认',cls:'ant-tag-processing'},
-  pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},
+  pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},pending_plate_review:{label:'待牌照审核',cls:'ant-tag-processing'},plate_rejected:{label:'牌照审核退回',cls:'ant-tag-error'},
   active:{label:'已生效',cls:'ant-tag-success'},
   expired:{label:'已过期',cls:'ant-tag-default'},
   rejected:{label:'已退回',cls:'ant-tag-error'},

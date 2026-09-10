@@ -66,7 +66,7 @@
 <script>
 const PAGE_ID='demo-operate';
 var pager;
-var statusMap={draft:{label:'草稿',cls:'ant-tag-default'},pending_review:{label:'待初审',cls:'ant-tag-processing'},pending_committee:{label:'待专班审核',cls:'ant-tag-processing'},pending_expert:{label:'待专家评审',cls:'ant-tag-processing'},pending_meeting:{label:'待专题会审议',cls:'ant-tag-processing'},pending_committee_confirm:{label:'待专班审核确认',cls:'ant-tag-processing'},rejected:{label:'已退回',cls:'ant-tag-error'},withdrawn:{label:'已撤回',cls:'ant-tag-default'},pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},active:{label:'已生效',cls:'ant-tag-success'},expired:{label:'已过期',cls:'ant-tag-default'},changed:{label:'已变更',cls:'ant-tag-blue'},terminated:{label:'已终止',cls:'ant-tag-error'}};
+var statusMap={draft:{label:'草稿',cls:'ant-tag-default'},pending_review:{label:'待初审',cls:'ant-tag-processing'},pending_committee:{label:'待专班审核',cls:'ant-tag-processing'},pending_expert:{label:'待专家评审',cls:'ant-tag-processing'},pending_meeting:{label:'待专题会审议',cls:'ant-tag-processing'},pending_committee_confirm:{label:'待专班审核确认',cls:'ant-tag-processing'},rejected:{label:'已退回',cls:'ant-tag-error'},withdrawn:{label:'已撤回',cls:'ant-tag-default'},pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},pending_plate_review:{label:'待牌照审核',cls:'ant-tag-processing'},plate_rejected:{label:'牌照审核退回',cls:'ant-tag-error'},active:{label:'已生效',cls:'ant-tag-success'},expired:{label:'已过期',cls:'ant-tag-default'},changed:{label:'已变更',cls:'ant-tag-blue'},terminated:{label:'已终止',cls:'ant-tag-error'}};
 var typeMap={initial:{label:'初次申请'},renewal:{label:'延期申请'},change:{label:'变更申请'},add_vehicle:{label:'新增相同配置车辆'}};
 var operateTypeMap={passenger:{label:'载人商业化试点'},cargo:{label:'载物商业化试点'},special:{label:'特种作业商业化试点'}};
 var appData=[
@@ -821,5 +821,6 @@ resetFilter=function(){document.getElementById('fTimeFrom').value='';document.ge
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',open);else setTimeout(open,100);
 })();
 </script>
+<script>var plateFlowLogOriginal=buildFlowLog;buildFlowLog=function(id){var d=getDetailData(id);if(d&&d.status==='pending_plate_review')return renderFLH([{title:'提交牌照信息',handler:d.company,time:d.time,opinion:'牌照信息已提交',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'},{title:'第三方牌照审核',handler:'第三方专业管理机构',time:'审核中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'}]);if(d&&d.status==='plate_rejected')return renderFLH([{title:'第三方牌照审核',handler:'第三方专业管理机构',time:'已退回',opinion:'审核意见：'+(d.plateReviewReason||'请修改牌照信息'),status:'已退回',color:'#ff4d4f',dot:'✗',tagCls:'ant-tag-error'},{title:'修改临时牌照',handler:d.company,time:'待处理',opinion:'请根据审核意见修改后重新提交',status:'待处理',color:'#fa8c16',dot:'●',tagCls:'ant-tag-warning'}]);return plateFlowLogOriginal(id);};</script>
 </body>
 </html>
