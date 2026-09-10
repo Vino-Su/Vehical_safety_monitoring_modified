@@ -32,7 +32,10 @@
   }
 
   function canRegister(record) {
-    return !!record && ['pending_plate', 'plate_rejected'].indexOf(record.status) > -1 && ['initial', 'change', 'add_vehicle'].indexOf(record.type) > -1 && registrationVehicles(record).length > 0;
+    if (!record) return false;
+    if (window.AccessFlowModel) window.AccessFlowModel.ensureRecord(record);
+    var available = record.currentStage === 'plate_upload' || (record.processStatus === 'returning' && record.currentStage === 'plate_correction');
+    return available && ['initial', 'change', 'add_vehicle'].indexOf(record.type) > -1 && registrationVehicles(record).length > 0;
   }
 
   function storedPlate(applicationId, vehicle) {
@@ -93,7 +96,8 @@
     Array.prototype.slice.call(body.querySelectorAll('button')).forEach(function (button) {
       if (button.textContent.trim() === '更新牌照') button.remove();
     });
-    if (['pending_plate', 'plate_rejected'].indexOf(raw.status) < 0) {
+    if (window.AccessFlowModel) window.AccessFlowModel.ensureRecord(raw);
+    if (raw.currentStage !== 'plate_upload' && raw.currentStage !== 'plate_correction') {
       Array.prototype.slice.call(body.querySelectorAll('.plate-registration-entry')).forEach(function (button) { button.remove(); });
     }
   }
@@ -110,7 +114,7 @@
     if (!heading) return;
     var text = heading.textContent;
     heading.classList.add('flex', 'items-center', 'justify-between', 'gap-2');
-    heading.innerHTML = '<span>' + escapeHTML(text) + '</span><button type="button" class="ant-btn ant-btn-primary ant-btn-sm plate-registration-entry" onclick="openPlateRegistrationModal(\'' + escapeHTML(applicationId) + '\')">' + (record.status === 'plate_rejected' ? '修改临时牌照' : '登记临时牌照') + '</button>';
+    heading.innerHTML = '<span>' + escapeHTML(text) + '</span><button type="button" class="ant-btn ant-btn-primary ant-btn-sm plate-registration-entry" onclick="openPlateRegistrationModal(\'' + escapeHTML(applicationId) + '\')">' + (record.currentStage === 'plate_correction' ? '修改临时牌照' : '登记临时牌照') + '</button>';
   }
 
   function platePhotoSvg(plateText) {
@@ -210,7 +214,7 @@
         : '<span class="text-xs text-[#ff4d4f]">未上传</span> <button type="button" class="ant-btn-link ant-btn-sm" onclick="document.getElementById(\'plate-photo-' + escapeHTML(vehicle.vin) + '\').click()">上传</button>';
       return '<tr class="plate-registration-row" data-vin="' + escapeHTML(vehicle.vin) + '" data-editing="false"><td class="text-xs col-code">' + escapeHTML(vehicle.vin) + '</td><td>' + escapeHTML(vehicle.model || '-') + '</td><td><input disabled class="ant-input plate-registration-number" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plate) + '" placeholder="如：鄂F·A001" style="width:140px"></td><td><input disabled type="date" class="ant-input plate-registration-start" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plateValidFrom) + '" style="width:125px"> <span class="text-[#00000073]">至</span> <input disabled type="date" class="ant-input plate-registration-end" data-vin="' + escapeHTML(vehicle.vin) + '" value="' + escapeHTML(saved.plateExpiry) + '" style="width:125px"></td><td><span class="plate-registration-photo" data-vin="' + escapeHTML(vehicle.vin) + '" data-uploaded="' + (saved.photo ? 'true' : 'false') + '" data-plate="' + escapeHTML(saved.plate || '') + '">' + photoCell + '</span><input id="plate-photo-' + escapeHTML(vehicle.vin) + '" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" style="display:none" onchange="handlePlatePhotoUpload(\'' + escapeHTML(vehicle.vin) + '\',this)"></td><td class="col-action plate-registration-row-action"><button type="button" class="ant-btn-link ant-btn-sm" onclick="editPlateRow(\'' + escapeHTML(vehicle.vin) + '\')">编辑</button></td></tr>';
     }).join('');
-    var notice = record.status === 'plate_rejected' ? '<div class="bg-[#fff1f0] border border-[#ffa39e] rounded-md px-3 py-2 mb-4 text-sm text-[#000000d9]"><strong>牌照审核未通过：</strong>' + escapeHTML(record.plateReviewReason || '请根据审核意见修改牌照信息后重新提交。') + '</div>' : '<div class="bg-[#fff7e6] border border-[#ffd591] rounded-md px-3 py-2 mb-4 text-sm text-[#000000d9]">请为本次申请的 ' + vehicles.length + ' 辆车辆登记临时牌照号、有效期并上传牌照照片，保存后提交第三方审核。</div>';
+    var notice = record.currentStage === 'plate_correction' ? '<div class="bg-[#fff1f0] border border-[#ffa39e] rounded-md px-3 py-2 mb-4 text-sm text-[#000000d9]"><strong>牌照确认退回：</strong>' + escapeHTML(record.plateReviewReason || '请根据退回意见修改牌照信息后重新提交。') + '</div>' : '<div class="bg-[#fff7e6] border border-[#ffd591] rounded-md px-3 py-2 mb-4 text-sm text-[#000000d9]">请为本次申请的 ' + vehicles.length + ' 辆车辆登记临时牌照号、有效期并上传牌照照片，保存后提交第三方确认。</div>';
     var html = notice + '<div style="overflow-x:auto"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th class="col-code">VIN码</th><th>车辆型号</th><th>临时牌照号</th><th class="col-code">有效期</th><th class="col-code">牌照照片</th><th class="col-action">操作</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     window.openModal('登记临时牌照 - ' + applicationId, html, {
       wide: true,
@@ -263,18 +267,17 @@
     registry[applicationId] = next;
     var raw = rawRecord(applicationId);
     if (raw) {
-      raw.status = 'pending_plate_review';
-      raw.node = 'pending_plate_review';
+      raw.processStatus = 'approved';
+      raw.currentStage = 'plate_confirmation';
+      raw.flowLogs = raw.flowLogs || [];
+      raw.flowLogs.push({ eventId: 'plate_submitted_' + Date.now(), eventType: 'plate_submitted', stage: 'plate_upload', result: 'submitted', handler: raw.company || '申请主体', handledAt: '2026-09-10 15:30:00', opinion: '临时牌照信息已提交确认' });
+      if (window.AccessFlowModel) window.AccessFlowModel.syncLegacy(raw);
       raw.plateReviewReason = '';
-      if (raw.type === 'change' && raw.origId) {
-        var source = rawRecord(raw.origId);
-        if (source) source.status = 'changed';
-      }
     }
     window.closeModal();
     if (typeof window.renderTable === 'function') window.renderTable();
     window.setTimeout(function () { syncDetail(applicationId); }, 0);
-    notify('临时牌照信息已提交，等待第三方审核');
+    notify('临时牌照信息已提交，等待第三方确认');
   };
 
   var originalGetOps = window.getOps;
@@ -282,7 +285,7 @@
     window.getOps = function (record) {
       var operations = originalGetOps(record);
       operations = operations.replace(/<button[^>]*>上传牌照<\/button>/g, '');
-      if (canRegister(record)) operations += '<button class="ant-btn-link whitespace-nowrap" onclick="openPlateRegistrationModal(\'' + escapeHTML(record.id) + '\')">' + (record.status === 'plate_rejected' ? '修改牌照' : '登记临时牌照') + '</button>';
+      if (canRegister(record)) operations += '<button class="ant-btn-link whitespace-nowrap" onclick="openPlateRegistrationModal(\'' + escapeHTML(record.id) + '\')">' + (record.currentStage === 'plate_correction' ? '修改牌照' : '登记临时牌照') + '</button>';
       return operations;
     };
   }

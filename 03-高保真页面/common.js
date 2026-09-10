@@ -179,7 +179,7 @@
         {
           key: 'road-catalog',
           label: '城市道路开放目录',
-          roles: ['admin', 'third-party', 'workgroup'],
+          roles: ['admin', 'third-party', 'workgroup', 'expert'],
           children: [
             { key: 'filing', label: '道路信息建档', path: 'road/catalog/filing.html', roles: ['admin', 'third-party', 'workgroup'] },
             { key: 'control', label: '道路资源动态管控', path: 'road/catalog/control.html', roles: ['admin', 'third-party', 'workgroup'] }
@@ -216,7 +216,7 @@
     {
       key: 'monitor',
       label: '测试示范监管',
-    roles: ['admin', 'enterprise', 'third-party', 'workgroup', 'traffic', 'public'],
+    roles: ['admin', 'enterprise', 'third-party', 'workgroup', 'expert', 'traffic', 'public'],
       icon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.23 9.36-7 10.57-3.77-1.21-7-5.74-7-10.57V6.3l7-3.12z"/></svg>',
       children: [
         {
@@ -246,7 +246,7 @@
           label: '准入审批管理',
           roles: ['admin', 'third-party', 'workgroup'],
           children: [
-            { key: 'approve', label: '审批管理', path: 'monitor/access-approve/approve.html', roles: ['admin', 'third-party', 'workgroup'] },
+            { key: 'approve', label: '审批管理', path: 'monitor/access-approve/approve.html', roles: ['admin', 'third-party', 'workgroup', 'expert'] },
             { key: 'terminate', label: '资格终止管理', path: 'monitor/access-approve/terminate.html', roles: ['admin', 'third-party', 'workgroup'] },
             { key: 'report', label: '报告管理', path: 'monitor/access-approve/report.html', roles: ['admin', 'third-party', 'workgroup'] }
           ]
@@ -480,6 +480,7 @@
     'enterprise': { label: '企业用户', avatar: '企', userDisplay: 'A公司' },
     'third-party': { label: '第三方专业服务机构', avatar: '三', userDisplay: '第三方审核员' },
     'workgroup':  { label: '市工作专班', avatar: '专', userDisplay: '专班审核员' },
+    'expert':     { label: '专家评审组', avatar: '评', userDisplay: '专家评审员' },
     'traffic':    { label: '交通管理部门', avatar: '交', userDisplay: '交通审核员' },
     'admin':      { label: '系统管理员', avatar: '管', userDisplay: '系统管理员' }
   };
@@ -653,7 +654,7 @@
   function renderRoleSwitcher() {
     var cfg = ROLE_CONFIG[USER_ROLE] || ROLE_CONFIG['admin'];
     var options = '';
-    var roleKeys = ['public', 'enterprise', 'third-party', 'workgroup', 'traffic', 'admin'];
+    var roleKeys = ['public', 'enterprise', 'third-party', 'workgroup', 'expert', 'traffic', 'admin'];
     for (var i = 0; i < roleKeys.length; i++) {
       var rk = roleKeys[i];
       var rc = ROLE_CONFIG[rk];

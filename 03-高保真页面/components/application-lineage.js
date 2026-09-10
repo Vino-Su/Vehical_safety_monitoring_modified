@@ -7,7 +7,7 @@
   function statusTone(statusClass,status){
     if(String(statusClass||'').indexOf('success')>-1||status==='active'||status==='passed')return 'success';
     if(String(statusClass||'').indexOf('error')>-1||status==='rejected'||status==='terminated')return 'error';
-    if(String(statusClass||'').indexOf('processing')>-1||String(status||'').indexOf('pending_')===0)return 'processing';
+    if(String(statusClass||'').indexOf('processing')>-1||String(statusClass||'').indexOf('warning')>-1||status==='returning'||String(status||'').indexOf('pending_')===0)return 'processing';
     return 'default';
   }
   function family(records,id,getId,getParent,getType,getTime){

@@ -95,7 +95,8 @@
                   <th>申请类型</th>
                   <th>申请主体</th>
                   <th class="col-num">车辆数</th>
-                  <th class="col-status">申请状态</th>
+                  <th class="col-status">流程状态</th>
+                  <th>当前环节</th>
                   <th class="col-code">申请时间</th>
                   <th class="col-action">操作</th>
                 </tr>
@@ -262,12 +263,9 @@ var PAGE_ID = 'home';
 // 申请状态映射
 var statusMap = {
   draft: { label: '草稿', cls: 'ant-tag-default' },
-  pending_review: { label: '待初审', cls: 'ant-tag-processing' },
-  pending_committee: { label: '待专班审核', cls: 'ant-tag-processing' },
-  pending_committee_confirm: { label: '待专班审核确认', cls: 'ant-tag-processing' },
-  pending_expert_review: { label: '待专家评审', cls: 'ant-tag-processing' },
-  pending_session: { label: '待专题会审议', cls: 'ant-tag-processing' },
-  rejected: { label: '已退回', cls: 'ant-tag-error' },
+  processing: { label: '审批中', cls: 'ant-tag-processing' },
+  returning: { label: '退回处理中', cls: 'ant-tag-warning' },
+  approved: { label: '已通过', cls: 'ant-tag-success' },
   withdrawn: { label: '已撤回', cls: 'ant-tag-default' },
   pending_plate: { label: '待上传牌照', cls: 'ant-tag-warning' },
   active: { label: '已生效', cls: 'ant-tag-success' },
@@ -277,16 +275,16 @@ var statusMap = {
 
 // 最近准入申请示例数据
 var recentApplications = [
-  { id: 'RT202604001', type: '初次申请', module: '道路测试', company: 'A公司', vehicleCount: 2, status: 'pending_review', time: '2026-04-10' },
-  { id: 'DA202604002', type: '延期申请', module: '示范应用', company: 'B公司', vehicleCount: 1, status: 'active', time: '2026-04-05' },
-  { id: 'RT202604003', type: '变更申请', module: '道路测试', company: 'D公司', vehicleCount: 1, status: 'rejected', time: '2026-04-08' },
-  { id: 'DO202604004', type: '初次申请', module: '商业化试点', company: 'A公司', vehicleCount: 1, status: 'active', time: '2026-04-12' },
-  { id: 'DA202604005', type: '初次申请', module: '示范应用', company: 'D公司', vehicleCount: 1, status: 'pending_expert_review', time: '2026-04-24' },
-  { id: 'RT202604006', type: '初次申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'pending_plate', time: '2026-04-25' },
-  { id: 'DA202604007', type: '初次申请', module: '示范应用', company: 'G公司', vehicleCount: 1, status: 'active', time: '2026-04-28' },
-  { id: 'DO202605001', type: '初次申请', module: '商业化试点', company: 'J公司', vehicleCount: 1, status: 'pending_committee', time: '2026-05-01' },
-  { id: 'RT202605002', type: '延期申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'pending_committee_confirm', time: '2026-05-05' },
-  { id: 'DA202605003', type: '初次申请', module: '示范应用', company: 'S公司', vehicleCount: 1, status: 'draft', time: '2026-05-08' }
+  { id: 'RT202604001', type: '初次申请', module: '道路测试', company: 'A公司', vehicleCount: 2, status: 'processing', stage: '第三方初审', time: '2026-04-10' },
+  { id: 'DA202604002', type: '延期申请', module: '示范应用', company: 'B公司', vehicleCount: 1, status: 'active', stage: '流程完成', time: '2026-04-05' },
+  { id: 'RT202604003', type: '变更申请', module: '道路测试', company: 'D公司', vehicleCount: 1, status: 'returning', stage: '申请主体补正', hint: '由第三方初审退回', time: '2026-04-08' },
+  { id: 'DO202604004', type: '初次申请', module: '商业化试点', company: 'A公司', vehicleCount: 1, status: 'active', stage: '流程完成', time: '2026-04-12' },
+  { id: 'DA202604005', type: '初次申请', module: '示范应用', company: 'D公司', vehicleCount: 1, status: 'processing', stage: '专家评审', time: '2026-04-24' },
+  { id: 'RT202604006', type: '初次申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'approved', stage: '牌照上传', time: '2026-04-25' },
+  { id: 'DA202604007', type: '初次申请', module: '示范应用', company: 'G公司', vehicleCount: 1, status: 'active', stage: '流程完成', time: '2026-04-28' },
+  { id: 'DO202605001', type: '初次申请', module: '商业化试点', company: 'J公司', vehicleCount: 1, status: 'processing', stage: '专班办公室审核', time: '2026-05-01' },
+  { id: 'RT202605002', type: '延期申请', module: '道路测试', company: '上海E公司', vehicleCount: 1, status: 'processing', stage: '专班审核确认', time: '2026-05-05' },
+  { id: 'DA202605003', type: '初次申请', module: '示范应用', company: 'S公司', vehicleCount: 1, status: 'draft', stage: '草稿编辑', time: '2026-05-08' }
 ];
 
 // 根据业务模块获取详情页链接
@@ -316,6 +314,7 @@ function renderRecentApplications() {
       '<td>' + d.company + '</td>' +
       '<td class="col-num">' + d.vehicleCount + '</td>' +
       '<td class="col-status"><span class="ant-tag ' + st.cls + '">' + st.label + '</span></td>' +
+      '<td>' + d.stage + (d.hint ? '<div class="text-xs text-[#d46b08]">' + d.hint + '</div>' : '') + '</td>' +
       '<td class="col-code">' + d.time + '</td>' +
       '<td class="col-action"><a href="' + getModuleLink(d) + '" class="ant-btn-link">查看</a></td>' +
       '</tr>';

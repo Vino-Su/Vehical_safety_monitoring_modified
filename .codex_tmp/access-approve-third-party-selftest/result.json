@@ -1,0 +1,21 @@
+{
+  "url": "http://127.0.0.1:9188/03-高保真页面/monitor/access-approve/approve.html?role=third-party",
+  "verdict": "check_errors",
+  "title": "审批管理 - 智能网联汽车安全监测平台",
+  "htmlLen": 214675,
+  "bodyChildren": 9,
+  "selector": "#mainTbody",
+  "selectorFound": true,
+  "selectorCount": 1,
+  "pageTextPreview": "智能网联汽车安全监测平台\n开放道路资源管理\n测试示范监管\n监测数据分析\n3\n第三方专业服务机构\n三\n第三方审核员\n准入信息管理\n准入审批管理\n审批管理\n资格终止管理\n报告管理\n自定义配置\n车辆状态监控\n测试服务管理\n信息公开与在线反馈\n我的待办\n全部\n审批中\n已通过\n退回处理中\n申请编号\n业务类型\n全部\n道路测试\n示范应用\n商业化试点\n申请类型\n全部\n初次申请\n延期申请\n变更申请\n新增相同配置车辆",
+  "errorCount": 1,
+  "errors": [
+    {
+      "kind": "log",
+      "text": "network: Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ],
+  "domFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\access-approve-third-party-selftest\\dom.html",
+  "resultFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\access-approve-third-party-selftest\\result.json",
+  "shotFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\access-approve-third-party-selftest\\shot.png"
+}

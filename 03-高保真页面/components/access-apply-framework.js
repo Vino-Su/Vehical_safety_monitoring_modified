@@ -1,7 +1,7 @@
 (function (window, document) {
   'use strict';
 
-  var state = { config: null, record: null, files: {}, selected: {}, structured: {}, add: null, mode: '' };
+  var state = { config: null, record: null, flowRecord: null, files: {}, selected: {}, structured: {}, add: null, mode: '', correction: false };
   var DEFAULT_ATTACHMENTS = [
     { key: 'latestDeclaration', label: '最新安全性自我声明', note: '上传最新版本安全性自我声明文件' },
     { key: 'reasonNecessity', label: '变更理由及必要性说明', note: '说明本次变更的理由和必要性' },
@@ -35,6 +35,14 @@
     }
     return value;
   }
+  function fieldInputValue(field, value) {
+    if (field.inputType !== 'select') return value;
+    var matched = (field.options || []).filter(function (option) {
+      var item = typeof option === 'string' ? { value: option, label: option } : option;
+      return String(item.value) === String(value) || String(item.label) === String(value);
+    })[0];
+    return matched && typeof matched !== 'string' ? matched.value : (matched || value);
+  }
   function fieldAdapter(field) { return field && (field.structured || field.adapter); }
   function isStructuredField(field) { return !!fieldAdapter(field); }
   function structuredValue(field) {
@@ -66,7 +74,11 @@
   function fieldMarkup(field) {
     var value = fieldValue(state.record, field);
     var displayValue = fieldDisplayValue(field, value);
-    return '<div class="aaf-change-field" data-aaf-change="' + esc(field.key) + '"><label class="aaf-change-head"><input type="checkbox" data-aaf-toggle="' + esc(field.key) + '"><span class="aaf-change-name">' + esc(field.label) + '</span><span class="aaf-change-prompt">勾选以变更</span></label><div class="aaf-change-current">当前值：' + esc(displayValue) + '</div><div class="aaf-change-editor">' + fieldInput(field, value) + '<div class="aaf-error" data-aaf-field-error="' + esc(field.key) + '">请补充变更后的' + esc(field.label) + '</div></div></div>';
+    var saved = state.correction && state.record.changeFields && state.record.changeFields[field.key];
+    var selected = !!saved;
+    var inputValue = fieldInputValue(field, saved && saved.newValue !== undefined ? saved.newValue : value);
+    state.selected[field.key] = selected;
+    return '<div class="aaf-change-field' + (selected ? ' is-selected' : '') + '" data-aaf-change="' + esc(field.key) + '"><label class="aaf-change-head"><input type="checkbox" data-aaf-toggle="' + esc(field.key) + '"' + (selected ? ' checked' : '') + '><span class="aaf-change-name">' + esc(field.label) + '</span><span class="aaf-change-prompt">勾选以变更</span></label><div class="aaf-change-current">当前值：' + esc(saved && saved.oldValue !== undefined ? saved.oldValue : displayValue) + '</div><div class="aaf-change-editor">' + fieldInput(field, inputValue) + '<div class="aaf-error" data-aaf-field-error="' + esc(field.key) + '">请补充变更后的' + esc(field.label) + '</div></div></div>';
   }
   function materialInfo(item) {
     var text = item && (item.original || item.full || item.name);
@@ -111,15 +123,15 @@
   function changeHtml() {
     var config = state.config;
     var record = state.record;
-    state.files = {
-      latestDeclaration: (record.attachments || {}).latestDeclaration || '',
-      reasonNecessity: (record.attachments || {}).reasonNecessity || '',
-      supportingMaterials: (record.attachments || {}).supportingMaterials || ''
-    };
+    state.files = {};
+    attachmentItems().forEach(function (item) { state.files[item.key] = (record.attachments || {})[item.key] || ''; });
     var source = originalSource(record);
+    var correctionLogs = state.correction
+      ? detailSection('审批流程日志', typeof window.buildFlowLog === 'function' ? window.buildFlowLog(state.flowRecord || record) : logsHtml(state.flowRecord || record))
+      : '';
     return formBanner('变更申请', record, source) +
       '<section class="aaf-section"><h4 class="aaf-section-title">申请信息</h4><div class="aaf-subsection"><h5 class="aaf-subsection-title">变更内容<span class="aaf-section-note">未勾选字段将保留原值</span></h5>' + (config.fields || []).map(fieldMarkup).join('') + '</div><div class="ant-form-item" style="margin-bottom:0"><div class="ant-form-label"><span class="required">*</span>变更原因</div><div class="ant-form-control"><textarea id="aaf-change-reason" class="ant-input" rows="3" placeholder="请输入变更原因" style="resize:vertical">' + esc(record.changeReason || '') + '</textarea><div class="aaf-error" data-aaf-reason-error>请输入变更原因</div></div></div></section>' +
-      '<section class="aaf-section"><h4 class="aaf-section-title">申请材料</h4><div class="aaf-attachment-form"><section class="attachment-group"><div class="attachment-group-title">本次申请文件</div>' + attachmentItems().map(attachmentMarkup).join('') + '</section></div></section>' + formOriginalContentHtml(source);
+      '<section class="aaf-section"><h4 class="aaf-section-title">申请材料</h4><div class="aaf-attachment-form"><section class="attachment-group"><div class="attachment-group-title">本次申请文件</div>' + attachmentItems().map(attachmentMarkup).join('') + '</section></div></section>' + formOriginalContentHtml(source) + correctionLogs;
   }
   function originalAttachmentHtml(record, detail) {
     var groups = originalGroups(record);
@@ -211,7 +223,7 @@
     });
     return { originalApplicationId: state.record.originalApplicationId || state.record.id, changeReason: document.getElementById('aaf-change-reason').value.trim(), changeFields: fields, attachments: Object.assign({}, state.files) };
   }
-  function statusLabel(record) { return record.statusLabel || (state.config.statusMap && state.config.statusMap[record.status] && state.config.statusMap[record.status].label) || record.status || '-'; }
+  function statusLabel(record) { if (window.AccessFlowModel) return window.AccessFlowModel.processInfo(record).label + ' · ' + window.AccessFlowModel.stageInfo(record).label; return record.statusLabel || (state.config.statusMap && state.config.statusMap[record.status] && state.config.statusMap[record.status].label) || record.status || '-'; }
   function formatChanges(record) {
     var fields = record.changeFields || {};
     var keys = Object.keys(fields);
@@ -239,6 +251,12 @@
     return '<div class="detail-attachment-panel operate-detail-group aaf-detail-attachments"><section class="attachment-group"><div class="attachment-group-title">本次申请文件</div>' + current + '</section></div>';
   }
   function flowHtml(record) {
+    if (window.AccessFlowModel) {
+      return '<div class="aaf-flow">' + window.AccessFlowModel.progress(record).map(function (item, index) {
+        var dotClass = item.error ? 'is-error' : item.done ? 'is-done' : item.current ? 'is-current' : '';
+        return '<div class="aaf-flow-step ' + dotClass + '"><div class="aaf-flow-dot">' + (item.error ? '×' : item.done ? '✓' : index + 1) + '</div><div><div class="aaf-flow-title">' + esc(item.label) + (item.current ? '（当前）' : '') + '</div></div></div>';
+      }).join('') + '</div>';
+    }
     var steps = record.flowSteps || ['提交申请', '初审', '专班审核', '审批完成'];
     var current = -1;
     var plainSteps = steps.every(function (step) { return typeof step === 'string'; });
@@ -259,6 +277,7 @@
     }).join('') + '</div>';
   }
   function detailLogs(record) {
+    if (window.AccessFlowModel) return window.AccessFlowModel.displayLogs(record).map(function (log) { return { title: log.title, handler: log.handler, time: log.time, opinion: log.opinion, status: log.status, tone: log.status === '已退回' ? 'error' : log.status === '处理中' || log.status === '退回处理中' ? 'current' : 'done' }; });
     if (state.config && typeof state.config.getFlowLogs === 'function') return state.config.getFlowLogs(record) || [];
     if (Array.isArray(record.flowLogs) && record.flowLogs.length) return record.flowLogs;
     var pendingReview = record.status === 'pending_review';
@@ -337,7 +356,7 @@
     return '<details class="aaf-original-content aaf-form-original-content"><summary>原申请内容<span>只读关联，默认收起，点击展开查看</span></summary><div class="aaf-original-content-body">' + originalContextHtml(source) + originalAttachmentHtml(source, true) + '</div></details>';
   }
   function detailSection(title, content) { return '<section class="aaf-section"><h4 class="aaf-section-title">' + esc(title) + '</h4>' + content + '</section>'; }
-  function statusTagClass(record) { return record.statusCls || (state.config && state.config.statusMap && state.config.statusMap[record.status] && state.config.statusMap[record.status].cls) || 'ant-tag-default'; }
+  function statusTagClass(record) { return window.AccessFlowModel ? window.AccessFlowModel.processInfo(record).cls : record.statusCls || (state.config && state.config.statusMap && state.config.statusMap[record.status] && state.config.statusMap[record.status].cls) || 'ant-tag-default'; }
   function detailModalTitle(label, record) { return label + ' - ' + esc(record.id || '') + '<span class="ant-tag aaf-title-status ' + esc(statusTagClass(record)) + '">' + esc(statusLabel(record)) + '</span>'; }
   function derivedDetailHtml(title, record, source, sections) {
     return '<div class="aaf-detail-layout"><div>' + detailBanner(record, source) + sections.join('') + originalContentHtml(record, source) + detailSection('审批流程进度', flowHtml(record)) + detailSection('流程日志', logsHtml(record)) + '</div></div>';
@@ -598,8 +617,11 @@
       if (!verifyModalSupport()) { console.error('AccessApplyFramework requires common.js openModal/closeModal.'); return; }
       state.config = config || {}; state.record = typeof recordOrId === 'object' ? recordOrId : getRecord(state.config, recordOrId); state.selected = {}; state.structured = {}; state.mode = 'change';
       if (!state.record) return;
+      state.flowRecord = (state.config.records || []).filter(function (item) { return item.id === state.record.id; })[0] || state.record;
+      if (window.AccessFlowModel) window.AccessFlowModel.ensureRecord(state.flowRecord);
+      state.correction = !!(window.AccessFlowModel && state.flowRecord.processStatus === 'returning' && state.flowRecord.currentStage === 'applicant_correction');
       prepareStructuredFields();
-      window.openModal('变更申请 - ' + esc(state.record.id || state.record.originalApplicationId || ''), changeHtml(), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="AccessApplyFramework.submit()">提交变更申请</button>', onOpen: function () { attachEvents(); renderStructuredFields(); } });
+      window.openModal((state.correction ? '编辑变更申请 - ' : '变更申请 - ') + esc(state.record.id || state.record.originalApplicationId || ''), changeHtml(), { wide: true, fullscreen: true, footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="AccessApplyFramework.submit()">' + (state.correction ? '提交申请' : '提交变更申请') + '</button>', onOpen: function () { attachEvents(); renderStructuredFields(); } });
     },
     openAddVehicle: function (config, recordOrId) {
       if (!verifyModalSupport()) return;
@@ -676,6 +698,21 @@
     submit: function () {
       if (!validate()) return false;
       var payload = changePayload();
+      if (state.correction) {
+        var target = state.flowRecord || state.record;
+        target.changeFields = payload.changeFields;
+        target.changeReason = payload.changeReason;
+        target.attachments = payload.attachments;
+        if (typeof state.config.onCorrectionSubmit === 'function') {
+          var correctionResult = state.config.onCorrectionSubmit(payload, state.record, target);
+          if (correctionResult === false) return false;
+        }
+        if (window.AccessFlowModel) window.AccessFlowModel.resubmit(target);
+        if (typeof window.renderTable === 'function') window.renderTable();
+        toast('补正申请已提交，流程已返回' + (window.AccessFlowModel ? window.AccessFlowModel.stageInfo(target).label : '审批环节'));
+        window.closeModal();
+        return true;
+      }
       if (typeof state.config.onSubmit === 'function') { var result = state.config.onSubmit(payload, state.record); if (result === false) return false; }
       toast('变更申请已提交'); window.closeModal(); return true;
     },
