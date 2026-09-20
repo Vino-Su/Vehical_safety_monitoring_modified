@@ -124,11 +124,6 @@
   function info(map, key) { return map[key] || { label: key || '-', cls: 'ant-tag-default', role: '' }; }
   function processInfo(record) { ensureRecord(record); return info(processStatusMap, record.processStatus); }
   function stageInfo(record) { ensureRecord(record); return info(stageMap, record.currentStage); }
-  function returnHint(record) {
-    ensureRecord(record); var log = latestReturn(record);
-    if (record.processStatus === 'returning' && log) return '由' + info(stageMap, log.stage).label + '退回';
-    return (record.flowLogs || []).some(function (item) { return item.eventType === 'stage_returned'; }) ? '曾退回' : '';
-  }
   function closeReturn(record, destination) {
     var log = latestReturn(record);
     if (!log) return;
@@ -190,7 +185,7 @@
       var returned = item.eventType === 'stage_returned', closed = item.eventType === 'return_cycle_closed', submitted = item.eventType === 'submitted';
       return { title: submitted ? '提交申请' : closed ? '退回闭环' : info(stageMap, item.stage).label, handler: item.handler || handlers[item.stage] || '-', time: item.handledAt || '-', opinion: item.opinion || '', status: returned ? '已退回' : closed ? '已闭环' : '已处理', color: returned ? '#ff4d4f' : '#52c41a', dot: returned ? '×' : '✓', tagCls: returned ? 'ant-tag-error' : 'ant-tag-success', attach: item.attachment || '' };
     });
-    if (record.currentStage !== 'completed') logs.push({ title: info(stageMap, record.currentStage).label, handler: handlers[record.currentStage] || '-', time: '待处理', opinion: returnHint(record), status: record.processStatus === 'returning' ? '退回处理中' : '处理中', color: record.processStatus === 'returning' ? '#fa8c16' : '#1677ff', dot: '●', tagCls: record.processStatus === 'returning' ? 'ant-tag-warning' : 'ant-tag-processing' });
+    if (record.currentStage !== 'completed') logs.push({ title: info(stageMap, record.currentStage).label, handler: handlers[record.currentStage] || '-', time: '待处理', opinion: '', status: record.processStatus === 'returning' ? '退回处理中' : '处理中', color: record.processStatus === 'returning' ? '#fa8c16' : '#1677ff', dot: '●', tagCls: record.processStatus === 'returning' ? 'ant-tag-warning' : 'ant-tag-processing' });
     return logs;
   }
   function currentRole() {
@@ -206,7 +201,7 @@
 
   window.AccessFlowModel = {
     processStatusMap: processStatusMap, stageMap: stageMap, ensureRecord: ensureRecord, ensureAll: ensureAll,
-    processInfo: processInfo, stageInfo: stageInfo, returnHint: returnHint, latestReturn: latestReturn,
+    processInfo: processInfo, stageInfo: stageInfo, latestReturn: latestReturn,
     isFullApproval: isFullApproval, approvalPath: approvalPath, needsPlate: needsPlate, pass: pass, reject: reject,
     resubmit: resubmit, progress: progress, displayLogs: displayLogs, syncLegacy: syncLegacy, currentRole: currentRole,
     canHandle: canHandle

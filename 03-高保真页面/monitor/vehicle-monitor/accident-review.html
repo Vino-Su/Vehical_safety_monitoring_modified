@@ -47,15 +47,16 @@
     .ant-form-label{display:block;margin-bottom:8px;font-size:14px;color:#000000d9}
     .ant-form-control{display:block}
     .ant-descriptions{font-size:14px}
-    .review-sticky-action{position:sticky;bottom:0;z-index:2;margin:16px -20px -16px;padding:12px 20px 16px;background:#fafcff;border-top:1px solid #d6e4ff;box-shadow:0 -4px 12px rgba(22,119,255,.05)}
-    .review-sticky-action.compact{margin:18px 0 0;padding:12px 0 0;background:#fff;border-color:#f0f0f0;box-shadow:none}
-    .review-action-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px;color:#00000073;font-size:12px;line-height:20px}
-    .review-action-form{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;align-items:start}
+    .review-action-footer{display:block!important;padding:16px 24px!important;background:#fafcff;box-shadow:0 -1px 0 #e6f4ff}
+    .review-action-footer-content{width:100%;display:flex;flex-direction:column;gap:14px}
+    .review-action-form{display:block;min-width:0}
     .review-action-field label{display:block;margin-bottom:6px;color:#000000d9;font-size:12px;font-weight:500;line-height:20px}
-    .review-result-options{display:flex;align-items:center;gap:16px;height:32px}
-    .review-action-field .ant-input{width:100%;height:32px}
-    .review-action-buttons{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
-    @media(max-width:720px){.review-sticky-action{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}.review-sticky-action.compact{margin-left:0;margin-right:0;padding-left:0;padding-right:0}.review-action-form{grid-template-columns:1fr}.review-action-buttons{flex-wrap:wrap}}
+    .review-action-field textarea{display:block;width:100%;min-height:64px;max-height:120px;padding:8px 11px;resize:vertical}
+    .review-action-buttons{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+    .review-action-buttons .ant-btn{white-space:nowrap}
+    .review-action-footer .ant-btn-danger{color:#fff;background:#ff4d4f;border-color:#ff4d4f}
+    .review-action-footer .ant-btn-danger:hover{background:#ff7875;border-color:#ff7875}
+    @media(max-width:720px){.review-action-footer{padding:12px 16px!important}.review-action-buttons{flex-wrap:wrap}}
     .ant-descriptions-row{display:flex;margin-bottom:12px;border-bottom:1px solid #f0f0f0;padding-bottom:8px}
     .ant-descriptions-label{width:140px;color:#00000073;font-weight:500;padding-right:12px}
     .ant-descriptions-value{flex:1;color:#000000d9}
@@ -73,8 +74,7 @@
       <div class="filter-bar">
         <div class="filter-row">
           <div class="filter-item"><label>时间范围</label><div style="display:flex;gap:4px;align-items:center;"><input class="ant-input" type="date" value="2026-04-01" style="width:140px"><span class="mx-1 text-[#00000040]">~</span><input class="ant-input" type="date" value="2026-05-08" style="width:140px"></div></div>
-          <div class="filter-item"><label>事故上报状态</label><select class="ant-input" id="reviewStatusFilter"><option>全部</option><option>事故信息待审核</option><option>事故报告待审核</option><option>事故分析报告待初审</option><option>事故分析报告待专班审核</option></select></div>
-          <div class="filter-item"><label>审核角色</label><select class="ant-input" id="reviewRoleFilter"><option>全部</option><option>第三方专业管理机构</option><option>市工作专班</option></select></div>
+          <div class="filter-item"><label>事故上报状态</label><select class="ant-input" id="reviewStatusFilter"><option>全部</option><option>已上报</option><option>待提交分析报告</option><option>待审核</option><option>已完成</option><option>已撤回</option><option>已退回</option></select></div>
           <div class="flex gap-2 items-end">
             <button class="ant-btn ant-btn-primary" onclick="applyReviewFilters()">查询</button>
             <button class="ant-btn" onclick="resetReviewFilters()">重置</button>
@@ -84,7 +84,7 @@
       <div class="ant-table-wrapper">
         <div style="overflow-x:auto" data-fixed-cols="1">
           <table class="ant-table">
-            <thead><tr><th>事故编号</th><th>测试主体</th><th>VIN码</th><th>临牌号码</th><th>事故保险</th><th>审核角色</th><th>事故类型</th><th>事故上报状态</th><th>操作</th></tr></thead>
+            <thead><tr><th>事故编号</th><th>测试主体</th><th>VIN码</th><th>临牌号码</th><th>事故类型</th><th>事故发生时间</th><th>事故上报状态</th><th>操作</th></tr></thead>
             <tbody id="reviewTableBody">
               <tr><td>ACC20260427001</td><td>D公司</td><td>LHGCR28X0NY064215</td><td>鄂F·C007</td><td><span class="ant-tag ant-tag-success">有</span></td><td><span class="ant-tag ant-tag-error">碰撞</span></td><td><span class="ant-tag ant-tag-default">交通事故报告审核</span></td><td><span class="ant-tag ant-tag-processing">待审核</span></td><td><button class="ant-btn-link" onclick="openReviewDetail('ACC20260427001','traffic')">查看</button><button class="ant-btn-link" style="color:#52c41a">审核通过</button><button class="ant-btn-link" style="color:#ff4d4f">退回</button></td></tr>
               <tr><td>ACC20260427001</td><td>D公司</td><td>LHGCR28X0NY064215</td><td>鄂F·C007</td><td><span class="ant-tag ant-tag-success">有</span></td><td><span class="ant-tag ant-tag-error">碰撞</span></td><td><span class="ant-tag ant-tag-warning">事故分析报告-第三方初审</span></td><td><span class="ant-tag ant-tag-processing">待审核</span></td><td><button class="ant-btn-link" onclick="openReviewDetail('ACC20260427001','first')">查看</button><button class="ant-btn-link" style="color:#52c41a">初审通过</button><button class="ant-btn-link" style="color:#ff4d4f">退回</button></td></tr>
@@ -222,14 +222,14 @@ function makeAccidentFlowLog(accId, step){
   return h;
 }
 
-// 审核待办仅呈现状态机定义的四类待审核状态。
+// 审核待办仅呈现状态机定义的“待审核”记录。
 var activeReviewId = '';
 var reviewPager;
 function getReviewPageRole(){
   var match = window.location.search.match(/[?&]role=([^&]+)/);
   return match ? decodeURIComponent(match[1]) : (localStorage.getItem('platform_role') || 'admin');
 }
-function reviewRoleLabel(role){ return role === 'workgroup' ? '市工作专班' : '第三方专业管理机构'; }
+function reviewRoleLabel(role){ return role === 'admin' ? '系统管理员' : role === 'third-party' ? '第三方专业管理机构' : '—'; }
 function reviewStatusTag(status){
   var meta=AccidentWorkflow.getStatusMeta(status);
   var cls=meta.type === 'processing' ? 'ant-tag-processing' : meta.type === 'warning' ? 'ant-tag-warning' : '';
@@ -239,60 +239,63 @@ function renderReviewRows(){
   var body=document.getElementById('reviewTableBody'); if (!body) return;
   var role=getReviewPageRole();
   var statusFilter=document.getElementById('reviewStatusFilter').value;
-  var roleFilter=document.getElementById('reviewRoleFilter').value;
   var records=AccidentWorkflow.getRecords().filter(function(record){
-    var reviewer=AccidentWorkflow.getReviewRole(record.status);
-    var label=reviewer ? reviewRoleLabel(reviewer) : '';
-    return reviewer && (statusFilter === '全部' || record.status === statusFilter) && (roleFilter === '全部' || label === roleFilter);
+    return statusFilter === '全部' || record.status === statusFilter;
   });
-  if (role === 'third-party' || role === 'workgroup') records=records.filter(function(record){ return AccidentWorkflow.getReviewRole(record.status) === role; });
+  if (role !== 'admin' && role !== 'third-party') records=[];
   if (reviewPager) reviewPager.setTotal(records.length);
   var page=reviewPager ? reviewPager.getCurrentPage() : 1;
   var pageSize=reviewPager ? reviewPager.getPageSize() : 10;
   var pageRecords=records.slice((page - 1) * pageSize, page * pageSize);
   body.innerHTML=pageRecords.map(function(record){
-    var reviewer=AccidentWorkflow.getReviewRole(record.status); var canAct=(role === reviewer);
-    return '<tr><td>' + record.id + '</td><td>' + record.enterprise + '</td><td>' + record.vin + '</td><td>' + record.plate + '</td><td><span class="ant-tag ' + (record.insurance === '有' ? 'ant-tag-success' : 'ant-tag-default') + '">' + record.insurance + '</span></td><td><span class="ant-tag ant-tag-default">' + reviewRoleLabel(reviewer) + '</span></td><td><span class="ant-tag ' + (record.type === '碰撞' ? 'ant-tag-error' : 'ant-tag-warning') + '">' + record.type + '</span></td><td>' + reviewStatusTag(record.status) + '</td><td><button class="ant-btn-link" onclick="openReviewDetail(\'' + record.id + '\')">查看</button>' + (canAct ? '<button class="ant-btn-link" style="color:#1677ff" onclick="openReviewDetail(\'' + record.id + '\')">审核</button>' : '') + '</td></tr>';
-  }).join('') || '<tr><td colspan="9" class="text-center text-[#00000040]">当前角色暂无待审核事故</td></tr>';
+    var reviewer=AccidentWorkflow.getReviewRole(record.status); var canAct=record.status === '待审核' && (role === 'admin' || role === reviewer);
+    return '<tr><td>' + record.id + '</td><td>' + record.enterprise + '</td><td>' + record.vin + '</td><td>' + record.plate + '</td><td><span class="ant-tag ' + (record.type === '碰撞' ? 'ant-tag-error' : 'ant-tag-warning') + '">' + record.type + '</span></td><td>' + record.occurredAt + '</td><td>' + reviewStatusTag(record.status) + '</td><td><button class="ant-btn-link" onclick="openReviewDetail(\'' + record.id + '\')">查看</button>' + (canAct ? '<button class="ant-btn-link" style="color:#1677ff" onclick="openReviewDetail(\'' + record.id + '\', true)">审核</button>' : '') + '</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="text-center text-[#00000040]">当前角色暂无待审核事故</td></tr>';
   if (window.applyTableAlignment) applyTableAlignment();
 }
 function resetReviewPager(){ if (reviewPager) reviewPager.reset(); else renderReviewRows(); }
 function applyReviewFilters(){ resetReviewPager(); }
-function resetReviewFilters(){ document.getElementById('reviewStatusFilter').value='全部'; document.getElementById('reviewRoleFilter').value='全部'; resetReviewPager(); }
-function getReviewMaterialHTML(status){
-  if (status === '事故信息待审核') return '<div class="flex items-center gap-2 p-2 bg-[#f5f5f5] rounded"><span style="color:#52c41a">&#10003;</span><span>事故基本信息、现场照片、行车记录视频</span></div>';
-  if (status === '事故报告待审核') return '<div class="flex items-center gap-2 p-2 bg-[#f5f5f5] rounded"><span style="color:#52c41a">&#10003;</span><span>交通事故报告、责任认定材料、现场佐证</span></div>';
-  return '<div class="flex items-center gap-2 p-2 bg-[#f5f5f5] rounded"><span style="color:#52c41a">&#10003;</span><span>事故原因分析报告、责任认定结果、完整事故分析报告</span></div>';
+function resetReviewFilters(){ document.getElementById('reviewStatusFilter').value='全部'; resetReviewPager(); }
+function getReviewMaterialHTML(record){
+  var traffic = record.trafficReport ? '；交通事故报告（可选）' : '';
+  return '<div class="flex items-center gap-2 p-2 bg-[#f5f5f5] rounded"><span style="color:#52c41a">&#10003;</span><span>事故基本信息、事故分析报告、责任认定材料、现场佐证' + traffic + '</span></div>';
 }
 function getReviewNodeHint(status){
-  return status === '事故信息待审核' ? '审核通过后，企业可提交交通事故报告。' : status === '事故报告待审核' ? '审核通过后，企业可提交事故分析报告。' : status === '事故分析报告待初审' ? '初审通过后，流转至市工作专班审核。' : '审核通过后，事故上报流程完成。';
+  return status === '待审核' ? '审核通过后，事故上报流程完成；审核退回后，企业修改事故分析报告并重新提交。' : '';
 }
-function openReviewDetail(id){
+function openReviewDetail(id, forReview){
   var record=AccidentWorkflow.getRecord(id); if (!record) return;
   activeReviewId=id;
-  var role=getReviewPageRole(); var reviewer=AccidentWorkflow.getReviewRole(record.status); var canAct=role === reviewer;
-  var actionArea=canAct ? '<div class="review-sticky-action compact"><div class="review-action-meta">当前审核角色：' + reviewRoleLabel(reviewer) + '</div><div class="review-action-form"><div class="review-action-field"><label>审核结论</label><div class="review-result-options"><label class="text-sm"><input type="radio" name="reviewResult" value="pass" checked> 通过</label><label class="text-sm"><input type="radio" name="reviewResult" value="reject"> 退回</label></div></div><div class="review-action-field"><label for="reviewOpinionInput">审核意见</label><input type="text" class="ant-input" id="reviewOpinionInput" placeholder="审核意见（通过可选，退回必填）"></div></div><div class="review-action-buttons"><button class="ant-btn ant-btn-primary" onclick="handleReviewSubmit()">确定</button></div></div>' : '<div class="bg-[#fafafa] rounded p-3 mt-4 text-xs text-[#00000073]">当前为只读查看。该节点由' + reviewRoleLabel(reviewer) + '处理。</div>';
+  var role=getReviewPageRole(); var reviewer=AccidentWorkflow.getReviewRole(record.status); var canAct=forReview === true && (role === 'admin' || role === reviewer);
+  var actionFooter=canAct ? '<div class="review-action-footer-content"><div class="review-action-form"><div class="review-action-field"><label for="reviewOpinionInput">审核意见</label><textarea class="ant-input text-sm" id="reviewOpinionInput" placeholder="请输入审核意见"></textarea></div></div><div class="review-action-buttons"><button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="handleReviewSubmit(true)">通过</button><button class="ant-btn ant-btn-danger" onclick="handleReviewSubmit(false)">退回</button></div></div>' : '<span></span>';
+  var actionArea=canAct ? '' : '<div class="bg-[#fafafa] rounded p-3 mt-4 text-xs text-[#00000073]">当前为只读查看。该节点由第三方专业管理机构或系统管理员处理。</div>';
   var body='<div class="ant-descriptions">' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">事故编号</div><div class="ant-descriptions-value">' + record.id + '</div><div class="ant-descriptions-label">事故上报状态</div><div class="ant-descriptions-value">' + reviewStatusTag(record.status) + '</div></div>' +
     '<div class="ant-descriptions-row"><div class="ant-descriptions-label">测试主体</div><div class="ant-descriptions-value">' + record.enterprise + '</div><div class="ant-descriptions-label">VIN码</div><div class="ant-descriptions-value">' + record.vin + '</div></div>' +
-    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">事故类型</div><div class="ant-descriptions-value">' + record.type + '</div><div class="ant-descriptions-label">事故发生时间</div><div class="ant-descriptions-value">' + record.occurredAt + '</div></div></div>' +
-    '<div class="card mt-4"><div class="flex items-center gap-2 mb-3"><span style="color:#1677ff">&#10003;</span><span class="text-sm font-medium">审核材料</span></div><div class="space-y-2 text-sm">' + getReviewMaterialHTML(record.status) + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">临牌号码</div><div class="ant-descriptions-value">' + record.plate + '</div><div class="ant-descriptions-label">事故类型</div><div class="ant-descriptions-value">' + record.type + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">事故发生时间</div><div class="ant-descriptions-value">' + record.occurredAt + '</div><div class="ant-descriptions-label">事故地点</div><div class="ant-descriptions-value">' + record.location + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">伤亡情况</div><div class="ant-descriptions-value">' + (record.casualty || '无人员伤亡') + '</div><div class="ant-descriptions-label">轻伤人数</div><div class="ant-descriptions-value">' + (record.minorInjuries == null ? 0 : record.minorInjuries) + ' 人</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">重伤人数</div><div class="ant-descriptions-value">' + (record.seriousInjuries == null ? 0 : record.seriousInjuries) + ' 人</div><div class="ant-descriptions-label">死亡人数</div><div class="ant-descriptions-value">' + (record.deaths == null ? 0 : record.deaths) + ' 人</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">财产损失（元）</div><div class="ant-descriptions-value">' + (record.propertyLoss == null ? '0.00' : Number(record.propertyLoss).toFixed(2)) + '</div><div class="ant-descriptions-label">现场图片</div><div class="ant-descriptions-value">' + ((record.sceneImages && record.sceneImages.length) ? record.sceneImages.join('、') : '未上传') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">事故经过</div><div class="ant-descriptions-value" style="grid-column:span 3">' + (record.description || '未填写') + '</div></div>' +
+    '<div class="ant-descriptions-row"><div class="ant-descriptions-label">附件</div><div class="ant-descriptions-value" style="grid-column:span 3">' + ((record.attachments && record.attachments.length) ? record.attachments.join('、') : '未上传') + '</div></div></div>' +
+    '<div class="card mt-4"><div class="flex items-center gap-2 mb-3"><span style="color:#1677ff">&#10003;</span><span class="text-sm font-medium">审核材料</span></div><div class="space-y-2 text-sm">' + getReviewMaterialHTML(record) + '</div></div>' +
     '<div class="bg-[#e6f4ff] border border-[#91caff] rounded p-3 mt-4 text-sm text-[#000000d9]">' + getReviewNodeHint(record.status) + '</div>' + renderReviewLog(record) + actionArea;
-  openModal('事故审核详情 - ' + record.id, body, {wide:true,footer:'<span></span>'});
+  openModal('事故审核详情 - ' + record.id, body, {wide:true,footer:actionFooter,footerClass:canAct ? 'review-action-footer' : ''});
 }
 function renderReviewLog(record){
   var content=(record.logs || []).slice().reverse().map(function(log){ return '<div class="border-l-2 border-[#91caff] pl-3 pb-3"><div class="flex items-center justify-between"><span class="text-sm font-medium">' + log.node + '</span><span class="ant-tag ' + (log.status === '已退回' ? 'ant-tag-error' : 'ant-tag-success') + '">' + log.status + '</span></div><div class="text-xs text-[#00000073] mt-1">' + log.handler + ' · ' + log.time + '</div><div class="text-xs text-[#00000073] mt-1">' + log.opinion + '</div></div>'; }).join('');
   return '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-5 pb-2 border-b border-[#f0f0f0]">流程日志</h4>' + content;
 }
-function handleReviewSubmit(){
-  var selected=document.querySelector('input[name="reviewResult"]:checked'); var opinion=document.getElementById('reviewOpinionInput').value.trim();
-  if (selected && selected.value === 'reject') { if (!opinion) { reviewNotify('退回时必须填写退回原因。'); return; } confirmReviewReject(opinion); return; }
+function handleReviewSubmit(passed){
+  var opinion=document.getElementById('reviewOpinionInput').value.trim();
+  if (!passed) { if (!opinion) { reviewNotify('退回时必须填写审核意见。'); return; } confirmReviewReject(opinion); return; }
   var record=AccidentWorkflow.getRecord(activeReviewId); if (!record) return;
-  AccidentWorkflow.review(activeReviewId, true, getReviewPageRole() === 'workgroup' ? '王主任（市工作专班）' : '李四（第三方专业管理机构）', opinion || '审核通过。');
+  AccidentWorkflow.review(activeReviewId, true, getReviewPageRole() === 'admin' ? '系统管理员' : '李四（第三方专业管理机构）', opinion || '审核通过。');
   closeModal(); renderReviewRows(); reviewNotify('审核通过，已按状态机流转至下一状态。');
 }
 function confirmReviewReject(reason){
-  AccidentWorkflow.review(activeReviewId, false, getReviewPageRole() === 'workgroup' ? '王主任（市工作专班）' : '李四（第三方专业管理机构）', reason);
+  AccidentWorkflow.review(activeReviewId, false, getReviewPageRole() === 'admin' ? '系统管理员' : '李四（第三方专业管理机构）', reason);
   closeModal(); renderReviewRows(); reviewNotify('已退回企业修改，当前记录保留为“已退回”。');
 }
 function reviewNotify(message){ window.showWorkflowToast(message); }

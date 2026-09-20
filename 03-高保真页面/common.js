@@ -272,7 +272,7 @@
             { key: 'alarm-handle', label: '异常事件处置', path: 'monitor/vehicle-monitor/alarm-handle.html', roles: ['admin', 'enterprise'] },
             { key: 'violation', label: '交通违法信息', path: 'monitor/vehicle-monitor/violation.html', roles: ['admin', 'enterprise', 'third-party', 'workgroup', 'traffic'] },
             { key: 'accident', label: '事故数据上报', path: 'monitor/vehicle-monitor/accident.html', roles: ['admin', 'enterprise'] },
-            { key: 'accident-review', label: '事故审核', path: 'monitor/vehicle-monitor/accident-review.html', roles: ['admin', 'third-party', 'workgroup', 'traffic'] }
+            { key: 'accident-review', label: '事故审核', path: 'monitor/vehicle-monitor/accident-review.html', roles: ['admin', 'third-party'] }
           ]
         },
         {
@@ -393,28 +393,22 @@
 
   // ========== 事故上报状态机 ==========
   // 页面共享同一份示例数据，确保企业上报与审核待办的状态、日志同步。
-  var ACCIDENT_WORKFLOW_KEY = 'platform_accident_workflow_v2';
+  var ACCIDENT_WORKFLOW_KEY = 'platform_accident_workflow_v3';
   var ACCIDENT_STATUS_META = {
-    '事故信息待审核': { type: 'processing', reviewer: 'third-party' },
-    '事故报告待提交': { type: 'warning' },
-    '事故报告待审核': { type: 'processing', reviewer: 'third-party' },
-    '事故分析报告待提交': { type: 'warning' },
-    '事故分析报告待初审': { type: 'processing', reviewer: 'third-party' },
-    '事故分析报告待专班审核': { type: 'processing', reviewer: 'workgroup' },
+    '已上报': { type: 'warning' },
+    '待提交分析报告': { type: 'warning' },
+    '待审核': { type: 'processing', reviewer: 'third-party' },
     '已完成': { type: 'success' },
     '已退回': { type: 'error' },
     '已撤回': { type: 'default' }
   };
   var ACCIDENT_SEED = [
-    { id:'ACC20260427001', enterprise:'D公司', vin:'LHGCR28X0NY064215', plate:'鄂F·C007', type:'碰撞', severity:'一般', location:'樊城区卧龙大道与长征路交叉口+500', occurredAt:'2026-04-27 13:45', insurance:'有', status:'事故信息待审核', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[{node:'事故信息待审核', handler:'王工（D公司）', time:'2026-04-27 14:00', opinion:'已提交事故基本信息及现场照片、行车记录视频。', status:'已处理'}] },
-    { id:'ACC20260426001', enterprise:'A公司', vin:'LHGCR28X0NY012876', plate:'鄂F·A001', type:'刮擦', severity:'轻微', location:'襄城区环城路K5+200', occurredAt:'2026-04-26 09:30', insurance:'有', status:'事故报告待提交', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[{node:'事故信息待审核', handler:'李四（第三方专业管理机构A）', time:'2026-04-27 16:30', opinion:'事故信息完整，审核通过。', status:'已处理'}] },
-    { id:'ACC20260425001', enterprise:'B公司', vin:'LHGCR28X0NY035429', plate:'鄂F·B003', type:'碰撞', severity:'严重', location:'B品牌试验场内部道路+100', occurredAt:'2026-04-25 16:20', insurance:'有', status:'事故报告待审核', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[{node:'事故信息待审核', handler:'李四（第三方专业管理机构A）', time:'2026-04-26 10:00', opinion:'事故信息完整，审核通过。', status:'已处理'},{node:'事故报告待审核', handler:'陈工（B公司）', time:'2026-04-27 11:20', opinion:'已上传交通事故报告及佐证材料。', status:'已处理'}] },
-    { id:'ACC20260423001', enterprise:'C公司', vin:'LHGCR28X0NY078534', plate:'鄂F·D010', type:'侧翻', severity:'严重', location:'高新区某停车场内', occurredAt:'2026-04-23 08:45', insurance:'无', status:'事故分析报告待提交', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[{node:'事故报告待审核', handler:'张三（第三方专业管理机构B）', time:'2026-04-25 14:00', opinion:'事故报告和现场材料齐全，审核通过。', status:'已处理'}] },
-    { id:'ACC20260420001', enterprise:'D公司', vin:'LHGCR28X0NY064215', plate:'鄂F·C007', type:'碰撞', severity:'一般', location:'长虹路与建华路交叉口', occurredAt:'2026-04-20 09:15', insurance:'有', status:'事故分析报告待初审', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[{node:'事故分析报告待初审', handler:'王工（D公司）', time:'2026-04-23 15:00', opinion:'已提交事故原因、责任认定与完整分析报告。', status:'已处理'}] },
-    { id:'ACC20260418001', enterprise:'E公司', vin:'LHGCR28X0NY046812', plate:'鄂F·E012', type:'追尾', severity:'一般', location:'东津新区科技大道K2+100', occurredAt:'2026-04-18 14:10', insurance:'有', status:'事故分析报告待专班审核', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[{node:'事故分析报告待初审', handler:'赵五（第三方专业管理机构C）', time:'2026-04-21 17:10', opinion:'分析结论依据充分，初审通过。', status:'已处理'}] },
-    { id:'ACC20260415001', enterprise:'F公司', vin:'LHGCR28X0NY054721', plate:'鄂F·F018', type:'剐蹭', severity:'轻微', location:'襄州区航空路K8+300', occurredAt:'2026-04-15 10:25', insurance:'有', status:'已完成', vehicleStatus:'已恢复', provinceStatus:'待报送', logs:[{node:'事故分析报告待专班审核', handler:'王主任（市工作专班）', time:'2026-04-19 11:00', opinion:'审核通过，事故上报流程已完成。', status:'已处理'}] },
-    { id:'ACC20260412001', enterprise:'G公司', vin:'LHGCR28X0NY062345', plate:'鄂F·G021', type:'碰撞', severity:'一般', location:'高新区团山大道K3+600', occurredAt:'2026-04-12 13:10', insurance:'有', status:'已退回', vehicleStatus:'已停运', provinceStatus:'未报送', returnTo:'事故报告待审核', returnReason:'交通事故报告未附责任认定结论，请补充后重新提交。', logs:[{node:'事故报告待审核', handler:'李四（第三方专业管理机构A）', time:'2026-04-14 09:40', opinion:'退回：交通事故报告缺少责任认定结论。', status:'已退回'}] },
-    { id:'ACC20260410001', enterprise:'H公司', vin:'LHGCR28X0NY071234', plate:'鄂F·H034', type:'单车事故', severity:'轻微', location:'樊城区人民路西段', occurredAt:'2026-04-10 15:20', insurance:'有', status:'已撤回', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[{node:'事故信息待审核', handler:'周工（H公司）', time:'2026-04-10 16:05', opinion:'企业主动撤回，待补充信息后重新发起。', status:'已撤回'}] }
+    { id:'ACC20260427001', enterprise:'D公司', vin:'LHGCR28X0NY064215', plate:'鄂F·C007', type:'碰撞', severity:'一般', location:'樊城区卧龙大道与长征路交叉口+500', occurredAt:'2026-04-27 13:45', insurance:'有', casualty:'无人员伤亡', minorInjuries:0, seriousInjuries:0, deaths:0, propertyLoss:18500, sceneImages:['事故现场全景.jpg','碰撞部位.jpg'], attachments:['行车记录视频.mp4'], status:'已上报', vehicleStatus:'已停运', logs:[{node:'已上报', handler:'王工（D公司）', time:'2026-04-27 14:00', opinion:'已提交事故基本信息及现场材料。', status:'已处理'}] },
+    { id:'ACC20260426001', enterprise:'A公司', vin:'LHGCR28X0NY012876', plate:'鄂F·A001', type:'刮擦', severity:'轻微', location:'襄城区环城路K5+200', occurredAt:'2026-04-26 09:30', insurance:'有', status:'待提交分析报告', vehicleStatus:'已停运', trafficReport:'交通事故报告.pdf', logs:[{node:'已上报', handler:'陈工（A公司）', time:'2026-04-26 10:00', opinion:'已提交事故基本信息。', status:'已处理'},{node:'交通事故报告提交', handler:'陈工（A公司）', time:'2026-04-27 09:30', opinion:'已补充交通事故报告（可选材料）。', status:'已处理'}] },
+    { id:'ACC20260425001', enterprise:'B公司', vin:'LHGCR28X0NY035429', plate:'鄂F·B003', type:'碰撞', severity:'严重', location:'B品牌试验场内部道路+100', occurredAt:'2026-04-25 16:20', insurance:'有', status:'待审核', vehicleStatus:'已停运', analysisReport:'事故分析报告.pdf', logs:[{node:'已上报', handler:'陈工（B公司）', time:'2026-04-25 17:00', opinion:'已提交事故基本信息。', status:'已处理'},{node:'待审核', handler:'陈工（B公司）', time:'2026-04-27 11:20', opinion:'已提交事故分析报告及佐证材料。', status:'已处理'}] },
+    { id:'ACC20260415001', enterprise:'F公司', vin:'LHGCR28X0NY054721', plate:'鄂F·F018', type:'剐蹭', severity:'轻微', location:'襄州区航空路K8+300', occurredAt:'2026-04-15 10:25', insurance:'有', status:'已完成', vehicleStatus:'已恢复', analysisReport:'事故分析报告.pdf', logs:[{node:'待审核', handler:'李四（第三方专业管理机构A）', time:'2026-04-19 11:00', opinion:'审核通过，事故上报流程已完成。', status:'已处理'}] },
+    { id:'ACC20260412001', enterprise:'G公司', vin:'LHGCR28X0NY062345', plate:'鄂F·G021', type:'碰撞', severity:'一般', location:'高新区团山大道K3+600', occurredAt:'2026-04-12 13:10', insurance:'有', status:'已退回', vehicleStatus:'已停运', analysisReport:'事故分析报告_v1.pdf', returnReason:'事故分析报告未附责任认定结论，请补充后重新提交。', logs:[{node:'待审核', handler:'李四（第三方专业管理机构A）', time:'2026-04-14 09:40', opinion:'退回：事故分析报告缺少责任认定结论。', status:'已退回'}] },
+    { id:'ACC20260410001', enterprise:'H公司', vin:'LHGCR28X0NY071234', plate:'鄂F·H034', type:'单车事故', severity:'轻微', location:'樊城区人民路西段', occurredAt:'2026-04-10 15:20', insurance:'有', status:'已撤回', vehicleStatus:'已停运', logs:[{node:'已上报', handler:'周工（H公司）', time:'2026-04-10 16:05', opinion:'企业在提交分析报告前主动撤回。', status:'已撤回'}] }
   ];
 
   function cloneAccidentData(data) { return JSON.parse(JSON.stringify(data)); }
@@ -451,10 +445,7 @@
   }
   function accidentNextStatus(status) {
     return {
-      '事故信息待审核':'事故报告待提交',
-      '事故报告待审核':'事故分析报告待提交',
-      '事故分析报告待初审':'事故分析报告待专班审核',
-      '事故分析报告待专班审核':'已完成'
+      '待审核':'已完成'
     }[status];
   }
   function getAccidentReviewRole(status) {
@@ -465,12 +456,11 @@
     getRecord: findAccidentRecord,
     getStatusMeta: function(status) { return ACCIDENT_STATUS_META[status] || { type:'default' }; },
     getReviewRole: getAccidentReviewRole,
-    withdraw: function(id) { return updateAccidentRecord(id, function(record) { appendAccidentLog(record, record.status, '王工（' + record.enterprise + '）', '企业主动撤回事故上报。', '已撤回'); record.status='已撤回'; }); },
-    submitReport: function(id, kind) { return updateAccidentRecord(id, function(record) { var next=kind==='traffic'?'事故报告待审核':'事故分析报告待初审'; appendAccidentLog(record, next, '王工（' + record.enterprise + '）', kind==='traffic'?'已提交交通事故报告及佐证材料。':'已提交事故原因、责任认定与完整事故分析报告。'); record.status=next; }); },
-    resubmit: function(id) { var records=getAccidentRecords(); for (var i=0;i<records.length;i++) { if (records[i].id===id) { var source=records[i]; var next=source.returnTo || '事故信息待审核'; var revision=cloneAccidentData(source); revision.id=source.id + '-R1'; revision.parentId=source.id; revision.status=next; revision.returnReason=''; appendAccidentLog(revision, next, '王工（' + revision.enterprise + '）', '已按退回意见完成修改并重新提交。'); records.unshift(revision); saveAccidentRecords(records); return revision; } } return null; },
-    review: function(id, approved, actor, opinion) { return updateAccidentRecord(id, function(record) { var node=record.status; if (approved) { var next=accidentNextStatus(node); appendAccidentLog(record, node, actor, opinion || '审核通过。'); record.status=next; if (next==='已完成') record.vehicleStatus='已恢复'; } else { appendAccidentLog(record, node, actor, opinion || '材料不完整，请补充后重新提交。', '已退回'); record.returnTo=node; record.returnReason=opinion || '材料不完整，请补充后重新提交。'; record.status='已退回'; } }); },
-    reportProvince: function(id) { return updateAccidentRecord(id, function(record) { appendAccidentLog(record, '省厅报送', '赵工（管理平台）', '已完成省级平台数据同步。'); record.provinceStatus='已报送'; }); },
-    create: function(data) { var records=getAccidentRecords(); var id='ACC20260817' + String(records.length + 1).padStart(3, '0'); var record={ id:id, enterprise:data.enterprise || 'A公司', vin:data.vin || 'LHGCR28X0NY012876', plate:data.plate || '鄂F·A001', type:data.type || '碰撞', severity:data.severity || '一般', location:data.location || '待补充', occurredAt:data.occurredAt || '2026-08-17 15:30', insurance:data.insurance || '有', status:'事故信息待审核', vehicleStatus:'已停运', provinceStatus:'未报送', logs:[] }; appendAccidentLog(record, '事故信息待审核', '王工（' + record.enterprise + '）', '已提交事故基本信息和佐证材料。'); records.unshift(record); saveAccidentRecords(records); return record; },
+    withdraw: function(id) { return updateAccidentRecord(id, function(record) { if (record.status !== '已上报' && record.status !== '待提交分析报告') return; appendAccidentLog(record, record.status, '王工（' + record.enterprise + '）', '企业在提交分析报告前主动撤回事故上报。', '已撤回'); record.status='已撤回'; }); },
+    submitReport: function(id, kind) { return updateAccidentRecord(id, function(record) { if (kind === 'traffic') { if (record.status !== '已上报') return; appendAccidentLog(record, '交通事故报告提交', '王工（' + record.enterprise + '）', '已补充交通事故报告（可选材料）。'); record.trafficReport='交通事故报告.pdf'; record.status='待提交分析报告'; return; } if (record.status !== '已上报' && record.status !== '待提交分析报告') return; appendAccidentLog(record, '待审核', '王工（' + record.enterprise + '）', '已提交事故分析报告及佐证材料。'); record.analysisReport='事故分析报告.pdf'; record.status='待审核'; }); },
+    resubmit: function(id) { return updateAccidentRecord(id, function(record) { if (record.status !== '已退回') return; appendAccidentLog(record, '待审核', '王工（' + record.enterprise + '）', '已按退回意见修改事故分析报告并重新提交。'); record.returnReason=''; record.analysisReport='事故分析报告_修订版.pdf'; record.status='待审核'; }); },
+    review: function(id, approved, actor, opinion) { return updateAccidentRecord(id, function(record) { if (record.status !== '待审核') return; var node=record.status; if (approved) { var next=accidentNextStatus(node); appendAccidentLog(record, node, actor, opinion || '审核通过。'); record.status=next; if (next==='已完成') record.vehicleStatus='已恢复'; } else { appendAccidentLog(record, node, actor, opinion || '材料不完整，请补充后重新提交。', '已退回'); record.returnTo=node; record.returnReason=opinion || '材料不完整，请补充后重新提交。'; record.status='已退回'; } }); },
+    create: function(data) { var records=getAccidentRecords(); var id='ACC20260817' + String(records.length + 1).padStart(3, '0'); var record={ id:id, enterprise:data.enterprise || 'A公司', vin:data.vin || 'LHGCR28X0NY012876', plate:data.plate || '鄂F·A001', type:data.type || '碰撞', severity:data.severity || '一般', location:data.location || '待补充', occurredAt:data.occurredAt || '2026-08-17 15:30', insurance:data.insurance || '有', casualty:data.casualty || '无人员伤亡', minorInjuries:data.minorInjuries == null ? 0 : data.minorInjuries, seriousInjuries:data.seriousInjuries == null ? 0 : data.seriousInjuries, deaths:data.deaths == null ? 0 : data.deaths, propertyLoss:data.propertyLoss == null ? 0 : data.propertyLoss, description:data.description || '', sceneImages:data.sceneImages || [], attachments:data.attachments || [], status:'已上报', vehicleStatus:'已停运', logs:[] }; appendAccidentLog(record, '已上报', '王工（' + record.enterprise + '）', '已提交事故基本信息、伤亡与财产损失信息、现场图片和附件。'); records.unshift(record); saveAccidentRecords(records); return record; },
     reset: function() { localStorage.removeItem(ACCIDENT_WORKFLOW_KEY); window.dispatchEvent(new CustomEvent('accidentworkflowchange')); }
   };
 
@@ -1585,7 +1575,7 @@
     '故障类型': ['全部','传感器故障','通信故障','控制器故障','制动系统故障','转向系统故障'],
     '越界方向': ['全部','驶入禁入区','驶出允许区'],
     '事故类型': ['全部','追尾事故','侧面碰撞','正面碰撞','刮擦事故','单车事故','翻车事故'],
-    '事故上报状态': ['全部','事故信息待审核','事故报告待提交','事故报告待审核','事故分析报告待提交','事故分析报告待初审','事故分析报告待专班审核','已完成','已退回','已撤回'],
+    '事故上报状态': ['全部','已上报','待提交分析报告','待审核','已完成','已退回','已撤回'],
     '审核角色': ['全部','第三方专业管理机构','市工作专班'],
     '当前审批节点': ['全部','第三方初审','市工作专班审核','专班审核确认','专家评审','专题会审议','待上传牌照'],
     '审核状态': ['全部','待审核','审核中','已通过','已退回'],

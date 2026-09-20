@@ -16,24 +16,36 @@
     if (document.getElementById('accessFlowSharedStyle')) return;
     var style = document.createElement('style');
     style.id = 'accessFlowSharedStyle';
-    style.textContent = '.access-flow-summary{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 16px;margin-bottom:16px;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;font-size:14px}.access-flow-summary-label{color:#00000073;margin-right:6px}.access-flow-hint{color:#d46b08;font-size:12px}.access-flow-stage-cell{min-width:136px}.access-flow-stage-cell small{display:block;margin-top:3px;color:#d46b08;line-height:18px}.access-flow-progress{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap}.access-flow-progress-item{display:flex;align-items:center}.access-flow-progress-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;background:#d9d9d9}.access-flow-progress-item.is-done .access-flow-progress-dot{background:#52c41a}.access-flow-progress-item.is-current .access-flow-progress-dot{background:#1677ff;box-shadow:0 0 0 3px #e6f4ff}.access-flow-progress-item.is-returned .access-flow-progress-dot{background:#ff4d4f}.access-flow-progress-label{margin-left:5px;font-size:12px;color:#000000d9;white-space:nowrap}.access-flow-progress-line{width:24px;height:2px;background:#d9d9d9;margin:11px 7px 0}.access-flow-progress-line.is-done{background:#52c41a}.access-flow-table.access-flow-wide{min-width:1360px}.access-flow-wide th:nth-last-child(3),.access-flow-wide td:nth-last-child(3){min-width:190px;white-space:nowrap}.access-flow-wide th:nth-last-child(2),.access-flow-wide td:nth-last-child(2){min-width:170px;white-space:nowrap}#mainTbody td:last-child{min-width:112px;white-space:nowrap}#mainTbody td:last-child .ant-btn-link{white-space:nowrap}';
+    style.textContent = '.access-flow-summary{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;min-height:48px;padding:8px 16px;margin-bottom:16px;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;font-size:14px}.access-flow-summary-main{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.access-flow-summary-label{color:#00000073;margin-right:6px}.access-flow-summary-owner{color:#00000073}.access-flow-summary-owner strong{color:#000000d9;font-weight:500}.access-flow-summary-return{color:#ad6800;font-size:12px}.access-flow-stage-cell{min-width:136px}.access-flow-progress{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap}.access-flow-progress-item{display:flex;align-items:center}.access-flow-progress-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;background:#d9d9d9}.access-flow-progress-item.is-done .access-flow-progress-dot{background:#52c41a}.access-flow-progress-item.is-current .access-flow-progress-dot{background:#1677ff;box-shadow:0 0 0 3px #e6f4ff}.access-flow-progress-item.is-returned .access-flow-progress-dot{background:#ff4d4f}.access-flow-progress-label{margin-left:5px;font-size:12px;color:#000000d9;white-space:nowrap}.access-flow-progress-line{width:24px;height:2px;background:#d9d9d9;margin:11px 7px 0}.access-flow-progress-line.is-done{background:#52c41a}.access-flow-table.access-flow-wide{min-width:1360px}.access-flow-wide th:nth-last-child(3),.access-flow-wide td:nth-last-child(3){min-width:190px;white-space:nowrap}.access-flow-wide th:nth-last-child(2),.access-flow-wide td:nth-last-child(2){min-width:170px;white-space:nowrap}#mainTbody td:last-child{min-width:112px;white-space:nowrap}#mainTbody td:last-child .ant-btn-link{white-space:nowrap}';
     document.head.appendChild(style);
   }
+  function ownerLabel(stage) {
+    var map = { enterprise: '申请主体', 'third-party': '第三方服务机构', workgroup: '市工作专班', expert: '专家评审组' };
+    return map[(F.stageInfo(stage) || {}).role] || '—';
+  }
   function summaryHtml(record) {
-    var hint = F.returnHint(record);
-    return '<div class="access-flow-summary"><div><span class="access-flow-summary-label">流程状态</span>' + tag(F.processInfo(record)) + '</div><div><span class="access-flow-summary-label">当前环节</span>' + tag({ label: F.stageInfo(record).label, cls: record.processStatus === 'returning' ? 'ant-tag-warning' : 'ant-tag-processing' }) + '</div>' + (hint ? '<span class="access-flow-hint">' + esc(hint) + '</span>' : '') + '</div>';
+    var stage = F.stageInfo(record), returned = F.latestReturn(record);
+    var stageCls = record.processStatus === 'returning' ? 'ant-tag-warning' : record.currentStage === 'completed' ? 'ant-tag-default' : record.processStatus === 'approved' ? 'ant-tag-success' : 'ant-tag-processing';
+    var returnedHtml = record.processStatus === 'returning' && returned ? '<span class="access-flow-summary-return">由' + esc(F.stageInfo({ currentStage: returned.stage, processStatus: record.processStatus }).label) + '退回</span>' : '';
+    return '<div class="access-flow-summary"><div class="access-flow-summary-main"><div><span class="access-flow-summary-label">流程状态</span>' + tag(F.processInfo(record)) + '</div><div><span class="access-flow-summary-label">当前环节</span>' + tag({ label: stage.label, cls: stageCls }) + '</div></div><div class="access-flow-summary-owner">当前处理方：<strong>' + esc(ownerLabel(record)) + '</strong></div>' + returnedHtml + '</div>';
+  }
+  function removeDuplicateContextFields(body) {
+    var labels = body.querySelectorAll('.ant-descriptions-label');
+    Array.prototype.forEach.call(labels, function (label) {
+      if (['申请状态', '审批状态', '流程状态', '当前节点', '当前环节'].indexOf(label.textContent.trim()) === -1) return;
+      var value = label.nextElementSibling, row = label.closest('.ant-descriptions-row');
+      label.remove();
+      if (value && value.classList.contains('ant-descriptions-value')) value.remove();
+      if (row && !row.querySelector('.ant-descriptions-label')) row.remove();
+    });
   }
   function decorateDetail(id) {
     var record = recordById(id); if (!record) return;
     var body = document.querySelector('#modal-mask .ant-modal-body'); if (!body) return;
     var old = body.querySelector('.access-flow-summary'); if (old) old.remove();
+    Array.prototype.forEach.call(document.querySelectorAll('#modal-mask .ant-modal-header .aaf-title-status'), function (tagNode) { tagNode.remove(); });
     body.insertAdjacentHTML('afterbegin', summaryHtml(record));
-    Array.prototype.forEach.call(body.querySelectorAll('.ant-descriptions-label'), function (label) {
-      var text = label.textContent.trim();
-      if (text !== '申请状态' && text !== '审批状态' && text !== '当前节点') return;
-      if (text === '当前节点') { label.textContent = '当前环节'; label.nextElementSibling.innerHTML = tag({ label: F.stageInfo(record).label, cls: 'ant-tag-processing' }); }
-      else { label.textContent = '流程状态'; label.nextElementSibling.innerHTML = tag(F.processInfo(record)); }
-    });
+    removeDuplicateContextFields(body);
   }
   function renderProgress(record) {
     var steps = F.progress(record), html = '<div class="access-flow-progress">';
@@ -99,8 +111,7 @@
       if (processIndex > -1 && row.cells[processIndex]) row.cells[processIndex].innerHTML = tag(F.processInfo(record));
       if (stageIndex > -1) {
         var current = row.cells[stageIndex];
-        var hint = F.returnHint(record);
-        current.className = 'access-flow-stage-cell'; current.innerHTML = esc(F.stageInfo(record).label) + (hint ? '<small>' + esc(hint) + '</small>' : '');
+        current.className = 'access-flow-stage-cell'; current.innerHTML = esc(F.stageInfo(record).label);
       }
     });
   }
@@ -164,9 +175,11 @@
       postprocessRows();
       Array.prototype.forEach.call(document.querySelectorAll('#mainTbody tr'), function (row) {
         var record = recordById(row.cells[0] && row.cells[0].textContent.trim()), cell = row.cells[row.cells.length - 1]; if (!record || !cell) return;
-        cell.innerHTML = F.canHandle(record) ? '<button class="ant-btn-link" onclick="openApprove(\'' + esc(record.id) + '\')">处理</button><button class="ant-btn-link" onclick="openDetail(\'' + esc(record.id) + '\')">查看</button>' : '<button class="ant-btn-link" onclick="openDetail(\'' + esc(record.id) + '\')">查看</button>';
+        cell.innerHTML = F.canHandle(record) ? '<button class="ant-btn-link" onclick="openDetail(\'' + esc(record.id) + '\')">查看</button><button class="ant-btn-link" onclick="openApprove(\'' + esc(record.id) + '\')">处理</button>' : '<button class="ant-btn-link" onclick="openDetail(\'' + esc(record.id) + '\')">查看</button>';
       });
     };
+    var originalDetail = window.openDetail;
+    if (typeof originalDetail === 'function') window.openDetail = function (id) { window.__accessFlowCurrentRecord = recordById(id); var result = originalDetail.apply(this, arguments); setTimeout(function () { decorateDetail(id); }, 80); return result; };
     var originalOpen = window.openApprove;
     if (typeof originalOpen === 'function') window.openApprove = function (id) { var record = recordById(id); if (!record || !F.canHandle(record)) { notify('当前角色不是该环节责任方，仅可查看', 'warning'); return window.openDetail(id); } window.__accessFlowCurrentRecord = record; var result = originalOpen.apply(this, arguments); setTimeout(function () { decorateDetail(id); var node = document.querySelector('.approval-context .current-node'); if (node) node.textContent = F.stageInfo(record).label; }, 80); return result; };
     window.approveAction = function (action) {

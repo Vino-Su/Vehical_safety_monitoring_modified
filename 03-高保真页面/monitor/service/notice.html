@@ -55,26 +55,26 @@
       <!-- 全部列表 -->
       <div id="tab-all">
         <div class="ant-table-wrapper">
-          <table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead>
+          <table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作</th></tr></thead>
           <tbody id="tbody-all"></tbody></table>
         </div>
         <div id="pageBar-all" class="mt-4"></div>
       </div>
 
       <!-- 草稿箱 -->
-      <div id="tab-draft" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead><tbody id="tbody-draft"></tbody></table></div><div id="pageBar-draft" class="mt-4"></div></div>
+      <div id="tab-draft" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作</th></tr></thead><tbody id="tbody-draft"></tbody></table></div><div id="pageBar-draft" class="mt-4"></div></div>
 
       <!-- 待审核 -->
-      <div id="tab-pending" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead><tbody id="tbody-pending"></tbody></table></div><div id="pageBar-pending" class="mt-4"></div></div>
+      <div id="tab-pending" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作</th></tr></thead><tbody id="tbody-pending"></tbody></table></div><div id="pageBar-pending" class="mt-4"></div></div>
 
       <!-- 已退回 -->
-      <div id="tab-returned" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead><tbody id="tbody-returned"></tbody></table></div><div id="pageBar-returned" class="mt-4"></div></div>
+      <div id="tab-returned" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作</th></tr></thead><tbody id="tbody-returned"></tbody></table></div><div id="pageBar-returned" class="mt-4"></div></div>
 
       <!-- 已发布 -->
-      <div id="tab-published" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead><tbody id="tbody-published"></tbody></table></div><div id="pageBar-published" class="mt-4"></div></div>
+      <div id="tab-published" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作</th></tr></thead><tbody id="tbody-published"></tbody></table></div><div id="pageBar-published" class="mt-4"></div></div>
 
       <!-- 已下架 -->
-      <div id="tab-removed" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作按钮</th></tr></thead><tbody id="tbody-removed"></tbody></table></div><div id="pageBar-removed" class="mt-4"></div></div>
+      <div id="tab-removed" style="display:none"><div class="ant-table-wrapper"><table class="ant-table"><thead><tr><th>通知公告编号</th><th>标题</th><th>信息类型</th><th>发布机构</th><th>创建人</th><th>目标受众</th><th>发布状态</th><th>最后修改时间/创建时间</th><th>操作</th></tr></thead><tbody id="tbody-removed"></tbody></table></div><div id="pageBar-removed" class="mt-4"></div></div>
     </main>
   </div>
 </div>
@@ -127,7 +127,7 @@ function buildOps(d){
   if(d.status==='pending')return '<button class="ant-btn-link" onclick="openDetailModal(\''+d.id+'\')">查看</button><button class="ant-btn-link" onclick="openReviewModal(\''+d.id+'\')">审核</button><button class="ant-btn-link danger" onclick="confirmWithdraw(\''+d.id+'\')">撤回</button>';
   if(d.status==='returned')return '<button class="ant-btn-link" onclick="openDetailModal(\''+d.id+'\')">查看</button><button class="ant-btn-link" onclick="openNoticeModal()">编辑</button><button class="ant-btn-link danger" onclick="confirmDelete(\''+d.id+'\')">删除</button>';
   if(d.status==='removed')return '<button class="ant-btn-link" onclick="openDetailModal(\''+d.id+'\')">查看</button>';
-  return '<button class="ant-btn-link" onclick="openDetailModal(\''+d.id+'\')">查看</button><button class="ant-btn-link" style="color:#faad14" onclick="openNoticeModal()">编辑</button><button class="ant-btn-link danger" onclick="confirmRemove(\''+d.id+'\')">下架</button>';
+  return '<button class="ant-btn-link" onclick="openDetailModal(\''+d.id+'\')">查看</button><button class="ant-btn-link danger" onclick="confirmRemove(\''+d.id+'\')">下架</button>';
 }
 function buildRow(d,tabKey){
   var ops=buildOps(d);

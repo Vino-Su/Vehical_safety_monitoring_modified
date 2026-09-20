@@ -147,6 +147,18 @@ var ALL_DATA = [
   {caseNo:'VL20260518020',time:'2026-05-18 10:45:28',plate:'鄂F·U045',enterprise:'E公司',vehicleType:'乘用车',violationCode:'12080',evidenceType:'电子抓拍',policeId:'—',issueDate:'2026-05-18',creditCode:'91420600MA46E005B',autoLevel:'L4',hasSafetyOfficer:'是',address:'襄阳市高新区中原路与春园路交叉口',violationDesc:'驾驶机动车不按导向车道行驶',legalBasis:'《中华人民共和国道路交通安全法》第九十条',vehicleStatus:'自动驾驶模式',issueUnit:'襄阳市公安局交通警察支队高新大队',policeName:'—',responsibleEntity:'E公司',fine:'100',points:'2',paymentDeadline:'2026-06-02',attachments:[{name:'违法现场照片.jpg',type:'image'},{name:'处罚决定书.pdf',type:'pdf'}]}
 ];
 
+var VIOLATION_ROADS = {
+  VL20260701001: '邓城大道', VL20260630002: '长虹路', VL20260628003: '人民广场西路', VL20260625004: '东津世纪城路',
+  VL20260622005: '深圳大道', VL20260620006: '东风汽车大道', VL20260618007: '檀溪路', VL20260615008: '解放路',
+  VL20260612009: '邓城大道', VL20260610010: '金源路', VL20260608011: '襄阳大道', VL20260605012: '环城南路',
+  VL20260603013: '长虹路', VL20260601014: '追日路', VL20260530015: '檀溪路', VL20260528016: '人民路',
+  VL20260525017: '东津大桥桥北匝道', VL20260522018: '富康大道', VL20260520019: '荆州街', VL20260518020: '中原路'
+};
+
+ALL_DATA.forEach(function (item) {
+  item.road = VIOLATION_ROADS[item.caseNo] || '—';
+});
+
 var selectedIds = new Set();
 var currentFilteredData = [];
 var pager = null;
@@ -395,6 +407,7 @@ function showDetail(id) {
       '<div class="desc-grid">' +
         '<div class="desc-item"><div class="desc-label">违法案件编号</div><div class="desc-value">' + d.caseNo + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">违法发生时间</div><div class="desc-value">' + d.time + '</div></div>' +
+        '<div class="desc-item full"><div class="desc-label">违法所在道路</div><div class="desc-value">' + d.road + '</div></div>' +
         '<div class="desc-item full"><div class="desc-label">违法发生地址</div><div class="desc-value">' + d.address + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">违法行为代码</div><div class="desc-value">' + d.violationCode + '</div></div>' +
         '<div class="desc-item"><div class="desc-label">违法取证类型</div><div class="desc-value"><span class="ant-tag ' + evClass + '">' + d.evidenceType + '</span></div></div>' +

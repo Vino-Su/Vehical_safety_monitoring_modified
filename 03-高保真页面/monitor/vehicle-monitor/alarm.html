@@ -9,13 +9,17 @@
   <style>
     .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
     .page-header h2{font-size:20px;font-weight:600;color:#000000d9}
-    .stat-card{background:#fff;border-radius:8px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 2px rgba(0,0,0,0.03),0 1px 6px -1px rgba(0,0,0,0.02);transition:transform .2s,box-shadow .2s}
+    .stat-card{background:#fff;border:1px solid transparent;border-radius:8px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 2px rgba(0,0,0,0.03),0 1px 6px -1px rgba(0,0,0,0.02);transition:transform .2s,box-shadow .2s,border-color .2s;background-clip:padding-box}
+    .stat-card-filter{width:100%;text-align:left;cursor:pointer;font-family:inherit}
     .stat-card:hover{transform:translateY(-2px);box-shadow:0 3px 6px rgba(0,0,0,0.05),0 2px 8px -2px rgba(0,0,0,0.08)}
+    .stat-card-filter:focus-visible{outline:2px solid #1677ff;outline-offset:2px}
+    .stat-card-filter.active{border-color:#1677ff;box-shadow:0 0 0 2px rgba(22,119,255,.12),0 3px 6px rgba(0,0,0,.05)}
     .stat-card .stat-icon{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px}
     .stat-card .stat-info .stat-value{font-size:24px;font-weight:600;color:#000000d9}
     .stat-card .stat-info .stat-label{font-size:14px;color:#00000073}
-    .alarm-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
-    @media (max-width:1180px){.alarm-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .alarm-stats-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;margin-bottom:16px}
+    @media (max-width:1280px){.alarm-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media (max-width:760px){.alarm-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .filter-bar{background:#fff;padding:16px 24px;border-radius:8px;margin-bottom:16px}
     .filter-row{display:flex;flex-wrap:wrap;gap:20px 24px;align-items:center}
     .filter-item{display:inline-flex;flex-direction:row;align-items:center;gap:8px}
@@ -96,16 +100,16 @@
         </div>
         <div class="filter-row filter-extra">
           <div class="filter-item"><label>VIN码</label><input id="filter-vin" class="ant-input" placeholder="请输入VIN码" style="width:150px"></div>
-          <div class="filter-item"><label>处理状态</label><select id="filter-status" class="ant-input" style="width:104px"><option>全部</option><option>待处理</option><option>待审核</option><option>已退回</option><option>已完成</option></select></div>
           <div class="filter-item"><label>发生时间</label><input id="filter-start-time" class="ant-input" type="datetime-local" step="1" style="width:196px"> <span style="color:#00000073">~</span> <input id="filter-end-time" class="ant-input" type="datetime-local" step="1" style="width:196px"></div>
         </div>
       </div>
       <!-- 统计卡片 -->
-      <div class="alarm-stats-grid">
-        <div class="stat-card"><div class="stat-icon bg-[#fffbe6] text-[#faad14]">!</div><div class="stat-info"><div id="stat-pending" class="stat-value">0</div><div class="stat-label">待处理事件数（含退回）</div></div></div>
-        <div class="stat-card"><div class="stat-icon bg-[#e6f7ff] text-[#1890ff]">...</div><div class="stat-info"><div id="stat-reviewing" class="stat-value">0</div><div class="stat-label">待审核事件数</div></div></div>
-        <div class="stat-card"><div class="stat-icon bg-[#f6ffed] text-[#52c41a]">✓</div><div class="stat-info"><div id="stat-completed" class="stat-value">0</div><div class="stat-label">已完成事件数</div></div></div>
-        <div class="stat-card"><div class="stat-icon bg-[#f5f5f5] text-[#00000073]">#</div><div class="stat-info"><div id="stat-total" class="stat-value">0</div><div class="stat-label">累计事件总数</div></div></div>
+      <div class="alarm-stats-grid" aria-label="按处理状态筛选事件">
+        <button type="button" class="stat-card stat-card-filter active" data-status="全部" aria-pressed="true" onclick="filterByStatus('全部')"><span class="stat-icon bg-[#f5f5f5] text-[#00000073]">#</span><span class="stat-info"><span id="stat-total" class="stat-value">0</span><span class="stat-label">全部事件数</span></span></button>
+        <button type="button" class="stat-card stat-card-filter" data-status="待处理" aria-pressed="false" onclick="filterByStatus('待处理')"><span class="stat-icon bg-[#fffbe6] text-[#faad14]">!</span><span class="stat-info"><span id="stat-pending" class="stat-value">0</span><span class="stat-label">待处理事件数</span></span></button>
+        <button type="button" class="stat-card stat-card-filter" data-status="待审核" aria-pressed="false" onclick="filterByStatus('待审核')"><span class="stat-icon bg-[#e6f7ff] text-[#1890ff]">...</span><span class="stat-info"><span id="stat-reviewing" class="stat-value">0</span><span class="stat-label">待审核事件数</span></span></button>
+        <button type="button" class="stat-card stat-card-filter" data-status="已退回" aria-pressed="false" onclick="filterByStatus('已退回')"><span class="stat-icon bg-[#fff2f0] text-[#ff4d4f]">↩</span><span class="stat-info"><span id="stat-returned" class="stat-value">0</span><span class="stat-label">已退回事件数</span></span></button>
+        <button type="button" class="stat-card stat-card-filter" data-status="已完成" aria-pressed="false" onclick="filterByStatus('已完成')"><span class="stat-icon bg-[#f6ffed] text-[#52c41a]">✓</span><span class="stat-info"><span id="stat-completed" class="stat-value">0</span><span class="stat-label">已完成事件数</span></span></button>
       </div>
       <!-- Tab 页签区 -->
       <div class="ant-tabs mb-4">
@@ -326,6 +330,7 @@ var EVENT_RULES = {
 var activeTabId = 'tab-ew01';
 var eventPagers = {};
 var selectedEventIds = {};
+var activeStatusFilter = '全部';
 
 Object.keys(EVENT_DATA).forEach(function(eventId){
   EVENT_DATA[eventId].enterprise = COMPANY_BY_VIN[EVENT_DATA[eventId].vin] || EVENT_DATA[eventId].enterprise;
@@ -436,12 +441,11 @@ function getInputTime(id){
   if(!value) return '';
   return value.replace('T',' ') + (value.length === 16 ? ':00' : '');
 }
-function getFilteredEvents(){
+function getFilteredEvents(ignoreStatus){
   var category = document.getElementById('filter-category').value;
   var company = document.getElementById('filter-company').value.trim().toLowerCase();
   var plate = document.getElementById('filter-plate').value.trim().toLowerCase();
   var vin = document.getElementById('filter-vin').value.trim().toLowerCase();
-  var status = document.getElementById('filter-status').value;
   var startTime = getInputTime('filter-start-time');
   var endTime = getInputTime('filter-end-time');
   return getEventRecords().filter(function(record){
@@ -449,7 +453,7 @@ function getFilteredEvents(){
       (!company || record.enterprise.toLowerCase().indexOf(company) > -1) &&
       (!plate || record.plate.toLowerCase().indexOf(plate) > -1) &&
       (!vin || record.vin.toLowerCase().indexOf(vin) > -1) &&
-      (status === '全部' || record.status === status) &&
+      (ignoreStatus || activeStatusFilter === '全部' || record.status === activeStatusFilter) &&
       (!startTime || record.time >= startTime) &&
       (!endTime || record.time <= endTime);
   });
@@ -462,11 +466,23 @@ function getStatusClass(status){
   return status === '待处理' ? 'ant-tag-warning' : status === '待审核' ? 'ant-tag-processing' : status === '已退回' ? 'ant-tag-error' : 'ant-tag-success';
 }
 function updateStatistics(){
-  var records = getFilteredEvents();
-  document.getElementById('stat-pending').textContent = records.filter(function(item){ return item.status === '待处理' || item.status === '已退回'; }).length;
+  var records = getFilteredEvents(true);
+  document.getElementById('stat-pending').textContent = records.filter(function(item){ return item.status === '待处理'; }).length;
   document.getElementById('stat-reviewing').textContent = records.filter(function(item){ return item.status === '待审核'; }).length;
+  document.getElementById('stat-returned').textContent = records.filter(function(item){ return item.status === '已退回'; }).length;
   document.getElementById('stat-completed').textContent = records.filter(function(item){ return item.status === '已完成'; }).length;
   document.getElementById('stat-total').textContent = records.length;
+}
+function updateStatusCardSelection(){
+  document.querySelectorAll('.stat-card-filter').forEach(function(card){
+    var selected = card.getAttribute('data-status') === activeStatusFilter;
+    card.classList.toggle('active',selected);
+    card.setAttribute('aria-pressed',selected ? 'true' : 'false');
+  });
+}
+function filterByStatus(status){
+  activeStatusFilter = status;
+  queryEvents();
 }
 function renderTable(tabId){
   var table = document.querySelector('#' + tabId + ' table');
@@ -496,6 +512,7 @@ function renderActiveTable(){ renderTable(activeTabId); }
 function queryEvents(){
   selectedEventIds = {};
   Object.keys(eventPagers).forEach(function(tabId){ eventPagers[tabId].reset(); });
+  updateStatusCardSelection();
   updateStatistics();
   renderActiveTable();
 }
@@ -504,7 +521,7 @@ function resetEventFilters(){
   document.getElementById('filter-company').value = '';
   document.getElementById('filter-plate').value = '';
   document.getElementById('filter-vin').value = '';
-  document.getElementById('filter-status').value = '全部';
+  activeStatusFilter = '全部';
   document.getElementById('filter-start-time').value = '';
   document.getElementById('filter-end-time').value = '';
   queryEvents();

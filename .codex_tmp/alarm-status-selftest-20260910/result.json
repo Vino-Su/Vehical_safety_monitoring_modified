@@ -1,0 +1,21 @@
+{
+  "url": "http://127.0.0.1:9188/03-高保真页面/monitor/vehicle-monitor/alarm.html",
+  "verdict": "check_errors",
+  "title": "异常状态事件 - 智能网联汽车安全监测平台",
+  "htmlLen": 120680,
+  "bodyChildren": 4,
+  "selector": ".alarm-stats-grid",
+  "selectorFound": true,
+  "selectorCount": 1,
+  "pageTextPreview": "智能网联汽车安全监测平台\n开放道路资源管理\n测试示范监管\n监测数据分析\n平台管理\n3\n系统管理员\n管\n系统管理员\n准入信息管理\n准入申请\n准入审批管理\n自定义配置\n车辆状态监控\n监控一张图\n车辆运行监控\n异常状态事件\n异常事件处置\n交通违法信息\n事故数据上报\n事故审核\n测试服务管理\n信息公开与在线反馈\n事件分类\n全部\n预警\n告警\n所属企业\n临牌号\n查询\n重置\n导出\n展开更多\n#\n12全部事件数\n!",
+  "errorCount": 1,
+  "errors": [
+    {
+      "kind": "log",
+      "text": "network: Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ],
+  "domFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\alarm-status-selftest-20260910\\dom.html",
+  "resultFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\alarm-status-selftest-20260910\\result.json",
+  "shotFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\alarm-status-selftest-20260910\\shot.png"
+}
