@@ -244,7 +244,7 @@
         {
           key: 'access-approve',
           label: '准入审批管理',
-          roles: ['admin', 'third-party', 'workgroup'],
+          roles: ['admin', 'third-party', 'workgroup', 'expert'],
           children: [
             { key: 'approve', label: '审批管理', path: 'monitor/access-approve/approve.html', roles: ['admin', 'third-party', 'workgroup', 'expert'] },
             { key: 'terminate', label: '资格终止管理', path: 'monitor/access-approve/terminate.html', roles: ['admin', 'third-party', 'workgroup'] },
@@ -377,6 +377,7 @@
         {
           key: 'perm',
           label: '权限管理',
+          hidden: true,
           roles: ['admin'],
           children: [
             { key: 'user-manage', label: '账号用户管理', path: 'platform/user/index.html', roles: ['admin'] },
@@ -490,7 +491,7 @@
     USER_ROLE = role;
     localStorage.setItem('platform_role', role);
     if (!hasPageAccess(window.PAGE_ID, role)) {
-      window.location.href = getBasePath() + 'layout.html';
+      window.location.href = getDefaultPageHref(role);
       return;
     }
     location.reload();
@@ -508,6 +509,7 @@
     var result = [];
     for (var i = 0; i < data.length; i++) {
       var item = data[i];
+      if (item.hidden) continue;
       var roles = item.roles || ['admin'];
       if (roles.indexOf(role) === -1) continue;
       var filtered = {};
@@ -526,6 +528,12 @@
 
   function getFilteredMenu() {
     return filterMenuByRole(MENU_DATA, USER_ROLE);
+  }
+
+  function getDefaultPageHref(role) {
+    var target = findFirstPageItem(filterMenuByRole(MENU_DATA, role));
+    var fallbackPath = 'road/catalog/filing.html';
+    return getBasePath() + (target ? target.path : fallbackPath) + '?role=' + encodeURIComponent(role);
   }
 
   function renderHomeNavigation() {
@@ -800,9 +808,9 @@
 
   function renderHomeSidebar(basePath) {
     return '<nav class="sidebar-menu sidebar-home-menu">' +
-      '<a class="menu-item level-1 menu-item-active" href="' + basePath + 'layout.html">' +
+      '<a class="menu-item level-1 menu-item-active" href="' + getDefaultPageHref(USER_ROLE) + '">' +
         renderSidebarMenuIcon(null, false) +
-        '<span class="menu-text">工作台</span>' +
+        '<span class="menu-text">默认页面</span>' +
       '</a>' +
     '</nav>';
   }
@@ -850,9 +858,6 @@
       '.top-module-active{color:#1677ff!important;border-bottom-color:#1677ff!important;background:#e6f4ff!important}',
       '.top-module-icon{display:inline-flex;align-items:center;justify-content:center}',
       '.topnav-right{display:flex;align-items:center;gap:16px}',
-      '.topnav-tool-link{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:4px;color:#00000073;text-decoration:none;transition:all .2s}',
-      '.topnav-tool-link:hover{color:#1677ff;background:#e6f4ff}',
-      '.topnav-tool-link:focus{outline:2px solid #91caff;outline-offset:1px}',
       '.topnav-right .notification{position:relative;cursor:pointer;color:#00000073}',
       '.topnav-right .notification .badge{position:absolute;top:-4px;right:-4px;background:#ff4d4f;color:#fff;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:8px;padding:0 4px}',
       '.user-menu{position:relative;display:flex;align-items:center}',
@@ -1360,15 +1365,12 @@
       topnav.style.cssText = 'height:64px;min-height:64px;background:#fff;border-bottom:1px solid #f0f0f0;display:flex;align-items:stretch;justify-content:space-between;padding:0;flex-shrink:0';
       topnav.innerHTML =
         '<div class="topnav-left">' +
-          '<a class="topnav-brand" href="' + basePath + 'layout.html" aria-label="返回工作台">' +
+          '<a class="topnav-brand" href="' + getDefaultPageHref(USER_ROLE) + '" aria-label="进入默认页面">' +
             '<span>智能网联汽车安全监测平台</span>' +
           '</a>' +
           '<nav class="top-module-nav" aria-label="一级模块导航">' + renderGlobalNavigation(filteredMenu, basePath, activeModuleKey) + '</nav>' +
         '</div>' +
         '<div class="topnav-right" style="padding:0 24px">' +
-          '<a class="topnav-tool-link" href="' + basePath + '流程图/page-relation-map.html?role=' + USER_ROLE + '" aria-label="打开页面关系图" title="页面关系图">' +
-            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"></rect><rect x="15" y="3" width="6" height="6" rx="1"></rect><rect x="9" y="15" width="6" height="6" rx="1"></rect><path d="M9 6h6M12 9v6"></path></svg>' +
-          '</a>' +
           '<span class="notification"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg><span class="badge">3</span></span>' +
           renderRoleSwitcher() +
           renderUserMenu(cfg) +
@@ -1528,7 +1530,7 @@
 
     // 页面访问权限检查
     if (!hasPageAccess(PAGE_ID, USER_ROLE)) {
-      window.location.replace(getBasePath() + 'layout.html');
+      window.location.replace(getDefaultPageHref(USER_ROLE));
       return;
     }
 

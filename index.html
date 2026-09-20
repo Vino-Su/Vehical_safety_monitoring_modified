@@ -4,16 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>智能网联汽车安全监测平台</title>
-  <meta http-equiv="refresh" content="0;url=03-高保真页面/layout.html">
+  <meta http-equiv="refresh" content="0;url=03-高保真页面/road/catalog/filing.html">
   <script>
-    window.location.replace('03-高保真页面/layout.html');
+    (function () {
+      var match = window.location.search.match(/[?&]role=([a-z-]+)/);
+      var role = (match && match[1]) || localStorage.getItem('platform_role') || 'admin';
+      var defaultPages = {
+        'admin': 'road/catalog/filing.html',
+        'enterprise': 'monitor/access-info/company.html',
+        'third-party': 'road/catalog/filing.html',
+        'workgroup': 'road/catalog/filing.html',
+        'expert': 'monitor/access-approve/approve.html',
+        'traffic': 'monitor/vehicle-monitor/monitor-map.html',
+        'public': 'monitor/public/info.html'
+      };
+      if (!defaultPages[role]) role = 'admin';
+      window.location.replace('03-高保真页面/' + defaultPages[role] + '?role=' + encodeURIComponent(role));
+    })();
   </script>
 </head>
 <body>
   <p style="font-family: 'Microsoft YaHei', sans-serif; text-align: center; margin-top: 40vh; color: #00000073;">
     正在跳转至智能网联汽车安全监测平台...
     <br><br>
-    <a href="03-高保真页面/layout.html" style="color: #1677ff; text-decoration: none;">点击此处立即跳转</a>
+    <a href="03-高保真页面/road/catalog/filing.html" style="color: #1677ff; text-decoration: none;">点击此处立即跳转</a>
   </p>
 </body>
 </html>

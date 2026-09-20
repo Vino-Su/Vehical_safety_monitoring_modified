@@ -4,6 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>智能网联汽车安全监测平台</title>
+  <script>
+    (function () {
+      var match = window.location.search.match(/[?&]role=([a-z-]+)/);
+      var role = (match && match[1]) || localStorage.getItem('platform_role') || 'admin';
+      var defaultPages = {
+        'admin': 'road/catalog/filing.html',
+        'enterprise': 'monitor/access-info/company.html',
+        'third-party': 'road/catalog/filing.html',
+        'workgroup': 'road/catalog/filing.html',
+        'expert': 'monitor/access-approve/approve.html',
+        'traffic': 'monitor/vehicle-monitor/monitor-map.html',
+        'public': 'monitor/public/info.html'
+      };
+      if (!defaultPages[role]) role = 'admin';
+      window.location.replace(defaultPages[role] + '?role=' + encodeURIComponent(role));
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
