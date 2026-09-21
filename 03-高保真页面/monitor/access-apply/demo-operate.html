@@ -68,6 +68,7 @@ const PAGE_ID='demo-operate';
 var pager;
 var statusMap={draft:{label:'草稿',cls:'ant-tag-default'},pending_review:{label:'待初审',cls:'ant-tag-processing'},pending_committee:{label:'待专班审核',cls:'ant-tag-processing'},pending_expert:{label:'待专家评审',cls:'ant-tag-processing'},pending_meeting:{label:'待专题会审议',cls:'ant-tag-processing'},pending_committee_confirm:{label:'待专班审核确认',cls:'ant-tag-processing'},rejected:{label:'已退回',cls:'ant-tag-error'},withdrawn:{label:'已撤回',cls:'ant-tag-default'},pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},pending_plate_review:{label:'待牌照审核',cls:'ant-tag-processing'},plate_rejected:{label:'牌照审核退回',cls:'ant-tag-error'},active:{label:'已生效',cls:'ant-tag-success'},expired:{label:'已过期',cls:'ant-tag-default'},changed:{label:'已变更',cls:'ant-tag-blue'},terminated:{label:'已终止',cls:'ant-tag-error'}};
 var typeMap={initial:{label:'初次申请'},renewal:{label:'延期申请'},change:{label:'变更申请'},add_vehicle:{label:'新增相同配置车辆'}};
+var operateModeMap={manned:{label:'主驾有人'},auto:{label:'自动驾驶'}};
 var operateTypeMap={passenger:{label:'载人商业化试点'},cargo:{label:'载物商业化试点'},special:{label:'特种作业商业化试点'}};
 var appData=[
   {id:'DO202604001',type:'initial',operateType:'passenger',company:'A公司',origId:'-',vehicleCount:2,roadCount:3,status:'pending_review',time:'2026-04-10 09:12:33',validFrom:'2026-04-15',validTo:'2026-10-15'},
@@ -86,6 +87,7 @@ var appData=[
   {id:'DO202605004',type:'initial',operateType:'passenger',company:'M公司',origId:'-',vehicleCount:1,roadCount:1,status:'changed',time:'2026-03-10 16:12:44',validFrom:'2026-03-20',validTo:'2026-07-15'},
   {id:'DO202605005',type:'change',operateType:'passenger',company:'M公司',origId:'DO202605004',vehicleCount:1,roadCount:2,status:'active',time:'2026-05-12 09:48:31',validFrom:'2026-05-20',validTo:'2026-11-20'}
 ];
+var operateModeSeed={DO202604006:'auto',DO202605004:'auto'};appData.forEach(function(record){record.operateMode=operateModeSeed[record.id]||'manned';});
 function getOps(d){var ops=['<button class="ant-btn-link" onclick="openDetail(\''+d.id+'\')">查看</button>'];if(d.status==='draft')ops.push('<button class="ant-btn-link">编辑</button>','<button class="ant-btn-link">提交</button>');if(d.status==='rejected')ops.push('<button class="ant-btn-link">重新提交</button>');if(d.status==='pending_review'||d.status==='pending_expert'||d.status==='pending_committee_confirm')ops.push('<button class="ant-btn-link">撤回</button>');if(d.status==='active'){ops.push('<button class="ant-btn-link" onclick="openReportSubmitPage(\''+d.id+'\')">报告提交</button>');var hasPendingDerive=appData.some(function(a){return a.origId===d.id&&['draft','pending_review','pending_committee','pending_committee_confirm','pending_expert','pending_meeting','pending_plate'].indexOf(a.status)>-1;});var dAttr=hasPendingDerive?' disabled style="color:#00000040;cursor:not-allowed" title="存在进行中的派生申请，延期/变更/新增车辆三类互斥（见PRD 4.14）"':'';var cRenew=hasPendingDerive?'':('onclick="openRenewalPage(\''+d.id+'\')"');var cChange=hasPendingDerive?'':('onclick="openChangePage(\''+d.id+'\')"');var cAddV=hasPendingDerive?'':('onclick="openAddVehiclePage(\''+d.id+'\')"');var vt=new Date(d.validTo);var nm=new Date();var tm=new Date(nm.getTime()+90*24*60*60*1000);if(vt<=tm)ops.push('<button class="ant-btn-link" '+cRenew+dAttr+'>延期</button>');ops.push('<button class="ant-btn-link" '+cChange+dAttr+'>变更</button>','<button class="ant-btn-link" '+cAddV+dAttr+'>新增相同配置车辆</button>');}return ops.join(' ');}
 
 function toggleMultiSelect(id){var panel=document.getElementById(id+'Panel');panel.classList.toggle('show');}
@@ -534,13 +536,44 @@ openDetail=function(id){
     }, 800);
   }
 })();
+/* 基本信息按两组字段一行排列，避免长标签挤压值区域。 */
+function normalizeOperateBasicInfo(body){
+  if(!body)return;
+  var heading=null;
+  Array.prototype.some.call(body.querySelectorAll('h4'),function(node){
+    if(node.textContent.trim()==='基本信息'){heading=node;return true;}
+    return false;
+  });
+  var descriptions=heading&&heading.nextElementSibling;
+  if(!descriptions||!descriptions.classList.contains('ant-descriptions')||descriptions.dataset.basicInfoNormalized==='1')return;
+  var cells=[];
+  Array.prototype.forEach.call(descriptions.querySelectorAll(':scope > .ant-descriptions-row'),function(row){
+    if(!row.textContent.trim())return;
+    Array.prototype.forEach.call(row.children,function(cell){cells.push(cell);});
+  });
+  if(cells.length<2)return;
+  descriptions.innerHTML='';
+  for(var i=0;i<cells.length;i+=4){
+    var nextRow=document.createElement('div');
+    nextRow.className='ant-descriptions-row';
+    for(var j=0;j<4&&i+j<cells.length;j++)nextRow.appendChild(cells[i+j]);
+    descriptions.appendChild(nextRow);
+  }
+  descriptions.classList.add('operate-basic-info');
+  descriptions.dataset.basicInfoNormalized='1';
+}
+
 /* 延期详情与延期申请表单采用同一字段分组，避免审批查看遗漏本次申请信息。 */
 var operateOpenDetailBeforeRenewalAlignment=openDetail;
 function operateFormatNextDay(date){var value=new Date(date+'T00:00:00');value.setDate(value.getDate()+1);return value.getFullYear()+'-'+String(value.getMonth()+1).padStart(2,'0')+'-'+String(value.getDate()).padStart(2,'0');}
 function openOperateRenewalDetail(d){var parent=d.origId&&d.origId!=='-'?getDetailData(d.origId):null;var original=parent||d;var originalFrom=original.validFrom&&original.validFrom!=='-'?original.validFrom:'-';var originalTo=original.validTo&&original.validTo!=='-'?original.validTo:'-';var renewalFrom=d.validFrom&&d.validFrom!=='-'?d.validFrom:(originalTo==='-'?'-':operateFormatNextDay(originalTo));var renewalTo=d.validTo&&d.validTo!=='-'?d.validTo:'待审批确认';var project=original.project||'L4级城区道路载人商业化试点项目';var h='<div class="bg-[#f0f5ff] border border-[#91caff] rounded-lg p-3 mb-4 text-sm"><span class="text-[#1677ff] font-medium">延期申请</span>　<span>基于原申请编号：'+(d.origId||'-')+'</span>　<span class="text-[#00000073]">申请时间：'+d.time+'</span></div>';h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 pb-2 border-b border-[#f0f0f0]">原申请信息</h4><div class="ant-descriptions mb-4"><div class="ant-descriptions-row"><div class="ant-descriptions-label">申请主体</div><div class="ant-descriptions-value">'+original.company+'</div><div class="ant-descriptions-label">原商业化试点时间段</div><div class="ant-descriptions-value">'+originalFrom+' 至 '+originalTo+'</div></div><div class="ant-descriptions-row"><div class="ant-descriptions-label">商业化试点类型</div><div class="ant-descriptions-value">'+original.operateTypeLabel+'</div><div class="ant-descriptions-label">商业化试点项目</div><div class="ant-descriptions-value">'+project+'</div></div></div>';h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 pb-2 border-b border-[#f0f0f0]">延期内容</h4><div class="ant-descriptions mb-4"><div class="ant-descriptions-row"><div class="ant-descriptions-label">原商业化试点时间段</div><div class="ant-descriptions-value">'+originalFrom+' 至 '+originalTo+'</div><div class="ant-descriptions-label">延期时间段</div><div class="ant-descriptions-value">'+renewalFrom+' 至 '+renewalTo+'</div></div><div class="ant-descriptions-row"><div class="ant-descriptions-label">延期原因</div><div class="ant-descriptions-value">原商业化试点期限即将到期，需继续开展商业化试点运营评估。</div></div></div><div class="text-xs text-[#fa8c16] mb-4">延期开始日期自动接续原截止日期次日；延期时长一次不超过 6 个月。</div>';h+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 pb-2 border-b border-[#f0f0f0]">延期申请材料</h4><div class="operate-detail-group">'+operateDetailCurrentAttachments(d,'renewal-detail')+'<details class="orig-mats"><summary class="text-xs text-[#00000073] hover:text-[#1677ff] flex items-center gap-1 select-none"><span class="text-[#1677ff]">原申请附件（只读关联）</span><span class="text-[#00000040] ml-1">- 点击展开查看</span></summary><div class="mt-2">'+operateDetailInitialAttachments(original.id,'renewal-original')+'</div></details></div>';openModal('延期申请详情 - '+d.id,h,{wide:true,fullscreen:true,footer:'<button class="ant-btn" onclick="closeModal()">关闭</button>'});}
-openDetail=function(id){var d=getDetailData(id);if(d&&d.type==='renewal'){openOperateRenewalDetail(d);return;}operateOpenDetailBeforeRenewalAlignment(id);};
+openDetail=function(id){var d=getDetailData(id);if(d&&d.type==='renewal'){openOperateRenewalDetail(d);return;}operateOpenDetailBeforeRenewalAlignment(id);setTimeout(function(){normalizeOperateBasicInfo(document.querySelector('#modal-mask .ant-modal-body'));},40);};
 </script>
 <style>
+.operate-basic-info .ant-descriptions-row{display:grid;grid-template-columns:minmax(132px,.85fr) minmax(130px,1.15fr) minmax(132px,.85fr) minmax(130px,1.15fr)}
+.operate-basic-info .ant-descriptions-label{width:auto;min-width:0;word-break:break-word}
+.operate-basic-info .ant-descriptions-value{min-width:0;word-break:break-word}
+@media(max-width:720px){.operate-basic-info .ant-descriptions-row{grid-template-columns:120px minmax(0,1fr)}}
 .ve-summary{padding:10px 12px;margin-bottom:12px;border:1px solid #f0f0f0;border-radius:6px;background:#fafafa;color:#00000073;font-size:12px;line-height:20px}.ve-summary strong{color:#000000d9;font-weight:600}.ve-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}.ve-legend span{display:inline-flex;align-items:center;gap:4px}.ve-key{width:8px;height:8px;border-radius:50%;background:#d9d9d9}.ve-key.active{background:#52c41a}.ve-key.processing{background:#fa8c16}.ve-key.ended{background:#bfbfbf}.ve-key.terminated{background:#ff4d4f}.ve-family{position:relative;padding-left:18px}.ve-family:before{content:'';position:absolute;left:4px;top:10px;bottom:10px;border-left:2px solid #f0f0f0}.ve-main-node{position:relative;padding:0 0 12px}.ve-main-node:before{content:'';position:absolute;left:-18px;top:7px;width:10px;height:10px;border:2px solid #bfbfbf;border-radius:50%;background:#fff}.ve-main-node.active:before{border-color:#52c41a;background:#52c41a}.ve-main-node.processing:before{border-color:#fa8c16;background:#fa8c16}.ve-main-node.changed:before{border-color:#1677ff;background:#1677ff;border-radius:2px;transform:rotate(45deg)}.ve-main-node.terminated:before{border-color:#ff4d4f;background:#ff4d4f}.ve-main-node.current{padding:8px 10px 12px;margin:0 0 12px -10px;border:1px solid #91caff;border-radius:6px;background:#f0f5ff}.ve-main-node.current:before{left:-10px;top:14px;border-color:#1677ff;background:#1677ff}.ve-node-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.ve-node-id{font-size:13px;font-weight:600;color:#000000d9}.ve-node-time{font-size:11px;color:#00000040;white-space:nowrap}.ve-node-meta{margin-top:3px;font-size:12px;color:#00000073}.ve-node-relation{margin-top:4px;font-size:11px;color:#00000073}.ve-node-relation b{color:#000000d9;font-weight:500}.ve-node-date{margin-top:4px;font-size:11px;color:#00000040}.ve-children{margin:-2px 0 8px 4px;padding:8px 0 2px 14px;border-left:1px dashed #d9d9d9}.ve-child{padding:7px 8px;margin-bottom:6px;border:1px solid #f0f0f0;border-radius:4px;background:#fff}.ve-child:last-child{margin-bottom:0}.ve-child .ve-node-id{font-size:12px}.ve-child .ve-node-meta{font-size:11px}.ve-empty{padding:20px 0;text-align:center;color:#00000040;font-size:12px}
 </style>
 <script>
@@ -576,6 +609,9 @@ resetFilter=function(){document.getElementById('fTimeFrom').value='';document.ge
     if(!detail || !detail.id)return null;
     var record=Object.assign({},detail,raw);
     record.originalApplicationId=raw.type==='change'&&raw.origId&&raw.origId!=='-'?raw.origId:raw.id;
+    var parentRecord=raw.origId&&raw.origId!=='-' ? (appData||[]).find(function(item){return item.id===raw.origId;}) : null;
+    record.operateMode=record.operateMode || raw.operateMode || (parentRecord&&parentRecord.operateMode) || 'manned';
+    record.operateModeLabel=record.operateModeLabel || ((operateModeMap[record.operateMode]||{}).label) || '-';
     record.operateType=record.operateType || raw.operateType || 'passenger';
     record.operateTypeLabel=record.operateTypeLabel || ((operateTypeMap[record.operateType]||{}).label) || '-';
     record.applicationTime=(record.validFrom&&record.validFrom!=='-'?record.validFrom:'')+' 至 '+(record.validTo&&record.validTo!=='-'?record.validTo:'');
@@ -599,7 +635,8 @@ resetFilter=function(){document.getElementById('fTimeFrom').value='';document.ge
       },record.attachments || {});
       var retainedSnapshots=function(list){return (list||[]).map(function(item){return Object.assign({},item,{changeStatus:'retained'});});};
       record.changeFields=record.changeFields || {
-        operateType:{label:'商业化试点类型',oldValue:record.operateTypeLabel,newValue:record.operateTypeLabel},
+        operateMode:{label:'商业化试点类型',oldValue:record.operateModeLabel,newValue:record.operateModeLabel},
+        operateType:{label:'商业化试点子类型',oldValue:record.operateTypeLabel,newValue:record.operateTypeLabel},
         vehicles:{label:'商业化试点车辆',oldValue:record.vehicleNames,newValue:record.vehicleNames,items:retainedSnapshots(record.vehicles)},
         persons:{label:'商业化试点驾驶员（安全员）',oldValue:record.personNames,newValue:record.personNames,items:retainedSnapshots(record.persons)},
         operateTime:{label:'商业化试点时间',oldValue:record.applicationTime,newValue:record.applicationTime},
@@ -693,7 +730,8 @@ resetFilter=function(){document.getElementById('fTimeFrom').value='';document.ge
     getOriginalAttachmentGroups:operateAccessOriginalAttachmentGroups,
     getVersions:operateAccessVersions,
     fields:[
-      {key:'operateType',label:'商业化试点类型',inputType:'select',options:['载人商业化试点','载物商业化试点','特种作业商业化试点'],getValue:function(record){return record.operateTypeLabel;}},
+      {key:'operateMode',label:'商业化试点类型',inputType:'select',options:[{value:'manned',label:'主驾有人'},{value:'auto',label:'自动驾驶'}],getValue:function(record){return record.operateModeLabel;}},
+      {key:'operateType',label:'商业化试点子类型',inputType:'select',options:['载人商业化试点','载物商业化试点','特种作业商业化试点'],getValue:function(record){return record.operateTypeLabel;}},
       {key:'vehicles',label:'商业化试点车辆',structured:operateAccessStructured.vehicles,getValue:function(record){return record.vehicleNames;}},
       {key:'persons',label:'商业化试点驾驶员（安全员）',structured:operateAccessStructured.persons,getValue:function(record){return record.personNames;}},
       {key:'operateTime',label:'商业化试点时间',inputType:'date-range',getValue:function(record){return record.applicationTime;}},
@@ -719,7 +757,8 @@ resetFilter=function(){document.getElementById('fTimeFrom').value='';document.ge
     getRecord:operateAddVehicleRecord,getSourceRecord:function(record){return record.sourceRecord||record;},
     getVehicleCandidates:function(source){var existing=vehicleData.filter(function(vehicle){return vehicle.violations===0&&vehicle.accidents===0;});var generated=(source.vehicles||[]).filter(function(vehicle){return vehicle.source!=='add_vehicle';}).map(function(vehicle,index){return Object.assign({},vehicle,{vin:'DOADD'+String(index+1).padStart(12,'0')});});return existing.concat(generated);},
     isSameConfiguration:function(source,vehicle){var original=(source.vehicles||[]).filter(function(item){return item.source!=='add_vehicle';});return !original.length||original.some(function(item){return item.model===vehicle.model&&item.level===vehicle.level;});},
-    getAddVehicleContext:function(source){return [{label:'申请主体',value:source.company},{label:'商业化试点类型',value:source.operateTypeLabel||((operateTypeMap[source.operateType]||{}).label)},{label:'商业化试点时间',value:source.validFrom&&source.validFrom!=='-'?source.validFrom+' 至 '+source.validTo:'-'},{label:'商业化试点项目',value:source.project||'智能网联汽车商业化试点项目'}];},
+    getAddVehicleContext:function(source){return [{label:'申请主体',value:source.company},{label:'商业化试点类型',value:source.operateModeLabel||((operateModeMap[source.operateMode||'manned']||{}).label)},{label:'商业化试点子类型',value:source.operateTypeLabel||((operateTypeMap[source.operateType]||{}).label)},{label:'商业化试点时间',value:source.validFrom&&source.validFrom!=='-'?source.validFrom+' 至 '+source.validTo:'-'},{label:'商业化试点项目',value:source.project||'智能网联汽车商业化试点项目'}];},
+    getOriginalContextItems:function(source){return [{label:'商业化试点类型',value:source.operateModeLabel||((operateModeMap[source.operateMode||'manned']||{}).label)},{label:'商业化试点子类型',value:source.operateTypeLabel||((operateTypeMap[source.operateType]||{}).label)}];},
     getOriginalAttachmentGroups:function(record){return operateAccessOriginalAttachmentGroups(record.sourceRecord||record);},
     getVersions:operateAccessVersions,openVersionDetail:function(id){openDetail(id);},
     onSubmitAddVehicle:function(payload,record,source){var newId='DO202608'+String((appData||[]).length+1).padStart(3,'0');payload.safetyPersons=(window.selectedPersons||[]).map(function(index){return personData[index];});appData.unshift({id:newId,type:'add_vehicle',operateType:source.operateType,company:source.company,origId:source.id,vehicleCount:payload.vehicles.length,roadCount:source.roadCount||0,status:'pending_review',time:'2026-08-13 20:55:00',validFrom:source.validFrom||'-',validTo:source.validTo||'-',addVehicles:payload.vehicles,addSafetyPersons:payload.safetyPersons,addReason:payload.reason,attachments:payload.attachments});renderTable();return true;}
@@ -740,7 +779,7 @@ resetFilter=function(){document.getElementById('fTimeFrom').value='';document.ge
     records:appData,statusMap:statusMap,originalContentDomain:'demo_operate',renewalTitle:'延期申请',renewalPeriodLabel:'延期时间段',renewalRuleText:'须在原申请有效期结束前 3 个月内提出，延期时长一次不超过 6 个月；新结束日期须晚于原截止日期。',
     renewalAttachments:[{key:'latestDeclaration',label:'最新商业化试点安全性自我声明'},{key:'renewalApplication',label:'商业化试点延期申请书'},{key:'evaluationReport',label:'前期商业化试点总结评估报告'},{key:'necessity',label:'商业化试点延期必要性说明'}],
     getRecord:operateRenewalRecord,getRenewalRecord:function(id){var raw=(appData||[]).find(function(item){return item.id===id;});var detail=getDetailData(id)||raw;return raw&&Object.assign({},operateRenewalRecord(id),{originalApplicationId:raw.id,sourceRecord:Object.assign({},detail,raw),renewalReason:'',attachments:{}});},getRenewalSource:function(record){return record.sourceRecord||record;},
-    getRenewalContext:function(source){return [{label:'申请主体',value:source.company},{label:'商业化试点类型',value:source.operateTypeLabel||((operateTypeMap[source.operateType]||{}).label)},{label:'项目负责人',value:source.manager||'-'},{label:'联系方式',value:source.contact||'-'},{label:'商业化试点时间',value:source.validFrom&&source.validFrom!=='-'?source.validFrom+' 至 '+source.validTo:'-'},{label:'商业化试点路段或区域',value:(source.roads||[]).map(function(item){return item.name;}).join('、')||'-'},{label:'商业化试点车辆',value:(source.vehicles||[]).map(function(item){return item.vin||item.model;}).join('、')||'-'},{label:'商业化试点驾驶员（安全员）',value:(source.persons||[]).map(function(item){return item.name;}).join('、')||'-'},{label:'商业化试点项目',value:source.project||'智能网联汽车商业化试点项目'}];},
+    getRenewalContext:function(source){return [{label:'申请主体',value:source.company},{label:'商业化试点类型',value:source.operateModeLabel||((operateModeMap[source.operateMode||'manned']||{}).label)},{label:'商业化试点子类型',value:source.operateTypeLabel||((operateTypeMap[source.operateType]||{}).label)},{label:'项目负责人',value:source.manager||'-'},{label:'联系方式',value:source.contact||'-'},{label:'商业化试点时间',value:source.validFrom&&source.validFrom!=='-'?source.validFrom+' 至 '+source.validTo:'-'},{label:'商业化试点路段或区域',value:(source.roads||[]).map(function(item){return item.name;}).join('、')||'-'},{label:'商业化试点车辆',value:(source.vehicles||[]).map(function(item){return item.vin||item.model;}).join('、')||'-'},{label:'商业化试点驾驶员（安全员）',value:(source.persons||[]).map(function(item){return item.name;}).join('、')||'-'},{label:'商业化试点项目',value:source.project||'智能网联汽车商业化试点项目'}];},
     getOriginalAttachmentGroups:function(record){return operateAccessOriginalAttachmentGroups(record.sourceRecord||record);},
     getVersions:operateAccessVersions,openVersionDetail:function(id){openDetail(id);},
     onSubmitRenewal:function(payload,record,source){var newId='DO202608'+String((appData||[]).length+1).padStart(3,'0');appData.unshift({id:newId,type:'renewal',operateType:source.operateType,company:source.company,origId:source.id,vehicleCount:source.vehicleCount||(source.vehicles||[]).length,roadCount:source.roadCount||(source.roads||[]).length,status:'pending_review',time:'2026-08-14 11:15:00',validFrom:payload.validFrom,validTo:payload.validTo,renewalReason:payload.renewalReason,attachments:payload.attachments});renderTable();showToast('商业化试点延期申请已提交，等待第三方初审');return true;}
@@ -825,5 +864,51 @@ resetFilter=function(){document.getElementById('fTimeFrom').value='';document.ge
 <script>var plateFlowLogOriginal=buildFlowLog;buildFlowLog=function(id){var d=getDetailData(id);if(d&&d.status==='pending_plate_review')return renderFLH([{title:'提交牌照信息',handler:d.company,time:d.time,opinion:'牌照信息已提交',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'},{title:'第三方牌照审核',handler:'第三方专业管理机构',time:'审核中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'}]);if(d&&d.status==='plate_rejected')return renderFLH([{title:'第三方牌照审核',handler:'第三方专业管理机构',time:'已退回',opinion:'审核意见：'+(d.plateReviewReason||'请修改牌照信息'),status:'已退回',color:'#ff4d4f',dot:'✗',tagCls:'ant-tag-error'},{title:'修改临时牌照',handler:d.company,time:'待处理',opinion:'请根据审核意见修改后重新提交',status:'待处理',color:'#fa8c16',dot:'●',tagCls:'ant-tag-warning'}]);return plateFlowLogOriginal(id);};</script>
 <script src="../../components/access-flow-pages.js?v=6"></script>
 <script src="../../components/report-submission-modal.js?v=1"></script>
+<script>
+(function(){
+  function modeFor(record){
+    if(record && record.operateMode) return record.operateMode;
+    var source=record&&record.origId&&record.origId!=='-' ? (appData||[]).find(function(item){return item.id===record.origId;}) : null;
+    return source&&source.operateMode ? source.operateMode : 'manned';
+  }
+  function normalizeRecords(){(window.appData||[]).forEach(function(record){record.operateMode=modeFor(record);});}
+  function modeLabel(record){return (operateModeMap[modeFor(record)]||operateModeMap.manned).label;}
+  function subtypeLabel(record){return (operateTypeMap[record.operateType]||{}).label||'-';}
+  function decorateList(){
+    var table=document.querySelector('#mainTbody')&&document.querySelector('#mainTbody').closest('table');
+    if(!table)return;
+    var head=table.querySelector('thead tr'), modeHead=head&&head.children[2];
+    if(modeHead)modeHead.textContent='商业化试点类型';
+    Array.prototype.forEach.call(table.querySelectorAll('#mainTbody tr'),function(row){
+      var id=row.cells[0]&&row.cells[0].textContent.trim(),record=(appData||[]).find(function(item){return item.id===id;});
+      if(!record||!row.cells[2])return;
+      row.cells[2].innerHTML='<span class="ant-tag ant-tag-processing">'+modeLabel(record)+'</span>';
+    });
+  }
+  function normalizeModalLabels(){
+    var body=document.querySelector('#modal-mask .ant-modal-body');if(!body)return;
+    Array.prototype.forEach.call(body.querySelectorAll('.ant-form-item'),function(item){
+      var label=item.querySelector('.ant-form-label'),mode=item.querySelector('input[name="operateMode"]'),subtype=item.querySelector('input[name="operateType"]');
+      if(label&&(mode||label.textContent.trim()==='商业化试点模式'))label.textContent=label.textContent.replace('商业化试点模式','商业化试点类型');
+      if(label&&subtype)label.textContent=label.textContent.replace('商业化试点类型','商业化试点子类型');
+      if(mode){var option=mode.closest('.ant-radio');if(option&&!option.dataset.operateModeNormalized){option.innerHTML=mode.outerHTML+(mode.value==='auto'?'自动驾驶':'主驾有人');option.dataset.operateModeNormalized='1';}}
+    });
+    Array.prototype.forEach.call(body.querySelectorAll('.ant-descriptions'),function(desc){
+      var labels=Array.prototype.slice.call(desc.querySelectorAll('.ant-descriptions-label'));
+      if(!labels.some(function(node){return node.textContent.trim()==='商业化试点子类型';})){labels.filter(function(node){return node.textContent.trim()==='商业化试点类型';}).forEach(function(node){node.textContent='商业化试点子类型';var value=node.nextElementSibling,row=node.closest('.ant-descriptions-row');if(row&&value){var modeLabelNode=document.createElement('div'),modeValue=document.createElement('div');modeLabelNode.className='ant-descriptions-label';modeLabelNode.textContent='商业化试点类型';modeValue.className='ant-descriptions-value';var record=(window.__applicationLineageCurrentId&&getDetailData(window.__applicationLineageCurrentId))||null;modeValue.textContent=record?modeLabel(record):'主驾有人';row.insertBefore(modeLabelNode,node);row.insertBefore(modeValue,node);}});}
+    });
+  }
+  normalizeRecords();
+  if(typeof getDetailData==='function'){
+    var baseGetDetailData=getDetailData;
+    window.getDetailData=function(id){var detail=baseGetDetailData(id);if(detail){detail.operateMode=modeFor(detail);detail.operateModeLabel=modeLabel(detail);detail.operateTypeLabel=detail.operateTypeLabel||subtypeLabel(detail);}return detail;};
+  }
+  if(typeof saveDraft==='function'){var baseSaveDraft=saveDraft;window.saveDraft=function(){var mode=(document.querySelector('input[name="operateMode"]:checked')||{}).value||'manned';baseSaveDraft.apply(this,arguments);if(appData[0])appData[0].operateMode=mode;normalizeRecords();};}
+  if(typeof submitApply==='function'){var baseSubmitApply=submitApply;window.submitApply=function(){var mode=(document.querySelector('input[name="operateMode"]:checked')||{}).value||'manned';baseSubmitApply.apply(this,arguments);if(appData[0])appData[0].operateMode=mode;normalizeRecords();};}
+  if(typeof renderTable==='function'){var baseRenderTable=renderTable;window.renderTable=function(){normalizeRecords();baseRenderTable.apply(this,arguments);decorateList();};}
+  if(typeof openModal==='function'){var baseOpenModal=openModal;window.openModal=function(){var result=baseOpenModal.apply(this,arguments);setTimeout(normalizeModalLabels,0);return result;};}
+  setTimeout(function(){normalizeModalLabels();decorateList();},120);
+})();
+</script>
 </body>
 </html>

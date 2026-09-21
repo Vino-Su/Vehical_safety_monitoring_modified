@@ -1,0 +1,21 @@
+{
+  "url": "http://127.0.0.1:8765/03-高保真页面/monitor/access-apply/demo-apply.html",
+  "verdict": "check_errors",
+  "title": "示范应用准入申请 - 智能网联汽车安全监测平台",
+  "htmlLen": 269289,
+  "bodyChildren": 19,
+  "selector": "#mainTbody",
+  "selectorFound": true,
+  "selectorCount": 1,
+  "pageTextPreview": "智能网联汽车安全监测平台\n开放道路资源管理\n测试示范监管\n监测数据分析\n平台管理\n3\n系统管理员\n管\n系统管理员\n准入信息管理\n准入申请\n道路测试准入申请\n示范应用准入申请\n商业化试点准入申请\n业务申请记录\n报告提交管理\n准入审批管理\n自定义配置\n车辆状态监控\n测试服务管理\n信息公开与在线反馈\n申请编号\n申请类型\n全部\n初次申请\n延期申请\n变更申请\n新增相同配置车辆\n流程状态\n全部\n草稿\n审批中\n",
+  "errorCount": 1,
+  "errors": [
+    {
+      "kind": "log",
+      "text": "network: Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ],
+  "domFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-demo-apply\\dom.html",
+  "resultFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-demo-apply\\result.json",
+  "shotFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\selftest-demo-apply\\shot.png"
+}

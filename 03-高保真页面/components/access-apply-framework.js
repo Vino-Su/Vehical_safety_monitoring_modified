@@ -339,6 +339,10 @@
       { label: '申请时间', value: source.time || '-' },
       { label: '有效期', value: source.validFrom && source.validFrom !== '-' ? source.validFrom + ' 至 ' + (source.validTo || '-') : (source.applicationTime || '-') }
     ];
+    var customItems = state.config && typeof state.config.getOriginalContextItems === 'function'
+      ? state.config.getOriginalContextItems(source, state.record) || []
+      : [];
+    items = items.concat(customItems);
     if (source.project) items.push({ label: '项目', value: source.project });
     return '<div class="aaf-original-context">' + items.map(function (item) { return '<div class="aaf-original-context-item"><span>' + esc(item.label) + '</span><strong>' + esc(item.value) + '</strong></div>'; }).join('') + '</div>' + originalEntityTablesHtml(source);
   }

@@ -18,7 +18,6 @@
         <div class="filter-row filter-primary" style="gap:8px !important">
           <div class="filter-item"><label>字典编码</label><input class="ant-input" placeholder="请输入字典编码搜索" style="width:150px"></div>
           <div class="filter-item"><label>字典名称</label><input class="ant-input" placeholder="请输入字典名称搜索" style="width:150px"></div>
-          <div class="filter-item"><label>所属应用</label><select class="ant-input" style="width:120px"><option value="all">全部</option><option>准入管理</option><option>监测管理</option><option>数据分析</option><option>道路管理</option><option>平台管理</option></select></div>
           <div class="filter-actions"><button class="ant-btn ant-btn-primary">查询</button><button class="ant-btn">重置</button><button class="ant-btn" onclick="openExportModal()">导出</button><button class="ant-btn ant-btn-primary" onclick="openDictModal()">+ 新增字典项</button></div>
           <button type="button" class="filter-more-toggle" onclick="toggleProgressiveFilter(this)" aria-expanded="false"><span class="filter-more-text">展开更多</span><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></button>
         </div>
@@ -35,9 +34,7 @@
                 <th style="width:48px;text-align:center"><input type="checkbox" class="ant-checkbox" id="dictSelectAll" onchange="toggleSelectAll(this)"></th>
                 <th>字典编码</th>
                 <th>字典名称</th>
-                <th>所属应用</th>
                 <th>字典键名</th>
-                <th>字典值数量</th>
                 <th>版本</th>
                 <th>状态</th>
                 <th>最后更新时间</th>
@@ -56,31 +53,31 @@
 const PAGE_ID='dict-manage';
 
 var dictData = [
-  {code:'VEHICLE_TYPE', name:'车辆类型', app:'准入管理', key:'vehicle_type', count:5, version:'V3', status:'已启用', updateTime:'2026-04-25 10:30'},
-  {code:'AD_LEVEL', name:'自动驾驶等级', app:'准入管理', key:'ad_level', count:4, version:'V2', status:'已启用', updateTime:'2026-04-20 14:15'},
-  {code:'ROAD_LEVEL', name:'道路等级分类', app:'道路管理', key:'road_level', count:6, version:'V1', status:'已启用', updateTime:'2026-04-18 09:00'},
-  {code:'APPLY_TYPE', name:'申请类型', app:'准入管理', key:'apply_type', count:4, version:'V1', status:'已停用', updateTime:'2026-04-10 16:45'},
-  {code:'TEST_SCENARIO', name:'测试场景分类', app:'道路管理', key:'test_scenario', count:3, version:'V2', status:'已启用', updateTime:'2026-04-28 11:20'},
-  {code:'COMPANY_TYPE', name:'企业类型', app:'准入管理', key:'company_type', count:5, version:'V1', status:'已启用', updateTime:'2026-05-02 09:15'},
-  {code:'PERSON_TYPE', name:'人员类型', app:'准入管理', key:'person_type', count:3, version:'V1', status:'已启用', updateTime:'2026-05-02 10:00'},
-  {code:'ALARM_TYPE', name:'告警类型', app:'监测管理', key:'alarm_type', count:7, version:'V2', status:'已启用', updateTime:'2026-05-05 14:30'},
-  {code:'ACCIDENT_TYPE', name:'事故类型', app:'监测管理', key:'accident_type', count:6, version:'V3', status:'已启用', updateTime:'2026-05-06 08:45'},
-  {code:'FAULT_TYPE', name:'故障类型', app:'监测管理', key:'fault_type', count:5, version:'V1', status:'已启用', updateTime:'2026-05-06 11:20'},
-  {code:'EVAL_LEVEL', name:'评估等级', app:'数据分析', key:'eval_level', count:4, version:'V1', status:'已启用', updateTime:'2026-05-08 16:00'},
-  {code:'REPORT_TYPE', name:'报告类型', app:'数据分析', key:'report_type', count:4, version:'V2', status:'已启用', updateTime:'2026-05-10 09:30'},
-  {code:'BIZ_TYPE', name:'业务类型', app:'平台管理', key:'biz_type', count:7, version:'V1', status:'已启用', updateTime:'2026-05-12 10:15'},
-  {code:'OP_TYPE', name:'操作类型', app:'平台管理', key:'op_type', count:7, version:'V1', status:'已启用', updateTime:'2026-05-12 10:30'},
-  {code:'REGION_CODE', name:'行政区域编码', app:'道路管理', key:'region_code', count:10, version:'V2', status:'已启用', updateTime:'2026-05-15 13:00'},
-  {code:'ROAD_TYPE', name:'道路类型', app:'道路管理', key:'road_type', count:5, version:'V3', status:'已启用', updateTime:'2026-05-18 08:20'},
-  {code:'LICENSE_TYPE', name:'驾照类型', app:'准入管理', key:'license_type', count:7, version:'V1', status:'已启用', updateTime:'2026-05-20 14:45'},
-  {code:'SCENE_TYPE', name:'适用场景', app:'道路管理', key:'scene_type', count:4, version:'V1', status:'已停用', updateTime:'2026-05-22 09:10'},
-  {code:'TERMINATE_TYPE', name:'终止类型', app:'准入管理', key:'terminate_type', count:6, version:'V2', status:'已启用', updateTime:'2026-07-06 20:50'},
-  {code:'APPROVE_NODE', name:'审批节点', app:'准入管理', key:'approve_node', count:6, version:'V2', status:'已启用', updateTime:'2026-05-28 16:00'},
-  {code:'INFO_TYPE', name:'信息类型', app:'平台管理', key:'info_type', count:4, version:'V1', status:'已启用', updateTime:'2026-06-01 10:00'},
-  {code:'PUBLISH_STATUS', name:'发布状态', app:'平台管理', key:'publish_status', count:3, version:'V1', status:'已启用', updateTime:'2026-06-02 14:20'},
-  {code:'RISK_LEVEL', name:'风险等级', app:'监测管理', key:'risk_level', count:3, version:'V1', status:'已启用', updateTime:'2026-06-05 08:50'},
-  {code:'DEVICE_TYPE', name:'感知设备类型', app:'道路管理', key:'device_type', count:5, version:'V2', status:'已启用', updateTime:'2026-06-08 15:30'},
-  {code:'LANE_TYPE', name:'车道类型', app:'道路管理', key:'lane_type', count:3, version:'V1', status:'已启用', updateTime:'2026-06-10 09:45'}
+  {code:'VEHICLE_TYPE', name:'车辆类型', key:'vehicle_type', version:'V3', status:'已启用', updateTime:'2026-04-25 10:30'},
+  {code:'AD_LEVEL', name:'自动驾驶等级', key:'ad_level', version:'V2', status:'已启用', updateTime:'2026-04-20 14:15'},
+  {code:'ROAD_LEVEL', name:'道路等级分类', key:'road_level', version:'V1', status:'已启用', updateTime:'2026-04-18 09:00'},
+  {code:'APPLY_TYPE', name:'申请类型', key:'apply_type', version:'V1', status:'已停用', updateTime:'2026-04-10 16:45'},
+  {code:'TEST_SCENARIO', name:'测试场景分类', key:'test_scenario', version:'V2', status:'已启用', updateTime:'2026-04-28 11:20'},
+  {code:'COMPANY_TYPE', name:'企业类型', key:'company_type', version:'V1', status:'已启用', updateTime:'2026-05-02 09:15'},
+  {code:'PERSON_TYPE', name:'人员类型', key:'person_type', version:'V1', status:'已启用', updateTime:'2026-05-02 10:00'},
+  {code:'ALARM_TYPE', name:'告警类型', key:'alarm_type', version:'V2', status:'已启用', updateTime:'2026-05-05 14:30'},
+  {code:'ACCIDENT_TYPE', name:'事故类型', key:'accident_type', version:'V3', status:'已启用', updateTime:'2026-05-06 08:45'},
+  {code:'FAULT_TYPE', name:'故障类型', key:'fault_type', version:'V1', status:'已启用', updateTime:'2026-05-06 11:20'},
+  {code:'EVAL_LEVEL', name:'评估等级', key:'eval_level', version:'V1', status:'已启用', updateTime:'2026-05-08 16:00'},
+  {code:'REPORT_TYPE', name:'报告类型', key:'report_type', version:'V2', status:'已启用', updateTime:'2026-05-10 09:30'},
+  {code:'BIZ_TYPE', name:'业务类型', key:'biz_type', version:'V1', status:'已启用', updateTime:'2026-05-12 10:15'},
+  {code:'OP_TYPE', name:'操作类型', key:'op_type', version:'V1', status:'已启用', updateTime:'2026-05-12 10:30'},
+  {code:'REGION_CODE', name:'行政区域编码', key:'region_code', version:'V2', status:'已启用', updateTime:'2026-05-15 13:00'},
+  {code:'ROAD_TYPE', name:'道路类型', key:'road_type', version:'V3', status:'已启用', updateTime:'2026-05-18 08:20'},
+  {code:'LICENSE_TYPE', name:'驾照类型', key:'license_type', version:'V1', status:'已启用', updateTime:'2026-05-20 14:45'},
+  {code:'SCENE_TYPE', name:'适用场景', key:'scene_type', version:'V1', status:'已停用', updateTime:'2026-05-22 09:10'},
+  {code:'TERMINATE_TYPE', name:'终止类型', key:'terminate_type', version:'V2', status:'已启用', updateTime:'2026-07-06 20:50'},
+  {code:'APPROVE_NODE', name:'审批节点', key:'approve_node', version:'V2', status:'已启用', updateTime:'2026-05-28 16:00'},
+  {code:'INFO_TYPE', name:'信息类型', key:'info_type', version:'V1', status:'已启用', updateTime:'2026-06-01 10:00'},
+  {code:'PUBLISH_STATUS', name:'发布状态', key:'publish_status', version:'V1', status:'已启用', updateTime:'2026-06-02 14:20'},
+  {code:'RISK_LEVEL', name:'风险等级', key:'risk_level', version:'V1', status:'已启用', updateTime:'2026-06-05 08:50'},
+  {code:'DEVICE_TYPE', name:'感知设备类型', key:'device_type', version:'V2', status:'已启用', updateTime:'2026-06-08 15:30'},
+  {code:'LANE_TYPE', name:'车道类型', key:'lane_type', version:'V1', status:'已启用', updateTime:'2026-06-10 09:45'}
 ];
 
 var dictPager;
@@ -101,9 +98,7 @@ function renderDictTable() {
       '<td style="text-align:center"><input type="checkbox" class="ant-checkbox dict-row-cb"></td>' +
       '<td>' + item.code + '</td>' +
       '<td>' + item.name + '</td>' +
-      '<td>' + item.app + '</td>' +
       '<td>' + item.key + '</td>' +
-      '<td style="text-align:center">' + item.count + '</td>' +
       '<td style="text-align:center">' + item.version + '</td>' +
       '<td style="text-align:center"><span class="ant-tag ' + statusClass + '">' + item.status + '</span></td>' +
       '<td>' + item.updateTime + '</td>' +
@@ -141,7 +136,6 @@ function openDictModal(){
   openModal('新增字典项',
     '<div class="ant-form-item" id="dictCodeItem"><div class="ant-form-label"><span class="required">*</span>字典编码</div><div class="ant-form-control"><input class="ant-input" id="dictCodeInput" placeholder="请输入字典编码，如：VEHICLE_TYPE"><div class="ant-form-error" style="display:none">请输入字典编码</div></div></div>' +
     '<div class="ant-form-item" id="dictNameItem"><div class="ant-form-label"><span class="required">*</span>字典名称</div><div class="ant-form-control"><input class="ant-input" id="dictNameInput" placeholder="请输入字典名称"><div class="ant-form-error" style="display:none">请输入字典名称</div></div></div>' +
-    '<div class="ant-form-item" id="dictAppItem"><div class="ant-form-label"><span class="required">*</span>所属应用</div><div class="ant-form-control"><select class="ant-input" id="dictAppSelect" style="width:100%;padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px"><option value="">请选择</option><option>准入管理</option><option>监测管理</option><option>数据分析</option><option>道路管理</option><option>平台管理</option></select><div class="ant-form-error" style="display:none">请选择所属应用</div></div></div>' +
     '<div class="ant-form-item" id="dictKeyItem"><div class="ant-form-label"><span class="required">*</span>字典键名</div><div class="ant-form-control"><input class="ant-input" id="dictKeyInput" placeholder="请输入字典键名，如：vehicle_type"><div class="ant-form-error" style="display:none">请输入字典键名</div></div></div>' +
     '<div class="ant-form-item" id="dictTypeItem"><div class="ant-form-label"><span class="required">*</span>字典值类型</div><div class="ant-form-control"><select class="ant-input" id="dictTypeSelect" style="width:100%;padding:6px 12px;border:1px solid #d9d9d9;border-radius:6px"><option value="">请选择</option><option>字符串</option><option>整数</option><option>小数</option><option>日期</option><option>布尔</option></select><div class="ant-form-error" style="display:none">请选择字典值类型</div></div></div>' +
     '<div class="ant-form-item"><div class="ant-form-label">排序序号</div><div class="ant-form-control"><input class="ant-input" type="number" placeholder="请输入排序序号"></div></div>' +
@@ -180,13 +174,6 @@ function submitDictForm(){
       item.classList.remove('error');if(err)err.style.display='none';
     }
   });
-  var appEl=document.getElementById('dictAppSelect');
-  var appItem=document.getElementById('dictAppItem');
-  var appErr=appItem.querySelector('.ant-form-error');
-  if(!appEl||!appEl.value){
-    appItem.classList.add('error');if(appErr){appErr.textContent='请选择所属应用';appErr.style.display='block';}
-    isValid=false;
-  }else{appItem.classList.remove('error');if(appErr)appErr.style.display='none';}
   var typeEl=document.getElementById('dictTypeSelect');
   var typeItem=document.getElementById('dictTypeItem');
   var typeErr=typeItem.querySelector('.ant-form-error');
@@ -202,12 +189,12 @@ function openDetailModal(){
   openModal('字典详情 - VEHICLE_TYPE',
     '<div class="ant-descriptions">' +
       '<div class="ant-descriptions-row"><div class="ant-descriptions-label">字典编码</div><div class="ant-descriptions-value">VEHICLE_TYPE</div><div class="ant-descriptions-label">字典名称</div><div class="ant-descriptions-value">车辆类型</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">所属应用</div><div class="ant-descriptions-value">准入管理</div><div class="ant-descriptions-label">字典键名</div><div class="ant-descriptions-value">vehicle_type</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">字典值类型</div><div class="ant-descriptions-value">字符串</div><div class="ant-descriptions-label">排序序号</div><div class="ant-descriptions-value">50</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">是否必填</div><div class="ant-descriptions-value">是</div><div class="ant-descriptions-label">备注说明</div><div class="ant-descriptions-value">车辆类型</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">已启用</span></div><div class="ant-descriptions-label">版本</div><div class="ant-descriptions-value">V3</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">创建时间</div><div class="ant-descriptions-value">2026-01-10 09:00</div><div class="ant-descriptions-label">最后更新时间</div><div class="ant-descriptions-value">2026-04-25 10:30</div></div>' +
-      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">创建人</div><div class="ant-descriptions-value">系统管理员</div><div class="ant-descriptions-label">更新人</div><div class="ant-descriptions-value">系统管理员</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">字典键名</div><div class="ant-descriptions-value">vehicle_type</div><div class="ant-descriptions-label">字典值类型</div><div class="ant-descriptions-value">字符串</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">排序序号</div><div class="ant-descriptions-value">50</div><div class="ant-descriptions-label">是否必填</div><div class="ant-descriptions-value">是</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">备注说明</div><div class="ant-descriptions-value">车辆类型</div><div class="ant-descriptions-label">状态</div><div class="ant-descriptions-value"><span class="ant-tag ant-tag-success">已启用</span></div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">版本</div><div class="ant-descriptions-value">V3</div><div class="ant-descriptions-label">创建时间</div><div class="ant-descriptions-value">2026-01-10 09:00</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">最后更新时间</div><div class="ant-descriptions-value">2026-04-25 10:30</div><div class="ant-descriptions-label">创建人</div><div class="ant-descriptions-value">系统管理员</div></div>' +
+      '<div class="ant-descriptions-row"><div class="ant-descriptions-label">更新人</div><div class="ant-descriptions-value">系统管理员</div><div class="ant-descriptions-label"></div><div class="ant-descriptions-value"></div></div>' +
     '</div>' +
     '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">字典值明细</h4>' +
     '<table class="ant-table"><thead><tr><th>字典键</th><th>字典值</th><th>排序</th><th>状态</th></tr></thead><tbody>' +
