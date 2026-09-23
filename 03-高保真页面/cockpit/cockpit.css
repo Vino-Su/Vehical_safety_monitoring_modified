@@ -53,7 +53,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
 .analysis-column { display: grid; gap: 12px; min-height: 0; }.left-column { grid-template-rows: .72fr 1.33fr 1.42fr; }.right-column { grid-template-rows: 1.65fr .85fr; }
 .module { background: rgba(16,38,58,.76); border: 1px solid rgba(61,112,136,.42); border-radius: var(--cockpit-radius); padding: 14px; min-width: 0; min-height: 0; overflow: hidden; position: relative; }
 .module::after { content: ""; position: absolute; top: 0; right: 0; width: 40px; height: 1px; background: var(--cockpit-cyan); opacity: .55; }.module-heading { height: 25px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; min-width: 0; }.module-heading > span:first-child { display: block; flex: 0 0 3px; width: 3px; height: 17px; background: var(--cockpit-cyan); box-shadow: 0 0 7px rgba(0,207,232,.32); }.module-heading h2 { font-size: 16px; line-height: 24px; font-weight: 600; margin: 0; white-space: nowrap; }.module-heading em { font-size: 11px; font-style: normal; color: var(--cockpit-text-muted); margin-left: auto; }.live-label { color: var(--cockpit-green) !important; }.module-link { margin-left: auto; border: 0; background: transparent; color: var(--cockpit-cyan); cursor: pointer; font-size: 12px; padding: 2px 0; }.module-link b { font-size: 18px; font-weight: 400; vertical-align: -1px; }
-.range-tabs { margin-left: auto; display: flex; gap: 2px; }.range-tabs button { border: 0; border-bottom: 1px solid transparent; background: transparent; color: var(--cockpit-text-muted); cursor: pointer; padding: 2px 5px; font-size: 11px; }.range-tabs button:hover, .range-tabs button.is-active { color: var(--cockpit-cyan); border-bottom-color: var(--cockpit-cyan); }
+.range-tabs { margin-left: auto; display: flex; flex: 0 0 auto; gap: 2px; }.range-tabs button { border: 0; border-bottom: 1px solid transparent; background: transparent; color: var(--cockpit-text-muted); cursor: pointer; padding: 2px 5px; font-size: 11px; white-space: nowrap; }.range-tabs button:hover, .range-tabs button.is-active { color: var(--cockpit-cyan); border-bottom-color: var(--cockpit-cyan); }
 
 .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }.metric-grid.compact { gap: 7px; }.metric-tile { border: 1px solid rgba(61,112,136,.25); background: rgba(22,50,71,.74); border-radius: 3px; min-width: 0; min-height: 70px; padding: 8px 8px 7px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; text-align: left; transition: border-color .2s, background .2s, transform .2s; }.metric-tile:hover { border-color: var(--cockpit-border-strong); background: rgba(22,50,71,.98); transform: translateY(-1px); }.metric-tile.is-selected { border-color: var(--cockpit-cyan); background: linear-gradient(180deg, rgba(0,207,232,.17), rgba(22,50,71,.9)); box-shadow: inset 0 0 0 1px rgba(0,207,232,.08), 0 0 10px rgba(0,207,232,.1); }.metric-tile span { color: var(--cockpit-text-secondary); font-size: 11px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }.metric-tile strong { margin-top: 2px; color: var(--cockpit-text); font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 26px; font-weight: 600; line-height: 30px; font-variant-numeric: tabular-nums lining-nums; }.metric-tile small { color: var(--cockpit-text-muted); font-size: 10px; line-height: 14px; }.context-line { display: flex; align-items: center; gap: 7px; margin-top: 12px; color: var(--cockpit-text-muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }.status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }.is-green { background: var(--cockpit-green); box-shadow: 0 0 6px rgba(82,196,26,.8); }
 .metric-static { cursor: default; }.metric-static:hover { transform: none; border-color: rgba(61,112,136,.25); background: rgba(22,50,71,.74); }.metric-static strong { color: var(--cockpit-cyan-soft); }
@@ -131,6 +131,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
 .map-layer-popover { position: absolute; top: 52px; right: 14px; width: 158px; padding: 11px 12px; display: grid; gap: 8px; background: rgba(11,28,42,.96); border: 1px solid var(--cockpit-border-strong); border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.28); opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .18s, transform .18s; }.map-layer-popover.is-open { opacity: 1; transform: translateY(0); pointer-events: auto; }.map-layer-popover strong { font-size: 12px; }.map-layer-popover label { color: var(--cockpit-text-secondary); font-size: 11px; display: flex; align-items: center; gap: 7px; }.map-layer-popover input { accent-color: var(--cockpit-cyan); }
 
 .incident-events { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(61,112,136,.45); }.incident-events .module-heading { margin-bottom: 7px; }.event-table { margin-top: 4px; }.event-row { display: grid; grid-template-columns: 76px minmax(0,1fr) 86px; gap: 7px; min-height: 29px; align-items: center; border-bottom: 1px solid rgba(61,112,136,.2); }.event-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.event-head { min-height: 25px; color: var(--cockpit-text-muted); font-size: 10px; border-bottom-color: rgba(61,112,136,.45); }.event-list-row { color: var(--cockpit-text-secondary); font-size: 11px; }.event-list-row .plate { color: var(--cockpit-cyan-soft); font-family: "Bahnschrift", "Segoe UI", sans-serif; }.event-list-row .event-time { color: var(--cockpit-text-muted); text-align: right; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 10px; }.event-kind { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }.event-kind i { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }.kind-warning i { background: var(--cockpit-yellow); }.kind-alarm i { background: var(--cockpit-orange); box-shadow: 0 0 6px rgba(250,140,22,.6); }.kind-info i { background: var(--cockpit-cyan); }
+.event-list-viewport { --event-row-height: 29px; height: calc(var(--event-row-height) * 5); overflow: hidden; }.event-list-track { transform: translateY(calc(var(--event-step, 0) * var(--event-row-height) * -1)); transition: transform .32s ease; }.event-list-track .event-row { height: var(--event-row-height); }
 .incident-selection-hint { min-height: 18px; margin: -2px 0 5px; color: var(--cockpit-text-muted); font-size: 10px; line-height: 18px; }
 .accident-chart { height: calc(100% - 34px); min-height: 112px; margin-top: 4px; }.accident-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }.chart-grid path { stroke: rgba(167,186,200,.18); stroke-width: 1; }.chart-area { fill: rgba(22,119,255,.17); }.chart-line { fill: none; stroke: var(--cockpit-primary); stroke-width: 2.5; }.chart-points circle { fill: var(--cockpit-bg-raised); stroke: var(--cockpit-cyan); stroke-width: 2; }.chart-values text { fill: var(--cockpit-text-secondary); font-size: 11px; text-anchor: middle; }.chart-labels text { fill: var(--cockpit-text-muted); font-size: 10px; text-anchor: middle; }
 
@@ -154,6 +155,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
   .incident-events { margin-top: 8px; padding-top: 8px; }
   .incident-events .module-heading { height: 22px; margin-bottom: 4px; }
   .incident-events .event-row { min-height: 21px; }
+  .event-list-viewport { --event-row-height: 21px; }
   .incident-events .event-head { min-height: 18px; }
   .accident-module { padding: 8px; }
   .accident-module .module-heading { height: 22px; margin-bottom: 4px; }
@@ -163,8 +165,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
 
 .module-heading .road-list-trigger { margin-left: 2px; padding: 0 3px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 15px; line-height: 20px; letter-spacing: .04em; }
 .module-heading .application-list-trigger { margin-left: 0; padding: 0 3px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 15px; line-height: 20px; }
+.module-heading .vehicle-list-trigger { margin-left: 0; padding: 0 3px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 15px; line-height: 20px; }
+.module-heading .incident-list-trigger { margin-left: 0; padding: 0 3px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 15px; line-height: 20px; }
+.module-heading .accident-list-trigger { margin-left: 0; padding: 0 3px; font-family: "Bahnschrift", "Segoe UI", sans-serif; font-size: 15px; line-height: 20px; }
+.accident-module .module-heading .range-tabs { margin-left: auto; }
 .detail-modal.is-road-list { width: min(980px, 92vw); }
 .detail-modal.is-application-list { width: min(980px, 92vw); }
+.detail-modal.is-incident-list { width: min(1160px, 94vw); }
+.detail-modal.is-accident-list { width: min(980px, 92vw); }
+.detail-modal.is-vehicle-list { width: min(1100px, 94vw); }
 .detail-modal [hidden] { display: none !important; }
 .modal-header-actions { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .application-date-range { display: flex; align-items: center; gap: 8px; color: var(--cockpit-text-muted); font-size: 12px; }
@@ -183,7 +192,42 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
 .application-list-table th:nth-child(6), .application-list-table td:nth-child(6) { width: 15%; }
 .application-list-table th:nth-child(7), .application-list-table td:nth-child(7) { width: 13%; }
 .application-list-table .application-code { color: var(--cockpit-cyan-soft); font-family: "Bahnschrift", "Segoe UI", sans-serif; }
+.accident-list-table { min-width: 780px; }
+.accident-list-table th:nth-child(1), .accident-list-table td:nth-child(1) { width: 17%; }
+.accident-list-table th:nth-child(2), .accident-list-table td:nth-child(2) { width: 17%; }
+.accident-list-table th:nth-child(3), .accident-list-table td:nth-child(3) { width: 14%; }
+.accident-list-table th:nth-child(4), .accident-list-table td:nth-child(4) { width: 17%; }
+.accident-list-table th:nth-child(5), .accident-list-table td:nth-child(5) { width: 11%; }
+.accident-list-table th:nth-child(6), .accident-list-table td:nth-child(6) { width: 24%; }
+.accident-list-table .accident-code { color: var(--cockpit-cyan-soft); font-family: "Bahnschrift", "Segoe UI", sans-serif; }
+.accident-list-table td:last-child { white-space: normal; }
 .application-page-ellipsis { min-width: 16px; color: var(--cockpit-text-muted); text-align: center; }
+.incident-modal-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.incident-summary-filter { position: relative; padding-right: 30px; }
+.incident-summary-filter strong { color: var(--cockpit-cyan-soft); }
+.incident-summary-filter.warning strong { color: var(--cockpit-primary); }
+.incident-summary-filter.alarm strong { color: var(--cockpit-orange); }
+.incident-summary-filter small { position: absolute; right: 12px; bottom: 11px; color: var(--cockpit-text-muted); font-size: 11px; }
+.incident-list-table { min-width: 1080px; }
+.incident-list-table th:nth-child(1), .incident-list-table td:nth-child(1) { width: 15%; }
+.incident-list-table th:nth-child(2), .incident-list-table td:nth-child(2) { width: 9%; }
+.incident-list-table th:nth-child(3), .incident-list-table td:nth-child(3) { width: 11%; }
+.incident-list-table th:nth-child(4), .incident-list-table td:nth-child(4) { width: 14%; }
+.incident-list-table th:nth-child(5), .incident-list-table td:nth-child(5) { width: 13%; }
+.incident-list-table th:nth-child(6), .incident-list-table td:nth-child(6) { width: 18%; }
+.incident-list-table th:nth-child(7), .incident-list-table td:nth-child(7) { width: 14%; }
+.incident-list-table th:nth-child(8), .incident-list-table td:nth-child(8) { width: 10%; }
+.incident-code, .incident-plate, .incident-time { color: var(--cockpit-cyan-soft) !important; font-family: "Bahnschrift", "Segoe UI", sans-serif; }
+.incident-time { color: var(--cockpit-text-muted) !important; }
+.incident-category, .incident-process { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.incident-category i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.incident-category.warning { color: var(--cockpit-primary); }.incident-category.warning i { background: var(--cockpit-primary); }
+.incident-category.alarm { color: var(--cockpit-orange); }.incident-category.alarm i { background: var(--cockpit-orange); }
+.incident-process { padding: 2px 6px; border: 1px solid transparent; border-radius: 3px; font-size: 11px; }
+.incident-process.pending { color: #ffd591; border-color: rgba(250,140,22,.36); background: rgba(250,140,22,.12); }
+.incident-process.processing { color: #bdefff; border-color: rgba(0,207,232,.36); background: rgba(0,207,232,.1); }
+.incident-process.finished { color: #b7eb8f; border-color: rgba(82,196,26,.36); background: rgba(82,196,26,.1); }
+.incident-table-wrap { max-height: 52vh; }
 .road-modal-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
 .road-summary-filter { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; border: 1px solid var(--cockpit-border); background: rgba(22,50,71,.74); border-radius: 3px; padding: 9px 12px; text-align: left; cursor: pointer; transition: border-color .2s, background .2s; }
 .road-summary-filter:hover { border-color: var(--cockpit-border-strong); background: rgba(22,50,71,.98); }
@@ -208,8 +252,45 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
 .road-page-btn.is-active { border-color: var(--cockpit-cyan); background: rgba(0,207,232,.14); color: var(--cockpit-cyan-soft); }
 .road-page-btn:disabled { opacity: .45; cursor: not-allowed; }
 @media (max-width: 720px) { .road-modal-summary { grid-template-columns: 1fr; gap: 7px; }.road-summary-filter { padding: 8px 10px; }.road-summary-filter strong { font-size: 22px; } }
-@media (max-width: 720px) { .detail-modal.is-application-list header { align-items: flex-start; gap: 8px; }.application-modal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }.application-summary-filter { padding: 8px; }.application-summary-filter strong { font-size: 20px; }.application-date-range { flex-wrap: wrap; justify-content: flex-end; }.application-date-range label span { display: none; }.application-date-range input { width: 120px; }.modal-header-actions { gap: 8px; }.application-list-table { min-width: 760px; } }
-@media (max-width: 1320px) { .module-chart .module-heading:has(.application-list-trigger) { gap: 4px; }.module-chart .module-heading:has(.application-list-trigger) h2 { font-size: 14px; }.module-chart .module-heading:has(.application-list-trigger) .range-tabs button { padding: 2px; font-size: 10px; } }
+@media (max-width: 720px) { .detail-modal.is-application-list header, .detail-modal.is-incident-list header, .detail-modal.is-accident-list header { align-items: flex-start; gap: 8px; }.application-modal-summary, .incident-modal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }.application-summary-filter, .incident-summary-filter { padding: 8px; }.application-summary-filter strong, .incident-summary-filter strong { font-size: 20px; }.application-date-range { flex-wrap: wrap; justify-content: flex-end; }.application-date-range label span { display: none; }.application-date-range input { width: 120px; }.modal-header-actions { gap: 8px; }.application-list-table { min-width: 760px; }.incident-list-table { min-width: 1080px; } }
+@media (max-width: 720px) { .detail-modal.is-accident-list header { flex-direction: column; align-items: stretch; }.detail-modal.is-accident-list .modal-header-actions { justify-content: space-between; }.detail-modal.is-accident-list .accident-date-range input { width: 110px; } }
+@media (max-width: 1600px) { .module-chart .module-heading:has(.application-list-trigger), .module-chart .module-heading:has(.incident-list-trigger) { gap: 4px; }.module-chart .module-heading:has(.application-list-trigger) h2, .module-chart .module-heading:has(.incident-list-trigger) h2 { font-size: 14px; }.module-chart .module-heading:has(.application-list-trigger) .range-tabs button, .module-chart .module-heading:has(.incident-list-trigger) .range-tabs button { padding: 2px; font-size: 10px; } }
+
+.vehicle-list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }.vehicle-search { position: relative; display: flex; align-items: center; width: min(286px, 100%); }.vehicle-search-icon { position: absolute; left: 10px; color: var(--cockpit-text-muted); font-size: 18px; line-height: 1; pointer-events: none; transform: translateY(-1px); }.vehicle-search input { width: 100%; height: 34px; padding: 0 10px 0 31px; border: 1px solid var(--cockpit-border); border-radius: 3px; background: var(--cockpit-surface); color: var(--cockpit-text); font-size: 12px; outline: none; }.vehicle-search input::placeholder { color: var(--cockpit-text-muted); }.vehicle-search input:focus { border-color: var(--cockpit-cyan); box-shadow: 0 0 0 2px rgba(0,207,232,.1); }.vehicle-list-hint { color: var(--cockpit-text-muted); font-size: 11px; white-space: nowrap; }.vehicle-modal-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }.vehicle-summary-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 4px 8px; padding: 10px 12px; border: 1px solid var(--cockpit-border); background: rgba(22,50,71,.74); border-radius: 3px; }.vehicle-summary-card span { grid-column: 1 / -1; color: var(--cockpit-text-secondary); font-size: 12px; line-height: 18px; }.vehicle-summary-card strong { color: var(--cockpit-cyan-soft); font: 600 26px/30px "Bahnschrift", "Segoe UI", sans-serif; font-variant-numeric: tabular-nums lining-nums; }.vehicle-summary-card small { color: var(--cockpit-text-muted); font-size: 11px; line-height: 18px; }.vehicle-summary-card.online strong { color: var(--cockpit-green); }.vehicle-summary-card.offline strong { color: var(--cockpit-text-secondary); }.vehicle-table-wrap { max-height: 49vh; overflow: auto; }.vehicle-list-table { min-width: 900px; }.vehicle-list-table th:nth-child(1), .vehicle-list-table td:nth-child(1) { width: 16%; }.vehicle-list-table th:nth-child(2), .vehicle-list-table td:nth-child(2) { width: 19%; }.vehicle-list-table th:nth-child(3), .vehicle-list-table td:nth-child(3) { width: 14%; }.vehicle-list-table th:nth-child(4), .vehicle-list-table td:nth-child(4) { width: 13%; }.vehicle-list-table th:nth-child(5), .vehicle-list-table td:nth-child(5) { width: 13%; }.vehicle-list-table th:nth-child(6), .vehicle-list-table td:nth-child(6) { width: 12%; }.vehicle-list-table th:nth-child(7), .vehicle-list-table td:nth-child(7) { width: 13%; }.vehicle-list-table .vehicle-plate { color: var(--cockpit-cyan-soft); font-family: "Bahnschrift", "Segoe UI", sans-serif; }.vehicle-list-table .vehicle-report-time { color: var(--cockpit-text-muted); font-family: "Bahnschrift", "Segoe UI", sans-serif; }.vehicle-status { display: inline-flex; align-items: center; gap: 5px; }.vehicle-status i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }.vehicle-status.online { color: var(--cockpit-green); }.vehicle-status.online i { background: var(--cockpit-green); box-shadow: 0 0 6px rgba(82,196,26,.55); }.vehicle-status.offline { color: var(--cockpit-text-muted); }.vehicle-status.offline i { background: #748390; }.vehicle-list-footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; color: var(--cockpit-text-muted); font-size: 11px; }.vehicle-list-footer b { color: var(--cockpit-text-secondary); font-weight: 500; }
+@media (max-width: 720px) { .vehicle-list-toolbar { align-items: stretch; flex-direction: column; }.vehicle-search { width: 100%; }.vehicle-list-hint { white-space: normal; }.vehicle-modal-summary { gap: 7px; }.vehicle-summary-card { padding: 8px; }.vehicle-summary-card strong { font-size: 22px; }.vehicle-list-footer { align-items: flex-start; flex-direction: column; gap: 4px; } }
+
+/* Vehicle context, video and trajectory overlays for the map-first cockpit workflow. */
+.cockpit-vehicle-leaflet-popup .leaflet-popup-content-wrapper, .cockpit-vehicle-leaflet-popup .leaflet-popup-tip { background: var(--cockpit-bg-raised); border: 1px solid var(--cockpit-border-strong); box-shadow: 0 10px 28px rgba(0,0,0,.42); }
+.cockpit-vehicle-leaflet-popup .leaflet-popup-content { margin: 0; color: var(--cockpit-text); }
+.cockpit-vehicle-leaflet-popup .leaflet-popup-close-button { z-index: 2; color: var(--cockpit-text-muted); }
+.cockpit-vehicle-leaflet-popup .leaflet-popup-close-button:hover { color: var(--cockpit-cyan); }
+.cockpit-vehicle-popup { width: 304px; padding: 14px; font-size: 11px; }
+.cockpit-popup-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--cockpit-border); }
+.cockpit-popup-kicker, .cockpit-panel-kicker { display: block; margin-bottom: 3px; color: var(--cockpit-cyan); font-size: 10px; letter-spacing: .04em; }
+.cockpit-popup-head strong { display: block; color: var(--cockpit-text); font: 600 17px/22px "Bahnschrift", "Segoe UI", sans-serif; }
+.cockpit-popup-status { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; color: var(--cockpit-green); }
+.cockpit-popup-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 7px currentColor; }
+.cockpit-popup-status.auto { color: var(--cockpit-primary); }.cockpit-popup-status.offline { color: var(--cockpit-text-muted); }.cockpit-popup-status.manual { color: var(--cockpit-cyan); }
+.cockpit-popup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; padding: 11px 0; }
+.cockpit-popup-grid div { min-width: 0; }.cockpit-popup-grid span, .cockpit-popup-events span { display: block; color: var(--cockpit-text-muted); font-size: 10px; line-height: 15px; }.cockpit-popup-grid b, .cockpit-popup-events b { display: block; overflow: hidden; color: var(--cockpit-text-secondary); font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-popup-events { padding: 8px 9px; border-left: 2px solid var(--cockpit-orange); background: rgba(250,140,22,.08); }.cockpit-popup-events b { margin-top: 2px; color: #ffd591; }
+.cockpit-popup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.cockpit-popup-action, .cockpit-control-button { min-height: 30px; padding: 0 10px; border: 1px solid var(--cockpit-border-strong); border-radius: 3px; background: rgba(22,50,71,.78); color: var(--cockpit-text-secondary); font-size: 11px; cursor: pointer; }
+.cockpit-popup-action:hover, .cockpit-control-button:hover { border-color: var(--cockpit-cyan); color: var(--cockpit-cyan-soft); }.cockpit-popup-action.primary, .cockpit-control-button.primary { border-color: var(--cockpit-primary); background: rgba(22,119,255,.22); color: var(--cockpit-cyan-soft); }
+
+.cockpit-video-panel { position: absolute; top: 14px; right: 14px; bottom: 14px; z-index: 8; display: flex; width: min(386px, 38%); min-width: 340px; flex-direction: column; overflow: hidden; border: 1px solid var(--cockpit-border-strong); border-radius: var(--cockpit-radius); background: rgba(7,21,34,.97); box-shadow: 0 12px 30px rgba(0,0,0,.42); opacity: 0; pointer-events: none; transform: translateX(14px); transition: opacity .2s, transform .2s; }
+.cockpit-video-panel.is-open { opacity: 1; pointer-events: auto; transform: translateX(0); }
+.cockpit-video-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 10px 12px; border-bottom: 1px solid var(--cockpit-border); background: rgba(11,28,42,.96); }
+.cockpit-video-header strong { display: block; overflow: hidden; max-width: 270px; color: var(--cockpit-text); font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-panel-close { width: 28px; height: 28px; flex: 0 0 28px; border: 1px solid var(--cockpit-border); border-radius: 3px; background: transparent; color: var(--cockpit-text-muted); font-size: 20px; line-height: 24px; cursor: pointer; }.cockpit-panel-close:hover { border-color: var(--cockpit-cyan); color: var(--cockpit-cyan); }
+.cockpit-video-body { min-height: 0; flex: 1; overflow: auto; padding: 10px; background: rgba(7,21,34,.82); }.cockpit-video-body .vw-workbench { min-height: 100%; }.cockpit-video-body .vw-main-stage { flex: 0 0 auto; aspect-ratio: 16 / 9; }.cockpit-video-body .vw-toolbar { flex-direction: column; align-items: stretch; }.cockpit-video-body .vw-vehicle-title { align-items: center; }.cockpit-video-body .vw-vehicle-select { width: 100%; }.cockpit-video-body .vw-tool-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }.cockpit-video-body .vw-tool-actions .ant-btn-xs { width: 100%; }
+
+.cockpit-trajectory-panel { position: absolute; left: 14px; right: 14px; bottom: 14px; z-index: 7; display: none; overflow: hidden; border: 1px solid var(--cockpit-border-strong); border-radius: var(--cockpit-radius); background: rgba(7,21,34,.97); box-shadow: 0 10px 28px rgba(0,0,0,.4); color: var(--cockpit-text); }
+.cockpit-trajectory-panel.is-open { display: block; }.map-stage:has(.cockpit-video-panel.is-open) .cockpit-trajectory-panel { right: min(410px, 40%); }
+.cockpit-traj-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px 8px; border-bottom: 1px solid var(--cockpit-border); }.cockpit-traj-head strong { display: inline-block; color: var(--cockpit-text); font: 600 14px/20px "Bahnschrift", "Segoe UI", sans-serif; }.cockpit-traj-head small { margin-left: 9px; color: var(--cockpit-text-muted); font-size: 11px; }.cockpit-traj-metrics { display: flex; align-items: center; gap: 15px; }.cockpit-traj-metrics span { display: grid; gap: 2px; min-width: 72px; }.cockpit-traj-metrics em { color: var(--cockpit-text-muted); font-size: 10px; font-style: normal; }.cockpit-traj-metrics b { color: var(--cockpit-cyan-soft); font: 500 12px/16px "Bahnschrift", "Segoe UI", sans-serif; }.cockpit-traj-metrics span:nth-child(2) b { color: var(--cockpit-primary); }.cockpit-traj-metrics span:nth-child(3) b { color: var(--cockpit-green); }.cockpit-traj-query, .cockpit-traj-controls { display: flex; align-items: center; gap: 7px; padding: 8px 12px; }.cockpit-traj-query { flex-wrap: wrap; border-bottom: 1px solid rgba(61,112,136,.35); }.cockpit-traj-query label { display: inline-flex; align-items: center; gap: 5px; color: var(--cockpit-text-muted); font-size: 10px; }.cockpit-traj-query input, .cockpit-traj-controls select { height: 27px; border: 1px solid var(--cockpit-border); border-radius: 3px; background: var(--cockpit-surface); color: var(--cockpit-text-secondary); font-size: 11px; }.cockpit-traj-query input { width: 128px; padding: 0 6px; }.cockpit-traj-controls select { width: 58px; padding: 0 4px; }.cockpit-traj-query > span { color: var(--cockpit-text-muted); font-size: 11px; }.cockpit-traj-controls { padding-top: 7px; padding-bottom: 9px; }.cockpit-traj-time { color: var(--cockpit-text-muted); font: 10px/18px "Bahnschrift", "Segoe UI", sans-serif; white-space: nowrap; }.cockpit-traj-slider { position: relative; min-width: 80px; flex: 1; height: 18px; }.cockpit-traj-slider > div { position: absolute; top: 7px; left: 0; z-index: 0; height: 4px; border-radius: 2px; background: var(--cockpit-primary); pointer-events: none; }.cockpit-traj-slider:before { content: ""; position: absolute; top: 7px; right: 0; left: 0; height: 4px; border-radius: 2px; background: #243744; }.cockpit-traj-slider input { position: relative; z-index: 1; width: 100%; height: 18px; margin: 0; appearance: none; background: transparent; }.cockpit-traj-slider input::-webkit-slider-thumb { width: 12px; height: 12px; appearance: none; border: 0; border-radius: 50%; background: var(--cockpit-cyan); box-shadow: 0 0 7px rgba(0,207,232,.65); cursor: pointer; }
+.cockpit-trajectory-marker { display: grid; place-items: center; width: 32px !important; height: 32px !important; border: 2px solid var(--cockpit-cyan); border-radius: 50%; background: rgba(7,21,34,.9); box-shadow: 0 0 0 5px rgba(0,207,232,.16), 0 0 14px rgba(0,207,232,.65); }.cockpit-trajectory-marker span { color: var(--cockpit-cyan-soft); font: 600 10px/1 "Bahnschrift", "Segoe UI", sans-serif; }
+@media (max-width: 1320px) { .cockpit-video-panel { min-width: 310px; width: min(350px, 40%); }.cockpit-vehicle-popup { width: 282px; }.cockpit-traj-metrics { gap: 9px; }.cockpit-traj-metrics span { min-width: 58px; }.map-stage:has(.cockpit-video-panel.is-open) .cockpit-trajectory-panel { right: 370px; } }
+@media (max-width: 720px) { .cockpit-video-panel { top: 8px; right: 8px; bottom: 8px; left: 8px; width: auto; min-width: 0; }.map-stage:has(.cockpit-video-panel.is-open) .cockpit-trajectory-panel { right: 8px; bottom: 8px; }.cockpit-traj-head { align-items: flex-start; flex-direction: column; gap: 8px; }.cockpit-traj-metrics { width: 100%; justify-content: space-between; }.cockpit-traj-query input { width: 112px; }.cockpit-traj-controls { flex-wrap: wrap; }.cockpit-traj-slider { order: 3; flex-basis: 100%; } }
 
 .map-layer-popover { z-index: 6; }
 @media (min-aspect-ratio: 12 / 5) { .map-cluster-icon { width: 116px; height: 116px; margin-left: -58px; margin-top: -58px; } }
@@ -219,3 +300,71 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
 @media (max-height: 760px) { .road-cluster-icon { width: 78px; height: 78px; margin-left: -39px; margin-top: -39px; }.road-cluster-icon strong { font-size: 24px; line-height: 26px; }.road-cluster-icon small { display: none; } }
 @media (max-width: 1320px) { .accident-cluster-icon { width: 90px; height: 90px; margin-left: -45px; margin-top: -45px; } }
 @media (max-height: 760px) { .accident-cluster-icon { width: 78px; height: 78px; margin-left: -39px; margin-top: -39px; }.accident-cluster-icon strong { font-size: 24px; line-height: 26px; }.accident-cluster-icon small { display: none; } }
+
+/* Shared modal treatment: one rhythm for every cockpit list/detail overlay. */
+.detail-modal { width: min(980px, 92vw); max-height: min(82vh, 820px); border-radius: var(--cockpit-radius); }
+.detail-modal.is-incident-list { width: min(1120px, 94vw); }
+.detail-modal.is-vehicle-list { width: min(1040px, 94vw); }
+.detail-modal header { min-height: 64px; gap: 20px; padding: 14px 18px; }
+.detail-modal header > div:first-child { min-width: 0; flex: 1 1 auto; }
+.detail-modal header h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modal-header-actions { flex: 0 1 auto; justify-content: flex-end; gap: 12px; }
+.application-date-range { flex: 0 0 auto; min-height: 32px; }
+.application-date-range input { width: 124px; height: 32px; border-radius: var(--cockpit-radius); }
+.modal-close { flex: 0 0 30px; border-radius: var(--cockpit-radius); }
+.detail-modal footer { min-height: 58px; padding: 12px 18px; }
+.modal-body { min-height: 0; padding: 16px 18px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--cockpit-border-strong) rgba(7,21,34,.55); }
+.modal-body::-webkit-scrollbar, .detail-modal *::-webkit-scrollbar { width: 8px; height: 8px; }
+.modal-body::-webkit-scrollbar-track, .detail-modal *::-webkit-scrollbar-track { background: rgba(7,21,34,.55); border-radius: 4px; }
+.modal-body::-webkit-scrollbar-thumb, .detail-modal *::-webkit-scrollbar-thumb { background: rgba(61,112,136,.82); border: 2px solid rgba(7,21,34,.55); border-radius: 4px; }
+.modal-body::-webkit-scrollbar-thumb:hover, .detail-modal *::-webkit-scrollbar-thumb:hover { background: var(--cockpit-cyan); }
+
+/* Statistical tiles share the same label/value layout regardless of data type. */
+.application-modal-summary, .incident-modal-summary, .road-modal-summary, .vehicle-modal-summary { gap: 8px; margin-bottom: 14px; }
+.application-modal-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.incident-modal-summary, .road-modal-summary, .vehicle-modal-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.road-summary-filter, .vehicle-summary-card { min-height: 68px; padding: 10px 12px; border: 1px solid var(--cockpit-border); border-radius: var(--cockpit-radius); background: rgba(22,50,71,.74); }
+.road-summary-filter span, .vehicle-summary-card span { color: var(--cockpit-text-secondary); font-size: 12px; line-height: 18px; }
+.road-summary-filter strong, .vehicle-summary-card strong { font: 600 26px/30px "Bahnschrift", "Segoe UI", sans-serif; font-variant-numeric: tabular-nums lining-nums; }
+.road-summary-filter.is-selected { box-shadow: inset 0 0 0 1px rgba(0,207,232,.1); }
+.vehicle-summary-card { align-items: center; }
+.vehicle-summary-card small { align-self: end; line-height: 18px; }
+.vehicle-summary-card { display: flex; justify-content: space-between; }
+.vehicle-summary-card span { min-width: 0; margin-right: auto; }
+.vehicle-summary-card small { align-self: auto; }
+.incident-summary-filter { min-height: 68px; padding: 10px 38px 10px 12px; }
+.incident-summary-filter small { right: 12px; bottom: 13px; }
+.summary-cell { min-height: 68px; padding: 10px 12px; border-radius: var(--cockpit-radius); }
+.summary-cell strong { font: 600 26px/30px "Bahnschrift", "Segoe UI", sans-serif; font-variant-numeric: tabular-nums lining-nums; }
+
+/* Filters sit on the same baseline and do not compete with the title or close control. */
+.road-list-meta, .vehicle-list-toolbar, .modal-filter-row { min-height: 34px; margin-bottom: 12px; }
+.modal-filter-row { display: flex; align-items: center; justify-content: flex-start; }
+.modal-filter-row .application-date-range { flex-wrap: wrap; }
+.road-area-filter { min-height: 32px; }
+.road-area-filter select, .vehicle-search input { height: 32px; border-radius: var(--cockpit-radius); }
+.vehicle-search { width: min(280px, 100%); }
+.vehicle-list-hint { line-height: 18px; }
+.detail-modal.is-vehicle-list .modal-body { display: flex; flex-direction: column; }
+.detail-modal.is-vehicle-list .vehicle-modal-summary { order: 0; }
+.detail-modal.is-vehicle-list .vehicle-list-toolbar { order: 1; }
+.detail-modal.is-vehicle-list .vehicle-table-wrap { order: 2; }
+.detail-modal.is-vehicle-list .vehicle-list-footer { order: 3; }
+.road-table-wrap, .incident-table-wrap, .vehicle-table-wrap { overflow: auto; max-height: 42vh; scrollbar-width: thin; scrollbar-color: var(--cockpit-border-strong) rgba(7,21,34,.55); }
+.road-list-table { min-width: 760px; }
+.road-list-table th { height: 38px; padding-top: 8px; padding-bottom: 8px; }
+.road-list-table td { height: 40px; padding-top: 8px; padding-bottom: 8px; }
+.road-pagination { min-height: 28px; margin-top: 12px; }
+
+@media (max-width: 720px) {
+  .detail-modal { width: min(640px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); }
+  .detail-modal header, .detail-modal.is-accident-list header { flex-direction: row; align-items: center; gap: 10px; }
+  .modal-header-actions { flex-wrap: wrap; gap: 8px; }
+  .application-date-range { flex-wrap: wrap; justify-content: flex-start; }
+  .application-date-range label span { display: inline; }
+  .application-date-range input { width: 116px; }
+  .application-modal-summary, .incident-modal-summary, .road-modal-summary, .vehicle-modal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .road-summary-filter, .vehicle-summary-card, .incident-summary-filter, .summary-cell { min-height: 62px; padding: 8px 10px; }
+  .road-summary-filter strong, .vehicle-summary-card strong, .incident-summary-filter strong, .summary-cell strong { font-size: 22px; line-height: 26px; }
+  .road-table-wrap, .incident-table-wrap, .vehicle-table-wrap { max-height: 48vh; }
+}

@@ -8,8 +8,12 @@
   var VEHICLE_EXPAND_ZOOM = 13;
   var ROAD_PAGE_SIZE = 10;
   var APPLICATION_PAGE_SIZE = 8;
+  var INCIDENT_PAGE_SIZE = 8;
+  var ACCIDENT_PAGE_SIZE = 8;
   var ACCIDENT_YEAR = new Date().getFullYear();
-  var state = { selectedArea: null, modalOpen: false, modalType: null, map: null, mapLayers: {}, roadMode: false, roadFilter: 'all', roadArea: 'all', roadPage: 1, roadViewMode: null, roadData: [], applicationFilter: 'all', applicationPage: 1, applicationDateFrom: '', applicationDateTo: '', vehicleMode: true, vehicleFilter: 'all', vehicleViewMode: null, vehicleData: [], incidentMode: false, incidentFilter: 'total', incidentRange: '本月', incidentViewMode: null, accidentMode: false, accidentRange: '今年', accidentViewMode: null, accidentData: [] };
+  var state = { selectedArea: null, selectedVehicleId: null, modalOpen: false, modalType: null, map: null, mapLayers: {}, roadMode: false, roadFilter: 'all', roadArea: 'all', roadPage: 1, roadViewMode: null, roadData: [], applicationFilter: 'all', applicationPage: 1, applicationDateFrom: '', applicationDateTo: '', vehicleMode: true, vehicleFilter: 'all', vehicleViewMode: null, vehicleData: [], vehicleSearch: '', incidentMode: false, incidentFilter: 'total', incidentRange: '本年', incidentViewMode: null, incidentListFilter: 'total', incidentListPage: 1, incidentDateFrom: '', incidentDateTo: '', accidentMode: false, accidentRange: '本年', accidentViewMode: null, accidentData: [], accidentPage: 1, accidentDateFrom: '', accidentDateTo: '' };
+  var trajectoryState = { vehicleId: null, points: [], currentIndex: 0, currentTime: null, playing: false, speed: 1, timer: null, playbackDate: '', startTime: '08:00:00', endTime: '14:32:00', line: null, passedLine: null, marker: null };
+  var cockpitVehicleIndex = {};
   var palette = ['#00cfe8', '#1677ff', '#fa8c16', '#9254de', '#ff6b9b'];
   var vehiclePalette = ['#00cfe8', '#1677ff', '#748390'];
   var chartData = {
@@ -51,6 +55,40 @@
     }
   });
   applicationRows.sort(function (a, b) { return b.date.localeCompare(a.date) || b.id.localeCompare(a.id); });
+  var vehicleListRows = [
+    { plate: 'DA202605004', company: '道路测试', application: '初次申请', mode: '自动驾驶', speed: 29, status: 'online', lastReport: '09-21 18:23:38' },
+    { plate: '鄂F·A001', company: '襄阳智行科技', application: '道路测试', mode: '人工驾驶', speed: 42, status: 'online', lastReport: '09-21 18:23:21' },
+    { plate: '鄂F·A002', company: '襄阳智行科技', application: '道路测试', mode: '自动驾驶', speed: 36, status: 'online', lastReport: '09-21 18:23:16' },
+    { plate: '鄂F·A003', company: '汉江智能出行', application: '示范应用', mode: '自动驾驶', speed: 18, status: 'online', lastReport: '09-21 18:22:57' },
+    { plate: '鄂F·A004', company: '襄阳智行科技', application: '道路测试', mode: '自动驾驶', speed: 51, status: 'online', lastReport: '09-21 18:22:41' },
+    { plate: '鄂F·A005', company: '汉江智能出行', application: '示范应用', mode: '人工驾驶', speed: 27, status: 'online', lastReport: '09-21 18:22:32' },
+    { plate: '鄂F·A006', company: '东津无人配送', application: '商业化试点', mode: '自动驾驶', speed: 12, status: 'online', lastReport: '09-21 18:22:10' },
+    { plate: '鄂F·A007', company: '东津无人配送', application: '商业化试点', mode: '自动驾驶', speed: 0, status: 'offline', lastReport: '09-21 18:18:44' },
+    { plate: '鄂F·A008', company: '汉江智能出行', application: '示范应用', mode: '人工驾驶', speed: 33, status: 'online', lastReport: '09-21 18:21:58' },
+    { plate: '鄂F·A009', company: '襄阳智行科技', application: '道路测试', mode: '自动驾驶', speed: 24, status: 'online', lastReport: '09-21 18:21:39' }
+  ];
+  var incidentRows = [];
+  var incidentTypes = ['车速超限', '通信中断', '电子围栏越界', '临牌有效期', '非规定时段测试', '路径规划异常'];
+  var incidentDescriptions = ['车辆运行速度超过当前道路限速', '车载终端连续未上报有效数据', '车辆驶入限制区域', '临时牌照已超过有效期限', '车辆在非规定测试时段运行', '自动驾驶路径规划出现异常'];
+  var incidentVehicles = [
+    ['鄂F·A001', '襄阳智行科技'], ['鄂F·A002', '襄阳智行科技'], ['鄂F·A003', '汉江智能出行'],
+    ['鄂F·A004', '襄阳智行科技'], ['鄂F·A005', '汉江智能出行'], ['鄂F·A006', '东津无人配送'],
+    ['鄂F·A007', '东津无人配送'], ['鄂F·A008', '汉江智能出行'], ['鄂F·A009', '襄阳智行科技']
+  ];
+  for (var incidentIndex = 0; incidentIndex < 36; incidentIndex++) {
+    var incidentDate = new Date(2026, 8 - (incidentIndex % 9), 1 + (incidentIndex * 3) % 26, 8 + (incidentIndex % 10), 12 + (incidentIndex * 7) % 48, 10 + (incidentIndex * 11) % 48);
+    var incidentCategory = incidentIndex % 3 === 0 ? 'alarm' : 'warning';
+    var incidentVehicle = incidentVehicles[incidentIndex % incidentVehicles.length];
+    var incidentTypeIndex = incidentIndex % incidentTypes.length;
+    incidentRows.push({
+      id: 'EW01-' + incidentDate.getFullYear() + String(incidentDate.getMonth() + 1).padStart(2, '0') + '-' + String(incidentIndex + 1).padStart(3, '0'),
+      category: incidentCategory, plate: incidentVehicle[0], company: incidentVehicle[1], type: incidentTypes[incidentTypeIndex],
+      description: incidentDescriptions[incidentTypeIndex], date: incidentDate.toISOString().slice(0, 10),
+      time: [String(incidentDate.getHours()).padStart(2, '0'), String(incidentDate.getMinutes()).padStart(2, '0'), String(incidentDate.getSeconds()).padStart(2, '0')].join(':'),
+      status: incidentIndex % 4 === 0 ? '待处理' : (incidentIndex % 4 === 1 ? '处理中' : '已完成')
+    });
+  }
+  incidentRows.sort(function (a, b) { return (b.date + b.time).localeCompare(a.date + a.time); });
 
   function setDonut(type, key) {
     var data = chartData[type];
@@ -125,9 +163,29 @@
       ['XY006', '非规定时段测试作业', '05-11 14:22:47', 'kind-warning'],
       ['XY007', '车速超限', '05-11 14:18:36', 'kind-alarm']
     ];
-    list.innerHTML = events.map(function (event) {
+    var rows = events.map(function (event) {
       return '<div class="event-row event-list-row" role="row"><span class="plate">' + event[0] + '</span><span class="event-kind ' + event[3] + '"><i></i>' + event[1] + '</span><span class="event-time">' + event[2] + '</span></div>';
     }).join('');
+    var duplicateRows = events.slice(0, 5).map(function (event) {
+      return '<div class="event-row event-list-row" aria-hidden="true"><span class="plate">' + event[0] + '</span><span class="event-kind ' + event[3] + '"><i></i>' + event[1] + '</span><span class="event-time">' + event[2] + '</span></div>';
+    }).join('');
+    list.innerHTML = '<div class="event-list-track">' + rows + duplicateRows + '</div>';
+    var track = list.firstElementChild;
+    var step = 0;
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    track.addEventListener('transitionend', function (event) {
+      if (event.propertyName !== 'transform' || step !== events.length) return;
+      track.style.transition = 'none';
+      step = 0;
+      track.style.setProperty('--event-step', step);
+      track.offsetHeight;
+      track.style.transition = '';
+    });
+    window.setInterval(function () {
+      if (events.length <= 5 || reducedMotion.matches || document.hidden || state.modalOpen || list.matches(':hover, :focus-within')) return;
+      step++;
+      track.style.setProperty('--event-step', step);
+    }, 8000);
   }
 
   function updateClock() {
@@ -140,8 +198,7 @@
   function openAreaModal(area, count) {
     state.selectedArea = area; state.modalOpen = true; state.modalType = 'area';
     var overlay = document.getElementById('overlay-root'); var title = document.getElementById('modal-title'); var body = document.getElementById('modal-body'); var kicker = document.getElementById('modal-kicker'); var action = document.getElementById('modal-action');
-    overlay.querySelector('.detail-modal').classList.remove('is-road-list', 'is-application-list');
-    document.getElementById('application-date-range').hidden = true;
+    overlay.querySelector('.detail-modal').classList.remove('is-road-list', 'is-application-list', 'is-vehicle-list', 'is-incident-list');
     kicker.hidden = false; kicker.textContent = '区域下钻'; action.textContent = '查看车辆清单';
     var ghost = overlay.querySelector('.ghost-button'); if (ghost) ghost.hidden = false;
     title.textContent = area + ' · 车辆分布';
@@ -200,8 +257,7 @@
     state.modalOpen = true; state.modalType = 'road';
     var overlay = document.getElementById('overlay-root'); var modal = overlay.querySelector('.detail-modal');
     var kicker = document.getElementById('modal-kicker');
-    modal.classList.remove('is-application-list');
-    document.getElementById('application-date-range').hidden = true;
+    modal.classList.remove('is-application-list', 'is-vehicle-list', 'is-incident-list');
     kicker.textContent = ''; kicker.hidden = true;
     document.getElementById('modal-title').textContent = '道路列表';
     document.getElementById('modal-action').textContent = '关闭';
@@ -218,6 +274,11 @@
         (!state.applicationDateFrom || row.date >= state.applicationDateFrom) &&
         (!state.applicationDateTo || row.date <= state.applicationDateTo);
     });
+  }
+  function modalDateFilter(type, label, from, to) {
+    return '<div class="modal-filter-row"><div class="application-date-range" aria-label="' + label + '筛选">' +
+      '<label><span>开始时间</span><input type="date" id="' + type + '-date-from" aria-label="' + label + '开始时间" value="' + from + '"></label>' +
+      '<span aria-hidden="true">→</span><label><span>结束时间</span><input type="date" id="' + type + '-date-to" aria-label="' + label + '结束时间" value="' + to + '"></label></div></div>';
   }
   function renderApplicationListModal() {
     var body = document.getElementById('modal-body');
@@ -236,7 +297,7 @@
     body.innerHTML = '<div class="application-modal-summary" role="tablist" aria-label="申请业务类型筛选">' + applicationCategories.map(function (item) {
       var selected = item.key === state.applicationFilter;
       return '<button type="button" class="road-summary-filter application-summary-filter' + (selected ? ' is-selected' : '') + '" data-application-filter="' + item.key + '" role="tab" aria-selected="' + selected + '"><span>' + item.label + '</span><strong>' + item.count + '</strong></button>';
-    }).join('') + '</div><div class="road-table-wrap"><table class="road-list-table application-list-table"><thead><tr><th>申请编号</th><th>业务类型</th><th>申请类型</th><th class="number-cell">车辆数</th><th>流程状态</th><th>当前环节</th><th>申请时间</th></tr></thead><tbody>' + (visible.length ? visible.map(function (row) {
+    }).join('') + '</div>' + modalDateFilter('application', '申请', state.applicationDateFrom, state.applicationDateTo) + '<div class="road-table-wrap"><table class="road-list-table application-list-table"><thead><tr><th>申请编号</th><th>业务类型</th><th>申请类型</th><th class="number-cell">车辆数</th><th>流程状态</th><th>当前环节</th><th>申请时间</th></tr></thead><tbody>' + (visible.length ? visible.map(function (row) {
       var category = applicationCategories.filter(function (item) { return item.key === row.category; })[0];
       return '<tr><td class="application-code">' + row.id + '</td><td>' + category.label + '</td><td>' + row.type + '</td><td class="number-cell">' + row.vehicles + '</td><td>' + row.status + '</td><td>' + row.stage + '</td><td>' + row.date + '</td></tr>';
     }).join('') : '<tr><td colspan="7" class="road-list-empty">当前筛选条件下暂无申请</td></tr>') + '</tbody></table></div><div class="road-pagination"><span class="road-page-total">共 <b>' + rows.length + '</b> 条</span><div class="road-page-controls"><button type="button" class="road-page-btn" data-application-page="prev" aria-label="上一页"' + (state.applicationPage === 1 ? ' disabled' : '') + '>‹</button>' + buttons + '<button type="button" class="road-page-btn" data-application-page="next" aria-label="下一页"' + (state.applicationPage === pages ? ' disabled' : '') + '>›</button></div></div>';
@@ -246,19 +307,97 @@
     state.applicationFilter = 'all'; state.applicationPage = 1; state.applicationDateFrom = ''; state.applicationDateTo = '';
     var overlay = document.getElementById('overlay-root');
     var modal = overlay.querySelector('.detail-modal');
-    modal.classList.remove('is-road-list'); modal.classList.add('is-application-list');
+    modal.classList.remove('is-road-list', 'is-vehicle-list', 'is-incident-list'); modal.classList.add('is-application-list');
     document.getElementById('modal-kicker').hidden = true;
     document.getElementById('modal-title').textContent = '申请列表';
     document.getElementById('modal-action').textContent = '关闭';
     overlay.querySelector('.ghost-button').hidden = true;
-    document.getElementById('application-date-range').hidden = false;
-    document.getElementById('application-date-from').value = '';
-    document.getElementById('application-date-to').value = '';
     renderApplicationListModal();
     overlay.classList.add('is-open'); overlay.setAttribute('aria-hidden', 'false');
     overlay.querySelector('.modal-close').focus();
   }
-  function closeModal() { var overlay = document.getElementById('overlay-root'); overlay.classList.remove('is-open'); overlay.setAttribute('aria-hidden', 'true'); state.modalOpen = false; state.modalType = null; }
+  function closeModal() { var overlay = document.getElementById('overlay-root'); overlay.classList.remove('is-open'); overlay.setAttribute('aria-hidden', 'true'); overlay.querySelector('.detail-modal').classList.remove('is-accident-list'); state.modalOpen = false; state.modalType = null; }
+
+  function vehicleListStatusLabel(status) { return status === 'online' ? '在线' : '离线'; }
+  function vehicleListFilteredRows() {
+    var query = (state.vehicleSearch || '').trim().toLowerCase();
+    if (!query) return vehicleListRows;
+    return vehicleListRows.filter(function (row) { return row.plate.toLowerCase().indexOf(query) > -1; });
+  }
+  function vehicleListEscape(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]; }); }
+  function renderVehicleListModal() {
+    var body = document.getElementById('modal-body');
+    if (!body) return;
+    var rows = vehicleListFilteredRows();
+    body.innerHTML = '<div class="vehicle-list-toolbar"><label class="vehicle-search" aria-label="按车牌号搜索车辆"><span class="vehicle-search-icon" aria-hidden="true">⌕</span><input type="search" data-vehicle-search placeholder="车牌号" value="' + vehicleListEscape(state.vehicleSearch) + '" autocomplete="off"></label><span class="vehicle-list-hint">展示车辆实时状态，数据每 5 秒更新</span></div><div class="vehicle-modal-summary" role="group" aria-label="车辆状态汇总"><div class="vehicle-summary-card"><span>车辆总数</span><strong>128</strong><small>辆</small></div><div class="vehicle-summary-card online"><span>在线车辆</span><strong>125</strong><small>辆</small></div><div class="vehicle-summary-card offline"><span>离线车辆</span><strong>3</strong><small>辆</small></div></div><div class="road-table-wrap vehicle-table-wrap"><table class="road-list-table vehicle-list-table"><thead><tr><th>车牌号</th><th>所属企业</th><th>申请类型</th><th>驾驶模式</th><th class="number-cell">速度(km/h)</th><th>在线状态</th><th>最后上报</th></tr></thead><tbody>' + (rows.length ? rows.map(function (row) { return '<tr><td class="vehicle-plate">' + row.plate + '</td><td>' + row.company + '</td><td>' + row.application + '</td><td>' + row.mode + '</td><td class="number-cell">' + row.speed + '</td><td><span class="vehicle-status ' + row.status + '"><i></i>' + vehicleListStatusLabel(row.status) + '</span></td><td class="vehicle-report-time">' + row.lastReport + '</td></tr>'; }).join('') : '<tr><td colspan="7" class="road-list-empty">当前车牌号下暂无车辆</td></tr>') + '</tbody></table></div><div class="vehicle-list-footer"><span>共 <b>' + rows.length + '</b> 条匹配记录</span><span>更新时间：2026-09-21 18:23:38</span></div>';
+  }
+  function openVehicleListModal() {
+    state.modalOpen = true; state.modalType = 'vehicle'; state.vehicleSearch = '';
+    var overlay = document.getElementById('overlay-root');
+    var modal = overlay.querySelector('.detail-modal');
+    modal.classList.remove('is-road-list', 'is-application-list', 'is-incident-list'); modal.classList.add('is-vehicle-list');
+    document.getElementById('modal-kicker').hidden = true;
+    document.getElementById('modal-title').textContent = '车辆列表';
+    document.getElementById('modal-action').textContent = '关闭';
+    overlay.querySelector('.ghost-button').hidden = true;
+    renderVehicleListModal();
+    overlay.classList.add('is-open'); overlay.setAttribute('aria-hidden', 'false');
+    var search = overlay.querySelector('[data-vehicle-search]');
+    if (search) search.focus();
+  }
+
+  function incidentCategoryLabel(category) { return category === 'alarm' ? '告警' : '预警'; }
+  function incidentStatusClass(status) { return status === '已完成' ? 'finished' : (status === '处理中' ? 'processing' : 'pending'); }
+  function incidentListFilteredRows() {
+    return incidentRows.filter(function (row) {
+      return (state.incidentListFilter === 'total' || row.category === state.incidentListFilter) &&
+        (!state.incidentDateFrom || row.date >= state.incidentDateFrom) &&
+        (!state.incidentDateTo || row.date <= state.incidentDateTo);
+    });
+  }
+  function incidentListSummary() {
+    return incidentRows.filter(function (row) {
+      return (!state.incidentDateFrom || row.date >= state.incidentDateFrom) && (!state.incidentDateTo || row.date <= state.incidentDateTo);
+    }).reduce(function (summary, row) {
+      summary.total += 1; summary[row.category] += 1; return summary;
+    }, { total: 0, warning: 0, alarm: 0 });
+  }
+  function renderIncidentListModal() {
+    var body = document.getElementById('modal-body');
+    if (!body) return;
+    var rows = incidentListFilteredRows();
+    var summary = incidentListSummary();
+    var pages = Math.max(1, Math.ceil(rows.length / INCIDENT_PAGE_SIZE));
+    state.incidentListPage = Math.min(Math.max(1, state.incidentListPage), pages);
+    var visible = rows.slice((state.incidentListPage - 1) * INCIDENT_PAGE_SIZE, state.incidentListPage * INCIDENT_PAGE_SIZE);
+    var buttons = '';
+    for (var page = 1; page <= pages; page++) {
+      if (pages > 7 && Math.abs(page - state.incidentListPage) > 2 && page !== 1 && page !== pages) {
+        if (page === 2 || page === pages - 1) buttons += '<span class="application-page-ellipsis">…</span>';
+        continue;
+      }
+      buttons += '<button type="button" class="road-page-btn' + (page === state.incidentListPage ? ' is-active' : '') + '" data-incident-page="' + page + '" aria-label="第 ' + page + ' 页"' + (page === state.incidentListPage ? ' aria-current="page"' : '') + '>' + page + '</button>';
+    }
+    var filters = [['total', '事件总数', summary.total], ['warning', '预警事件', summary.warning], ['alarm', '告警事件', summary.alarm]];
+    body.innerHTML = '<div class="incident-modal-summary" role="tablist" aria-label="异常事件分类筛选">' + filters.map(function (item) {
+      var selected = item[0] === state.incidentListFilter;
+      return '<button type="button" class="road-summary-filter incident-summary-filter ' + item[0] + (selected ? ' is-selected' : '') + '" data-incident-filter="' + item[0] + '" role="tab" aria-selected="' + selected + '"><span>' + item[1] + '</span><strong>' + item[2] + '</strong><small>起</small></button>';
+    }).join('') + '</div>' + modalDateFilter('incident', '异常事件', state.incidentDateFrom, state.incidentDateTo) + '<div class="road-table-wrap incident-table-wrap"><table class="road-list-table incident-list-table"><thead><tr><th>事件编号</th><th>事件分类</th><th>车牌号</th><th>企业</th><th>事件类型</th><th>事件描述</th><th>发生时间</th><th>处理状态</th></tr></thead><tbody>' + (visible.length ? visible.map(function (row) {
+      return '<tr><td class="incident-code">' + row.id + '</td><td><span class="incident-category ' + row.category + '"><i></i>' + incidentCategoryLabel(row.category) + '</span></td><td class="incident-plate">' + row.plate + '</td><td>' + row.company + '</td><td>' + row.type + '</td><td title="' + row.description + '">' + row.description + '</td><td class="incident-time">' + row.date + ' ' + row.time + '</td><td><span class="incident-process ' + incidentStatusClass(row.status) + '">' + row.status + '</span></td></tr>';
+    }).join('') : '<tr><td colspan="8" class="road-list-empty">当前筛选条件下暂无异常事件</td></tr>') + '</tbody></table></div><div class="road-pagination"><span class="road-page-total">共 <b>' + rows.length + '</b> 条</span><div class="road-page-controls"><button type="button" class="road-page-btn" data-incident-page="prev" aria-label="上一页"' + (state.incidentListPage === 1 ? ' disabled' : '') + '>‹</button>' + buttons + '<button type="button" class="road-page-btn" data-incident-page="next" aria-label="下一页"' + (state.incidentListPage === pages ? ' disabled' : '') + '>›</button></div></div>';
+  }
+  function openIncidentListModal() {
+    state.modalOpen = true; state.modalType = 'incident'; state.incidentListFilter = 'total'; state.incidentListPage = 1; state.incidentDateFrom = ''; state.incidentDateTo = '';
+    var overlay = document.getElementById('overlay-root'); var modal = overlay.querySelector('.detail-modal');
+    modal.classList.remove('is-road-list', 'is-application-list', 'is-vehicle-list'); modal.classList.add('is-incident-list');
+    document.getElementById('modal-kicker').hidden = true;
+    document.getElementById('modal-title').textContent = '异常事件列表';
+    document.getElementById('modal-action').textContent = '关闭';
+    overlay.querySelector('.ghost-button').hidden = true;
+    renderIncidentListModal();
+    overlay.classList.add('is-open'); overlay.setAttribute('aria-hidden', 'false');
+    overlay.querySelector('.modal-close').focus();
+  }
 
   function roadStatusLabel(status) { return status === 'open' ? '开放' : '暂停'; }
   function roadStatusColor(status) { return status === 'open' ? '#52c41a' : '#fadb14'; }
@@ -281,6 +420,67 @@
   function vehicleFilterLabel() {
     return state.vehicleFilter === 'online' ? '在线车辆' : (state.vehicleFilter === 'mileage' ? '里程车辆' : '车辆总数');
   }
+
+  function cockpitModeKey(label) { return label === '人工驾驶' ? 'manual' : 'auto'; }
+  function cockpitVehicleStatus(vehicle) {
+    if (vehicle.status === 'offline') return 'offline';
+    return vehicleIncidentStatus(vehicle) === 'unfinished' ? 'alarm' : 'online';
+  }
+  function ensureCockpitVehicleData(areas) {
+    cockpitVehicleIndex = {};
+    (areas || []).forEach(function (area) {
+      (area.vehicles || []).forEach(function (vehicle) {
+        var row = vehicleListRows.find(function (item) { return item.plate === vehicle.plate; }) || {};
+        var normalized = typeof vehicleData !== 'undefined' && vehicleData.find(function (item) { return item.plate === vehicle.plate; });
+        if (!normalized) {
+          normalized = { id: 'CP-' + vehicle.plate.replace(/[^A-Za-z0-9]/g, ''), plate: vehicle.plate, company: row.company || area.name, applyType: row.application === '示范应用' ? 'demo' : (row.application === '商业化试点' ? 'operate' : 'road-test'), mode: vehicle.status === 'manual' ? 'manual' : 'auto', speed: row.speed == null ? 0 : row.speed, acceleration: 0, level: 'L3', status: cockpitVehicleStatus(vehicle), lon: vehicle.position[1], lat: vehicle.position[0], vin: 'COCKPIT-' + vehicle.plate.replace(/[^A-Za-z0-9]/g, ''), heading: 0, gear: vehicle.status === 'offline' ? 'P' : 'D', lastTime: row.lastReport || '--', alarms: (vehicle.events || []).filter(function (event) { return event.category === 'alarm'; }).length };
+          if (typeof vehicleData !== 'undefined') vehicleData.push(normalized);
+        } else {
+          normalized.company = row.company || normalized.company || area.name;
+          normalized.mode = vehicle.status === 'manual' ? 'manual' : normalized.mode;
+          normalized.speed = row.speed == null ? normalized.speed : row.speed;
+          normalized.status = cockpitVehicleStatus(vehicle);
+          normalized.lon = vehicle.position[1]; normalized.lat = vehicle.position[0];
+          normalized.lastTime = row.lastReport || normalized.lastTime;
+        }
+        normalized.cockpitArea = area.name;
+        normalized.cockpitMileage = vehicle.mileage;
+        normalized.cockpitEvents = vehicle.events || [];
+        vehicle.vehicleId = normalized.id;
+        vehicle.areaName = area.name;
+        cockpitVehicleIndex[normalized.id] = { raw: vehicle, area: area, normalized: normalized };
+      });
+    });
+  }
+  function cockpitVehicleById(id) {
+    var entry = cockpitVehicleIndex[id];
+    if (entry) return entry;
+    if (typeof vehicleData !== 'undefined') {
+      var normalized = vehicleData.find(function (item) { return item.id === id || item.plate === id; });
+      if (normalized) return cockpitVehicleIndex[normalized.id] || { raw: null, area: null, normalized: normalized };
+    }
+    return null;
+  }
+  function cockpitEventSummary(events) {
+    var list = events || [];
+    var alarms = list.filter(function (event) { return event.category === 'alarm'; }).length;
+    var warnings = list.filter(function (event) { return event.category !== 'alarm'; }).length;
+    return { alarms: alarms, warnings: warnings, total: list.length };
+  }
+  function cockpitVehiclePopup(area, vehicle) {
+    var entry = cockpitVehicleById(vehicle.vehicleId);
+    var v = entry ? entry.normalized : vehicle;
+    var summary = cockpitEventSummary(vehicle.events);
+    var status = vehicleStatusLabel(vehicle.status);
+    var eventText = summary.total ? '预警 ' + summary.warnings + ' · 告警 ' + summary.alarms : '暂无异常事件';
+    var id = vehicle.vehicleId;
+    return '<div class="cockpit-vehicle-popup" data-vehicle-id="' + id + '">' +
+      '<div class="cockpit-popup-head"><div><span class="cockpit-popup-kicker">车辆实时状态</span><strong>' + v.plate + '</strong></div><span class="cockpit-popup-status ' + vehicle.status + '"><i></i>' + status + '</span></div>' +
+      '<div class="cockpit-popup-grid"><div><span>所属区域</span><b>' + area.name + '</b></div><div><span>驾驶模式</span><b>' + vehicleStatusLabel(vehicle.status) + '</b></div><div><span>实时速度</span><b>' + (v.speed == null ? '--' : v.speed) + ' km/h</b></div><div><span>累计里程</span><b>' + vehicle.mileage + ' km</b></div></div>' +
+      '<div class="cockpit-popup-events"><span>当前异常</span><b>' + eventText + '</b></div>' +
+      '<div class="cockpit-popup-actions"><button type="button" class="cockpit-popup-action primary" onclick="openCockpitTrajectory(\'' + id + '\')">轨迹</button><button type="button" class="cockpit-popup-action" onclick="openCockpitVideo(\'' + id + '\')">视频</button></div>' +
+      '</div>';
+  }
   function incidentPeriodRank(period) { return period === '本月' ? 1 : (period === '本年' ? 2 : 3); }
   function incidentEventMatches(event) {
     var rangeRank = incidentPeriodRank(state.incidentRange);
@@ -296,7 +496,7 @@
     return (area.vehicles || []).reduce(function (events, vehicle) { return events.concat(vehicleIncidentEvents(vehicle)); }, []);
   }
   function updateIncidentTiles() {
-    var summary = incidentRangeData[state.incidentRange] || incidentRangeData['本月'];
+    var summary = incidentRangeData[state.incidentRange] || incidentRangeData['本年'];
     var module = document.getElementById('incident-module');
     if (!module) return;
     var values = { total: summary.total, warning: summary.warning, alarm: summary.alarm };
@@ -311,7 +511,7 @@
     setDonut('incident', state.incidentFilter);
   }
   function setIncidentRange(range) {
-    state.incidentRange = range || '本月';
+    state.incidentRange = range || '本年';
     updateIncidentTiles();
     if (state.incidentMode) updateIncidentView(true);
   }
@@ -325,6 +525,10 @@
           var sequence = records.length + 1;
           records.push({
             id: 'SG' + String(sequence).padStart(4, '0'), area: area.name,
+            plate: '鄂F·' + String(16000 + sequence), company: ['襄阳智行科技', '汉江智能出行', '东津无人配送'][sequence % 3],
+            type: ['碰撞', '追尾', '剐蹭', '单车事故'][sequence % 4],
+            location: area.name + '测试路段' + (index % 6 + 1) + '号路口',
+            time: String(8 + index % 10).padStart(2, '0') + ':' + String((index * 7) % 60).padStart(2, '0') + ':33',
             position: [area.center[0] + (((index * 7 + monthIndex * 3) % 17) - 8) * .0015, area.center[1] + (((index * 11 + monthIndex * 5) % 19) - 9) * .002],
             date: year + '-' + String(monthIndex + 1).padStart(2, '0') + '-' + String((index % 28) + 1).padStart(2, '0')
           });
@@ -333,24 +537,235 @@
     }
     addYear(ACCIDENT_YEAR - 1, [4, 5, 6, 4, 5, 6]);
     addYear(ACCIDENT_YEAR, months);
+    var sample = records.filter(function (record) { return record.date === ACCIDENT_YEAR + '-05-01'; })[0];
+    if (sample) Object.assign(sample, { id: 'DA' + ACCIDENT_YEAR + '05004', date: ACCIDENT_YEAR + '-05-08', time: '15:35:33', plate: '鄂F·16789', company: 'C公司', type: '碰撞', location: '长虹路与建华路交叉口' });
     return records;
   }
+  function accidentListRows() {
+    return state.accidentData.filter(function (record) {
+      return (!state.accidentDateFrom || record.date >= state.accidentDateFrom) &&
+        (!state.accidentDateTo || record.date <= state.accidentDateTo);
+    }).sort(function (a, b) { return (b.date + b.time).localeCompare(a.date + a.time) || b.id.localeCompare(a.id); });
+  }
+  function renderAccidentListModal() {
+    var rows = accidentListRows();
+    var pages = Math.max(1, Math.ceil(rows.length / ACCIDENT_PAGE_SIZE));
+    state.accidentPage = Math.min(Math.max(1, state.accidentPage), pages);
+    var visible = rows.slice((state.accidentPage - 1) * ACCIDENT_PAGE_SIZE, state.accidentPage * ACCIDENT_PAGE_SIZE);
+    var buttons = '';
+    for (var page = 1; page <= pages; page++) {
+      if (pages > 7 && Math.abs(page - state.accidentPage) > 2 && page !== 1 && page !== pages) {
+        if (page === 2 || page === pages - 1) buttons += '<span class="application-page-ellipsis">…</span>';
+        continue;
+      }
+      buttons += '<button type="button" class="road-page-btn' + (page === state.accidentPage ? ' is-active' : '') + '" data-accident-page="' + page + '" aria-label="第 ' + page + ' 页"' + (page === state.accidentPage ? ' aria-current="page"' : '') + '>' + page + '</button>';
+    }
+    document.getElementById('modal-body').innerHTML = modalDateFilter('accident', '事故', state.accidentDateFrom, state.accidentDateTo) + '<div class="road-table-wrap"><table class="road-list-table accident-list-table"><thead><tr><th>事故编号</th><th>发生时间</th><th>车牌号</th><th>企业</th><th>事故类型</th><th>地点</th></tr></thead><tbody>' + (visible.length ? visible.map(function (row) {
+      return '<tr><td class="accident-code">' + row.id + '</td><td>' + row.date + ' ' + row.time + '</td><td>' + row.plate + '</td><td>' + row.company + '</td><td>' + row.type + '</td><td title="' + row.location + '">' + row.location + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="road-list-empty">当前筛选条件下暂无事故</td></tr>') + '</tbody></table></div><div class="road-pagination"><span class="road-page-total">共 <b>' + rows.length + '</b> 条</span><div class="road-page-controls"><button type="button" class="road-page-btn" data-accident-page="prev" aria-label="上一页"' + (state.accidentPage === 1 ? ' disabled' : '') + '>‹</button>' + buttons + '<button type="button" class="road-page-btn" data-accident-page="next" aria-label="下一页"' + (state.accidentPage === pages ? ' disabled' : '') + '>›</button></div></div>';
+  }
+  function openAccidentListModal(event) {
+    event.stopPropagation();
+    state.modalOpen = true; state.modalType = 'accident'; state.accidentPage = 1; state.accidentDateFrom = ''; state.accidentDateTo = '';
+    var overlay = document.getElementById('overlay-root'); var modal = overlay.querySelector('.detail-modal');
+    modal.classList.remove('is-road-list', 'is-application-list', 'is-vehicle-list', 'is-incident-list'); modal.classList.add('is-accident-list');
+    document.getElementById('modal-kicker').hidden = true;
+    document.getElementById('modal-title').textContent = '交通事故列表';
+    document.getElementById('modal-action').textContent = '关闭';
+    overlay.querySelector('.ghost-button').hidden = true;
+    renderAccidentListModal();
+    overlay.classList.add('is-open'); overlay.setAttribute('aria-hidden', 'false');
+    overlay.querySelector('.modal-close').focus();
+  }
   function accidentRecords() {
-    return state.accidentData.filter(function (record) { return state.accidentRange === '全部' || Number(record.date.slice(0, 4)) === ACCIDENT_YEAR; });
+    var month = String(new Date().getMonth() + 1).padStart(2, '0');
+    return state.accidentData.filter(function (record) {
+      return state.accidentRange === '全部' || (Number(record.date.slice(0, 4)) === ACCIDENT_YEAR &&
+        (state.accidentRange !== '本月' || record.date.slice(5, 7) === month));
+    });
   }
   function renderAccidentChart() {
     var chart = document.getElementById('accident-chart');
     if (!chart) return;
     var records = accidentRecords();
-    var labels = state.accidentRange === '全部' ? [(ACCIDENT_YEAR - 1) + '年', ACCIDENT_YEAR + '年'] : ['1月', '2月', '3月', '4月', '5月', '6月'];
+    var daysInMonth = new Date(ACCIDENT_YEAR, new Date().getMonth() + 1, 0).getDate();
+    var labels = state.accidentRange === '全部' ? [(ACCIDENT_YEAR - 1) + '年', ACCIDENT_YEAR + '年'] :
+      (state.accidentRange === '本月' ? ['1日', '6日', '11日', '16日', '21日', '26日'] :
+        Array.from({ length: 12 }, function (_, index) { return (index + 1) + '月'; }));
     var counts = labels.map(function (label, index) {
-      return records.filter(function (record) { return state.accidentRange === '全部' ? record.date.slice(0, 4) === label.slice(0, 4) : Number(record.date.slice(5, 7)) === index + 1; }).length;
+      return records.filter(function (record) {
+        if (state.accidentRange === '全部') return record.date.slice(0, 4) === label.slice(0, 4);
+        if (state.accidentRange === '本月') {
+          var day = Number(record.date.slice(8, 10));
+          return day >= index * 5 + 1 && day <= Math.min((index + 1) * 5, daysInMonth) || (index === 5 && day > 30);
+        }
+        return Number(record.date.slice(5, 7)) === index + 1;
+      }).length;
     });
     var max = Math.max.apply(null, counts.concat([1]));
     var points = counts.map(function (count, index) { return { x: 42 + index * 450 / (counts.length - 1), y: 168 - count / max * 120, count: count }; });
     var path = points.map(function (point, index) { return (index ? 'L' : 'M') + point.x + ' ' + point.y; }).join(' ');
     chart.setAttribute('aria-label', state.accidentRange + '事故趋势图，共' + records.length + '起');
     chart.innerHTML = '<svg viewBox="0 0 520 208" preserveAspectRatio="none" aria-hidden="true"><g class="chart-grid"><path d="M42 20H500 M42 62H500 M42 104H500 M42 146H500 M42 188H500"/></g><path class="chart-area" d="' + path + ' L492 188 L42 188Z"/><path class="chart-line" d="' + path + '"/><g class="chart-points">' + points.map(function (point) { return '<circle cx="' + point.x + '" cy="' + point.y + '" r="4"/>'; }).join('') + '</g><g class="chart-values">' + points.map(function (point) { return '<text x="' + point.x + '" y="' + (point.y - 11) + '">' + point.count + '</text>'; }).join('') + '</g><g class="chart-labels">' + points.map(function (point, index) { return '<text x="' + point.x + '" y="204">' + labels[index] + '</text>'; }).join('') + '</g></svg>';
+  }
+
+  function cockpitDateText(date) {
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  }
+  function clearCockpitTrajectoryLayers() {
+    [trajectoryState.line, trajectoryState.passedLine, trajectoryState.marker].forEach(function (layer) { if (layer && state.map) state.map.removeLayer(layer); });
+    trajectoryState.line = null; trajectoryState.passedLine = null; trajectoryState.marker = null;
+    if (trajectoryState.timer) { clearInterval(trajectoryState.timer); trajectoryState.timer = null; }
+    trajectoryState.playing = false;
+  }
+  function buildCockpitTrajectory(v, date, startTime, endTime) {
+    var from = timeToSeconds(startTime || '08:00:00');
+    var to = timeToSeconds(endTime || '14:32:00');
+    var duration = Math.max(60, to - from);
+    var count = Math.max(2, Math.ceil(duration / 30) + 1);
+    var baseLon = Number(v.lon) || 112.15;
+    var baseLat = Number(v.lat) || 32.07;
+    var seed = String(v.id || '').split('').reduce(function (total, char) { return total + char.charCodeAt(0); }, 0);
+    return Array.from({ length: count }, function (_, index) {
+      var ratio = index / (count - 1);
+      var angle = (seed % 13) * 0.2 + ratio * Math.PI * 1.5;
+      var seconds = Math.round(from + duration * ratio);
+      return { timeStr: secToTime(seconds), lon: baseLon - .008 + ratio * .016 + Math.sin(angle) * .0015, lat: baseLat - .004 + ratio * .008 + Math.cos(angle) * .0011, speed: Math.max(0, Math.round((Number(v.speed) || 30) + Math.sin(angle * 1.7) * 8)), driveMode: v.mode === 'manual' ? '人工驾驶' : '自动驾驶' };
+    });
+  }
+  function cockpitTrajectoryMetrics(point) {
+    var panel = document.getElementById('cockpit-trajectory-panel');
+    if (!panel || !point) return;
+    var time = panel.querySelector('[data-traj-current-time]');
+    var speed = panel.querySelector('[data-traj-current-speed]');
+    var mode = panel.querySelector('[data-traj-current-mode]');
+    if (time) time.textContent = point.timeStr;
+    if (speed) speed.textContent = point.speed + ' km/h';
+    if (mode) mode.textContent = point.driveMode;
+    var slider = panel.querySelector('[data-traj-slider]');
+    if (slider) slider.value = trajectoryState.currentIndex;
+    var fill = panel.querySelector('[data-traj-progress]');
+    if (fill) fill.style.width = (trajectoryState.points.length > 1 ? trajectoryState.currentIndex / (trajectoryState.points.length - 1) * 100 : 0) + '%';
+  }
+  function seekCockpitTrajectory(index, source) {
+    if (!trajectoryState.points.length) return;
+    trajectoryState.currentIndex = Math.max(0, Math.min(trajectoryState.points.length - 1, Number(index) || 0));
+    var point = trajectoryState.points[trajectoryState.currentIndex];
+    var path = trajectoryState.points.slice(0, trajectoryState.currentIndex + 1).map(function (item) { return [item.lat, item.lon]; });
+    if (trajectoryState.passedLine) trajectoryState.passedLine.setLatLngs(path);
+    if (trajectoryState.marker) trajectoryState.marker.setLatLng([point.lat, point.lon]);
+    trajectoryState.currentTime = point.timeStr;
+    cockpitTrajectoryMetrics(point);
+    if (source !== 'video') TimeClock.set(point.timeStr, 'trajectory');
+  }
+  function createCockpitTrajectoryLayers(v) {
+    if (!state.map || !trajectoryState.points.length) return;
+    var path = trajectoryState.points.map(function (point) { return [point.lat, point.lon]; });
+    trajectoryState.line = L.polyline(path, { color: '#00cfe8', weight: 4, opacity: .5, dashArray: '8 6', lineJoin: 'round', lineCap: 'round' }).addTo(state.map);
+    trajectoryState.passedLine = L.polyline([path[0]], { color: '#1677ff', weight: 5, opacity: .95, lineJoin: 'round', lineCap: 'round' }).addTo(state.map);
+    trajectoryState.marker = L.marker(path[0], { icon: L.divIcon({ className: 'cockpit-trajectory-marker', html: '<span>' + v.plate.slice(-2) + '</span>', iconSize: [32, 32], iconAnchor: [16, 16] }), zIndexOffset: 600 }).addTo(state.map);
+    state.map.fitBounds(trajectoryState.line.getBounds(), { padding: [80, 80], maxZoom: 14 });
+  }
+  function renderCockpitTrajectoryPanel(v) {
+    var panel = document.getElementById('cockpit-trajectory-panel');
+    if (!panel) return;
+    var point = trajectoryState.points[trajectoryState.currentIndex];
+    panel.innerHTML = '<div class="cockpit-traj-head"><div><span class="cockpit-panel-kicker">轨迹回放</span><strong>' + v.plate + '</strong><small>' + (v.cockpitArea || v.cockpitArea === '' ? v.cockpitArea : '车辆') + '</small></div><div class="cockpit-traj-metrics"><span><em>当前时间</em><b data-traj-current-time>' + point.timeStr + '</b></span><span><em>速度</em><b data-traj-current-speed>' + point.speed + ' km/h</b></span><span><em>驾驶模式</em><b data-traj-current-mode>' + point.driveMode + '</b></span><button type="button" class="cockpit-panel-close" onclick="closeCockpitTrajectory()" aria-label="关闭轨迹面板" title="关闭轨迹面板">×</button></div></div>' +
+      '<div class="cockpit-traj-query"><label>日期<input type="date" data-traj-date value="' + trajectoryState.playbackDate + '"></label><label>开始<input type="time" step="1" data-traj-start value="' + trajectoryState.startTime + '"></label><span>至</span><label>结束<input type="time" step="1" data-traj-end value="' + trajectoryState.endTime + '"></label><button type="button" class="cockpit-control-button" onclick="reloadCockpitTrajectory()">查询</button><button type="button" class="cockpit-control-button" onclick="openCockpitTrajectoryVideo()">视频回看</button></div>' +
+      '<div class="cockpit-traj-controls"><button type="button" class="cockpit-control-button primary" data-traj-play onclick="toggleCockpitTrajectory()">▶ 播放</button><select data-traj-speed aria-label="轨迹播放速度" onchange="changeCockpitTrajectorySpeed(this.value)"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option><option value="8">8x</option></select><span class="cockpit-traj-time">' + trajectoryState.startTime + '</span><div class="cockpit-traj-slider"><div data-traj-progress></div><input type="range" data-traj-slider min="0" max="' + (trajectoryState.points.length - 1) + '" value="' + trajectoryState.currentIndex + '" oninput="seekCockpitTrajectory(this.value)"></div><span class="cockpit-traj-time">' + trajectoryState.endTime + '</span></div>';
+    panel.classList.add('is-open'); panel.setAttribute('aria-hidden', 'false');
+    cockpitTrajectoryMetrics(point);
+  }
+  function showCockpitTrajectory(id, options) {
+    var entry = cockpitVehicleById(id);
+    if (!entry || !entry.normalized) return;
+    var v = entry.normalized;
+    var now = new Date();
+    var opts = options || {};
+    var date = opts.playbackDate || cockpitDateText(now);
+    var startTime = opts.startTime || '08:00:00';
+    var endTime = opts.endTime || '14:32:00';
+    clearCockpitTrajectoryLayers();
+    state.selectedVehicleId = v.id;
+    trajectoryState.vehicleId = v.id; trajectoryState.playbackDate = date; trajectoryState.startTime = startTime; trajectoryState.endTime = endTime;
+    trajectoryState.points = buildCockpitTrajectory(v, date, startTime, endTime);
+    trajectoryState.currentIndex = 0;
+    if (opts.currentTime) {
+      var target = timeToSeconds(opts.currentTime);
+      trajectoryState.currentIndex = trajectoryState.points.reduce(function (best, point, index) { return Math.abs(timeToSeconds(point.timeStr) - target) < Math.abs(timeToSeconds(trajectoryState.points[best].timeStr) - target) ? index : best; }, 0);
+    }
+    createCockpitTrajectoryLayers(v);
+    renderCockpitTrajectoryPanel(v);
+    seekCockpitTrajectory(trajectoryState.currentIndex);
+  }
+  function reloadCockpitTrajectory() {
+    var panel = document.getElementById('cockpit-trajectory-panel');
+    if (!panel || !trajectoryState.vehicleId) return;
+    var start = panel.querySelector('[data-traj-start]').value;
+    var end = panel.querySelector('[data-traj-end]').value;
+    if (timeToSeconds(end) <= timeToSeconds(start)) return;
+    showCockpitTrajectory(trajectoryState.vehicleId, { playbackDate: panel.querySelector('[data-traj-date]').value, startTime: start, endTime: end });
+  }
+  function toggleCockpitTrajectory() {
+    if (!trajectoryState.points.length) return;
+    trajectoryState.playing = !trajectoryState.playing;
+    var button = document.querySelector('[data-traj-play]');
+    if (button) button.textContent = trajectoryState.playing ? '⏸ 暂停' : '▶ 播放';
+    if (trajectoryState.playing) {
+      if (trajectoryState.currentIndex >= trajectoryState.points.length - 1) seekCockpitTrajectory(0);
+      trajectoryState.timer = setInterval(function () {
+        if (trajectoryState.currentIndex >= trajectoryState.points.length - 1) { toggleCockpitTrajectory(); return; }
+        seekCockpitTrajectory(trajectoryState.currentIndex + 1);
+      }, 900 / trajectoryState.speed);
+    } else if (trajectoryState.timer) { clearInterval(trajectoryState.timer); trajectoryState.timer = null; }
+  }
+  function changeCockpitTrajectorySpeed(speed) {
+    trajectoryState.speed = Number(speed) || 1;
+    if (trajectoryState.playing) { toggleCockpitTrajectory(); toggleCockpitTrajectory(); }
+  }
+  function closeCockpitTrajectory() {
+    var panel = document.getElementById('cockpit-trajectory-panel');
+    clearCockpitTrajectoryLayers();
+    trajectoryState.vehicleId = null; trajectoryState.points = [];
+    if (panel) { panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true'); }
+    var instance = typeof VideoWorkbench !== 'undefined' && VideoWorkbench.getInstance('cockpit-video-pane');
+    if (instance && instance.mode === 'playback') VideoWorkbench.backToLive('cockpit-video-pane');
+  }
+  function openCockpitVideo(id, playback) {
+    var entry = cockpitVehicleById(id);
+    if (!entry || !entry.normalized) return;
+    var v = entry.normalized;
+    state.selectedVehicleId = v.id;
+    var panel = document.getElementById('cockpit-video-panel');
+    var title = document.getElementById('cockpit-video-title');
+    var pane = document.getElementById('cockpit-video-pane');
+    if (!panel || !pane || typeof VideoWorkbench === 'undefined') return;
+    if (title) title.textContent = v.plate + ' · ' + (v.company || '');
+    panel.classList.add('is-open'); panel.setAttribute('aria-hidden', 'false');
+    if (!VideoWorkbench.getInstance('cockpit-video-pane')) {
+      VideoWorkbench.mount({ container: pane, vehicleId: v.id, layout: 'single', mode: playback ? 'playback' : 'live', timeSource: playback ? 'external' : 'now', onSelectVehicle: selectCockpitVideoVehicle });
+    } else {
+      VideoWorkbench.selectVehicle('cockpit-video-pane', v.id);
+    }
+    if (playback) VideoWorkbench.enterPlayback('cockpit-video-pane', playback);
+  }
+  function selectCockpitVideoVehicle(id) {
+    var entry = cockpitVehicleById(id);
+    if (!entry || !entry.normalized) return;
+    state.selectedVehicleId = entry.normalized.id;
+    var title = document.getElementById('cockpit-video-title');
+    if (title) title.textContent = entry.normalized.plate + ' · ' + (entry.normalized.company || '');
+    if (state.map && entry.raw) state.map.flyTo(entry.raw.position, 14, { duration: .35 });
+  }
+  function closeCockpitVideo() {
+    var panel = document.getElementById('cockpit-video-panel');
+    if (panel) { panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true'); }
+    var instance = typeof VideoWorkbench !== 'undefined' && VideoWorkbench.getInstance('cockpit-video-pane');
+    if (instance && instance.mode === 'playback') VideoWorkbench.backToLive('cockpit-video-pane');
+  }
+  function openCockpitTrajectoryVideo() {
+    if (!trajectoryState.vehicleId || !trajectoryState.points.length) return;
+    openCockpitVideo(trajectoryState.vehicleId, { timeSource: 'external', playbackDate: trajectoryState.playbackDate, startTime: trajectoryState.startTime, endTime: trajectoryState.endTime, currentTime: trajectoryState.currentTime });
   }
   function setAccidentRange(range) {
     state.accidentRange = range;
@@ -510,7 +925,7 @@
     var module = document.getElementById('incident-module');
     if (!module) return;
     module.addEventListener('click', function (event) {
-      if (event.target.closest('.metric-tile') || event.target.closest('.range-tabs') || event.target.closest('#event-more')) return;
+      if (event.target.closest('.metric-tile') || event.target.closest('.range-tabs') || event.target.closest('#incident-list-trigger') || event.target.closest('.event-list-viewport')) return;
       setIncidentModuleSelected(!state.incidentMode);
     });
     module.addEventListener('keydown', function (event) {
@@ -559,7 +974,8 @@
         var label = area.name + ' · ' + vehicle.plate + ' · ' + vehicleStatusLabel(vehicle.status);
         var marker = L.marker(vehicle.position, { icon: L.divIcon({ className: 'vehicle-dot ' + vehicle.status, html: '', iconSize: [12, 12], iconAnchor: [6, 6] }), title: label, keyboard: true });
         marker.bindTooltip(label + ' · ' + vehicle.mileage + ' km', { direction: 'top', offset: [0, -6] });
-        marker.bindPopup('<div class="vehicle-popup"><strong>' + vehicle.plate + '</strong><span>' + area.name + '</span><span class="vehicle-popup-status ' + vehicle.status + '"><i></i>' + vehicleStatusLabel(vehicle.status) + '</span><small>累计里程 ' + vehicle.mileage + ' km</small></div>', { closeButton: true, offset: [0, -5] });
+        marker.bindPopup(cockpitVehiclePopup(area, vehicle), { closeButton: true, offset: [0, -8], maxWidth: 340, className: 'cockpit-vehicle-leaflet-popup' });
+        marker.on('click', function () { state.selectedVehicleId = vehicle.vehicleId; });
         marker.addTo(layer);
       });
     });
@@ -592,6 +1008,7 @@
     var module = document.getElementById('vehicle-monitor-module');
     if (!module) return;
     module.addEventListener('click', function (event) {
+      if (event.target.closest('.vehicle-list-trigger')) { event.stopPropagation(); openVehicleListModal(); return; }
       if (event.target.closest('.metric-tile')) return;
       setVehicleModuleSelected(!state.vehicleMode);
     });
@@ -750,6 +1167,7 @@
       ] }
     ];
     state.vehicleData = districtData;
+    ensureCockpitVehicleData(districtData);
     state.accidentData = buildAccidentData(districtData);
     renderAccidentChart();
     state.roadData = [
@@ -791,7 +1209,7 @@
     L.circleMarker([32.11,112.31], { radius: 4, color: '#00cfe8', weight: 2, fillColor: '#00cfe8', fillOpacity: 1 }).addTo(routeLayer);
 
     districtLayer.addTo(map); vehicleLayer.addTo(map); routeLayer.addTo(map);
-    state.map = map; state.mapLayers = { district: districtLayer, vehicle: vehicleLayer, incident: incidentLayer, accident: accidentLayer, route: routeLayer, road: roadLayer };
+    state.map = map; state.mapLayers = { district: districtLayer, vehicle: vehicleLayer, incident: incidentLayer, accident: accidentLayer, route: routeLayer, road: roadLayer, trajectory: null };
     updateVehicleView(true);
     map.on('zoomend', function () { updateRoadView(); updateVehicleView(); updateIncidentView(); updateAccidentView(); });
     window.setTimeout(function () { map.invalidateSize(); }, 80);
@@ -815,6 +1233,8 @@
     if (!layerBtn || !layer) return;
     layerBtn.addEventListener('click', function () { var open = layer.classList.toggle('is-open'); layer.setAttribute('aria-hidden', String(!open)); });
     document.addEventListener('click', function (event) { if (!layer.contains(event.target) && event.target !== layerBtn) { layer.classList.remove('is-open'); layer.setAttribute('aria-hidden', 'true'); } });
+    var videoClose = document.getElementById('cockpit-video-close');
+    if (videoClose) videoClose.addEventListener('click', closeCockpitVideo);
   }
 
   function bindOverlay() {
@@ -822,16 +1242,20 @@
     document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.modalOpen) closeModal(); });
     document.getElementById('modal-action').addEventListener('click', function () { closeModal(); });
     document.getElementById('application-list-trigger').addEventListener('click', openApplicationListModal);
-    ['application-date-from', 'application-date-to'].forEach(function (id) {
-      document.getElementById(id).addEventListener('change', function () {
-        state.applicationDateFrom = document.getElementById('application-date-from').value;
-        state.applicationDateTo = document.getElementById('application-date-to').value;
-        state.applicationPage = 1;
-        renderApplicationListModal();
-      });
-    });
+    document.getElementById('incident-list-trigger').addEventListener('click', openIncidentListModal);
+    document.getElementById('accident-list-trigger').addEventListener('click', openAccidentListModal);
     var body = document.getElementById('modal-body');
     body.addEventListener('click', function (event) {
+      if (state.modalType === 'accident') {
+        var accidentPage = event.target.closest('[data-accident-page]');
+        if (!accidentPage || accidentPage.disabled) return;
+        var accidentTargetPage = accidentPage.dataset.accidentPage;
+        if (accidentTargetPage === 'prev') state.accidentPage--;
+        else if (accidentTargetPage === 'next') state.accidentPage++;
+        else state.accidentPage = parseInt(accidentTargetPage, 10) || 1;
+        renderAccidentListModal();
+        return;
+      }
       if (state.modalType === 'application') {
         var applicationFilter = event.target.closest('[data-application-filter]');
         if (applicationFilter) {
@@ -849,6 +1273,24 @@
         renderApplicationListModal();
         return;
       }
+      if (state.modalType === 'incident') {
+        var incidentFilter = event.target.closest('[data-incident-filter]');
+        if (incidentFilter) {
+          state.incidentListFilter = incidentFilter.dataset.incidentFilter || 'total';
+          state.incidentListPage = 1;
+          renderIncidentListModal();
+          return;
+        }
+        var incidentPage = event.target.closest('[data-incident-page]');
+        if (!incidentPage || incidentPage.disabled) return;
+        var incidentTargetPage = incidentPage.dataset.incidentPage;
+        if (incidentTargetPage === 'prev') state.incidentListPage--;
+        else if (incidentTargetPage === 'next') state.incidentListPage++;
+        else state.incidentListPage = parseInt(incidentTargetPage, 10) || 1;
+        renderIncidentListModal();
+        return;
+      }
+      if (state.modalType === 'vehicle') return;
       if (state.modalType !== 'road') return;
       var filterButton = event.target.closest('[data-modal-road-filter]');
       if (filterButton) {
@@ -866,13 +1308,57 @@
       renderRoadListModal();
     });
     body.addEventListener('change', function (event) {
+      var dateInput = event.target.closest('.application-date-range input');
+      if (dateInput && ['application', 'incident', 'accident'].indexOf(state.modalType) !== -1) {
+        var type = state.modalType;
+        var dateFrom = body.querySelector('#' + type + '-date-from').value;
+        var dateTo = body.querySelector('#' + type + '-date-to').value;
+        if (type === 'application') {
+          state.applicationDateFrom = dateFrom; state.applicationDateTo = dateTo; state.applicationPage = 1;
+          renderApplicationListModal();
+        } else if (type === 'incident') {
+          state.incidentDateFrom = dateFrom; state.incidentDateTo = dateTo; state.incidentListPage = 1;
+          renderIncidentListModal();
+        } else {
+          state.accidentDateFrom = dateFrom; state.accidentDateTo = dateTo; state.accidentPage = 1;
+          renderAccidentListModal();
+        }
+        return;
+      }
       var select = event.target.closest('[data-road-area]');
       if (!select || state.modalType !== 'road') return;
       state.roadArea = select.value || 'all';
       state.roadPage = 1;
       renderRoadListModal();
     });
+    body.addEventListener('input', function (event) {
+      var input = event.target.closest('[data-vehicle-search]');
+      if (!input || state.modalType !== 'vehicle') return;
+      state.vehicleSearch = input.value || '';
+      renderVehicleListModal();
+      var nextInput = document.querySelector('[data-vehicle-search]');
+      if (nextInput) { nextInput.focus(); nextInput.setSelectionRange(state.vehicleSearch.length, state.vehicleSearch.length); }
+    });
   }
+
+  if (typeof TimeClock !== 'undefined') {
+    TimeClock.on(function (timeStr, source) {
+      if (source === 'video' && trajectoryState.points.length) {
+        var target = timeToSeconds(timeStr);
+        var nearest = trajectoryState.points.reduce(function (best, point, index) { return Math.abs(timeToSeconds(point.timeStr) - target) < Math.abs(timeToSeconds(trajectoryState.points[best].timeStr) - target) ? index : best; }, 0);
+        seekCockpitTrajectory(nearest, 'video');
+      }
+    });
+  }
+
+  window.openCockpitVideo = openCockpitVideo;
+  window.openCockpitTrajectory = showCockpitTrajectory;
+  window.openCockpitTrajectoryVideo = openCockpitTrajectoryVideo;
+  window.closeCockpitTrajectory = closeCockpitTrajectory;
+  window.toggleCockpitTrajectory = toggleCockpitTrajectory;
+  window.changeCockpitTrajectorySpeed = changeCockpitTrajectorySpeed;
+  window.seekCockpitTrajectory = seekCockpitTrajectory;
+  window.reloadCockpitTrajectory = reloadCockpitTrajectory;
 
   setDonut('application', 'road-test'); setDonut('vehicle', 'all'); setDonut('incident', 'total'); updateIncidentTiles();
   bindMetricTiles(); bindRangeTabs(); bindRoadResource(); bindVehicleResource(); bindIncidentModule(); bindAccidentModule(); renderEvents(); bindMap(); bindOverlay(); updateRoadLegend(); updateClock();
