@@ -1,0 +1,16 @@
+{
+  "url": "http://127.0.0.1:9188/03-高保真页面/cockpit/index.html",
+  "verdict": "ok",
+  "title": "智能网联汽车监管及运营平台 · 可视化驾驶舱",
+  "htmlLen": 21554,
+  "bodyChildren": 6,
+  "selector": ".cockpit-root",
+  "selectorFound": true,
+  "selectorCount": 1,
+  "pageTextPreview": "智能网联汽车监管及运营平台\n19:43:20\n开放道路资源\n>>\n路段总数\n128\n段 · 全部\n开放路段\n125\n段 · 可用\n暂停路段\n3\n段 · 关注\n测试示范申请\n>>\n本月\n本年\n全部\n道路测试\n125\n项\n示范应用\n3\n项\n商业化试点\n3\n项\n125\n道路测试\n初次申请\n36.0%\n延期申请\n31.5%\n变更申请\n18.0%\n续期同车型申请\n14.4%\n车辆实时监控\n>>\n实时\n车辆总",
+  "errorCount": 0,
+  "errors": [],
+  "domFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\cockpit-event-selftest-20260923\\dom.html",
+  "resultFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\cockpit-event-selftest-20260923\\result.json",
+  "shotFile": "D:\\claude_code_coding\\智能网联汽车安全监测平台\\.codex_tmp\\cockpit-event-selftest-20260923\\shot.png"
+}
