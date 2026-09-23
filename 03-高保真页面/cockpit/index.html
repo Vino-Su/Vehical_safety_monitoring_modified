@@ -35,7 +35,7 @@
         </section>
 
         <section class="module module-chart">
-          <div class="module-heading"><span></span><h2>测试示范申请</h2><div class="range-tabs" data-range="application"><button type="button" class="is-active">本月</button><button type="button">本年</button><button type="button">全部</button></div></div>
+          <div class="module-heading"><span></span><h2>测试示范申请</h2><div class="range-tabs" data-range="application"><button type="button" class="is-active">本月</button><button type="button">本年</button><button type="button">全部</button></div><button class="module-link application-list-trigger" type="button" id="application-list-trigger" aria-label="查看申请列表" title="查看申请列表">&gt;&gt;</button></div>
           <div class="metric-grid metric-grid-3 compact" data-metric-group="application">
             <button class="metric-tile is-selected" type="button" data-chart="application" data-key="road-test" data-value="125" aria-pressed="true"><span>道路测试</span><strong>125</strong><small>项</small></button>
             <button class="metric-tile" type="button" data-chart="application" data-key="demo-apply" data-value="3" aria-pressed="false"><span>示范应用</span><strong>3</strong><small>项</small></button>
@@ -66,18 +66,19 @@
           <div class="leaflet-map" id="cockpit-map" role="application" aria-label="襄阳市行政区与测试车辆分布地图"></div>
           <button type="button" class="map-layer-control" id="map-layer-btn" aria-label="地图图层" title="地图图层">⌗</button>
           <div class="map-legend" id="map-legend"><span><i class="legend-online"></i>在线车辆</span><span><i class="legend-warning"></i>预警车辆</span><span><i class="legend-alarm"></i>告警车辆</span></div>
-          <div class="map-layer-popover" id="map-layer-popover" aria-hidden="true"><strong>地图图层</strong><label><input type="checkbox" data-layer="district" checked> 行政区边界</label><label><input type="checkbox" data-layer="vehicle" checked> 测试车辆</label><label><input type="checkbox" data-layer="route" checked> 实时轨迹</label><label><input type="checkbox" data-layer="road" checked> 开放道路</label></div>
+          <div class="map-layer-popover" id="map-layer-popover" aria-hidden="true"><strong>地图图层</strong><label><input type="checkbox" data-layer="district" checked> 行政区边界</label><label><input type="checkbox" data-layer="vehicle" checked> 测试车辆</label><label><input type="checkbox" data-layer="incident" checked> 异常事件</label><label><input type="checkbox" data-layer="accident" checked> 事故点位</label><label><input type="checkbox" data-layer="route" checked> 实时轨迹</label><label><input type="checkbox" data-layer="road" checked> 开放道路</label></div>
         </div>
       </section>
 
       <aside class="analysis-column right-column" aria-label="右侧事件分析">
-        <section class="module module-chart incident-module">
+        <section class="module module-chart incident-module" id="incident-module" tabindex="0" role="button" aria-pressed="false" aria-label="选择异常事件地图视图">
           <div class="module-heading"><span></span><h2>异常事件统计</h2><div class="range-tabs" data-range="incident"><button type="button" class="is-active">本月</button><button type="button">本年</button><button type="button">全部</button></div></div>
           <div class="metric-grid metric-grid-3 compact" data-metric-group="incident">
             <button class="metric-tile is-selected" type="button" data-chart="incident" data-key="total" data-value="54" aria-pressed="true"><span>事件总数</span><strong>54</strong><small>起</small></button>
             <button class="metric-tile" type="button" data-chart="incident" data-key="warning" data-value="45" aria-pressed="false"><span>预警事件</span><strong>45</strong><small>起</small></button>
             <button class="metric-tile" type="button" data-chart="incident" data-key="alarm" data-value="9" aria-pressed="false"><span>告警事件</span><strong>9</strong><small>起</small></button>
           </div>
+          <div class="incident-selection-hint" id="incident-selection-hint">点击模块查看区域异常事件聚合</div>
           <div class="donut-wrap incident-donut-wrap">
             <div class="donut-chart" id="incident-donut" style="--donut: conic-gradient(#fadb14 0 29.63%, #fa8c16 29.63% 74.07%, #ff6b9b 74.07% 100%);"><div class="donut-hole"><strong id="incident-total">54</strong><span id="incident-total-label">事件总数</span></div></div>
             <div class="legend-list" id="incident-legend"></div>
@@ -88,14 +89,14 @@
           </div>
         </section>
 
-        <section class="module accident-module">
+        <section class="module accident-module" id="accident-module" tabindex="0" role="button" aria-pressed="false" aria-label="选择事故统计地图视图">
           <div class="module-heading"><span></span><h2>事故统计</h2><div class="range-tabs" data-range="accident"><button type="button" class="is-active">今年</button><button type="button">全部</button></div></div>
-          <div class="accident-chart" aria-label="2026年事故趋势图"><svg viewBox="0 0 520 208" preserveAspectRatio="none"><g class="chart-grid"><path d="M42 20H500 M42 62H500 M42 104H500 M42 146H500 M42 188H500"/></g><path class="chart-area" d="M42 108 L132 48 L222 126 L312 126 L402 146 L492 48 L492 188 L42 188Z"/><path class="chart-line" d="M42 108 L132 48 L222 126 L312 126 L402 146 L492 48"/><g class="chart-points"><circle cx="42" cy="108" r="4"/><circle cx="132" cy="48" r="4"/><circle cx="222" cy="126" r="4"/><circle cx="312" cy="126" r="4"/><circle cx="402" cy="146" r="4"/><circle cx="492" cy="48" r="4"/></g><g class="chart-values"><text x="42" y="98">20</text><text x="132" y="37">30</text><text x="222" y="116">15</text><text x="312" y="116">15</text><text x="402" y="136">10</text><text x="492" y="37">30</text></g><g class="chart-labels"><text x="42" y="204">1月</text><text x="132" y="204">2月</text><text x="222" y="204">3月</text><text x="312" y="204">4月</text><text x="402" y="204">5月</text><text x="492" y="204">6月</text></g></svg></div>
+          <div class="accident-chart" id="accident-chart" aria-label="今年事故趋势图"></div>
         </section>
       </aside>
     </section>
 
-    <div class="cockpit-overlay" id="overlay-root" aria-hidden="true"><div class="overlay-shade" data-overlay-close></div><section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><header><div><span class="modal-kicker" id="modal-kicker">区域下钻</span><h2 id="modal-title">--</h2></div><button class="modal-close" type="button" data-overlay-close aria-label="关闭">×</button></header><div class="modal-body" id="modal-body"></div><footer><button type="button" class="ghost-button" data-overlay-close>返回驾驶舱</button><button type="button" class="primary-button" id="modal-action">查看车辆清单</button></footer></section></div>
+    <div class="cockpit-overlay" id="overlay-root" aria-hidden="true"><div class="overlay-shade" data-overlay-close></div><section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><header><div><span class="modal-kicker" id="modal-kicker">区域下钻</span><h2 id="modal-title">--</h2></div><div class="modal-header-actions"><div class="application-date-range" id="application-date-range" hidden><label><span>开始时间</span><input type="date" id="application-date-from" aria-label="申请开始时间"></label><span aria-hidden="true">→</span><label><span>结束时间</span><input type="date" id="application-date-to" aria-label="申请结束时间"></label></div><button class="modal-close" type="button" data-overlay-close aria-label="关闭">×</button></div></header><div class="modal-body" id="modal-body"></div><footer><button type="button" class="ghost-button" data-overlay-close>返回驾驶舱</button><button type="button" class="primary-button" id="modal-action">查看车辆清单</button></footer></section></div>
   </main>
   <script src="./vendor/leaflet/leaflet.js"></script>
   <script src="./cockpit.js"></script>
