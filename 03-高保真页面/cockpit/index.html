@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#071522">
+  <link rel="icon" href="data:,">
   <title>智能网联汽车监管及运营平台 · 可视化驾驶舱</title>
   <link rel="stylesheet" href="./vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="./cockpit.css">
@@ -66,8 +67,23 @@
         <div class="map-stage" id="map-stage">
           <div class="leaflet-map" id="cockpit-map" role="application" aria-label="襄阳市行政区与测试车辆分布地图"></div>
           <button type="button" class="map-layer-control" id="map-layer-btn" aria-label="地图图层" title="地图图层"><svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M949.333333 512a32 32 0 0 0-18.346666-29.013333L811.946667 426.666667l119.04-56.32c11.306667-5.333333 18.346667-16.64 18.346666-29.013334a32 32 0 0 0-18.346666-29.013333l-405.333334-192c-8.746667-4.053333-18.56-4.053333-27.306666 0l-405.333334 192A32 32 0 0 0 74.666667 341.333333c0 12.373333 7.04 23.68 18.346666 29.013334L212.053333 426.666667l-119.04 56.32A32 32 0 0 0 74.666667 512c0 12.373333 7.04 23.68 18.346666 29.013333L212.053333 597.333333l-119.04 56.32A32 32 0 0 0 74.666667 682.666667c0 12.373333 7.04 23.68 18.346666 29.013333l405.333334 192c4.266667 1.92 8.96 2.986667 13.653333 2.986667s9.386667-1.066667 13.653333-2.986667l405.333334-192c11.306667-5.333333 18.346667-16.64 18.346666-29.013333a32 32 0 0 0-18.346666-29.013334L811.946667 597.333333l119.04-56.32c11.306667-5.333333 18.346667-16.64 18.346666-29.013333z m-768-170.666667L512 184.746667 842.666667 341.333333l-118.186667 55.893334-1.28 0.64-211.2 100.053333-211.2-100.053333-1.28-0.64L181.333333 341.333333z m661.333334 341.333334L512 839.253333 181.333333 682.666667l105.6-49.92 211.413334 100.266666c4.266667 1.92 8.96 2.986667 13.653333 2.986667s9.386667-1.066667 13.653333-2.986667l211.413334-100.266666L842.666667 682.666667z m-118.613334-114.56L512 668.586667l-212.053333-100.48L181.546667 512l105.386666-49.92 211.413334 100.266667c4.266667 1.92 8.96 2.986667 13.653333 2.986666s9.386667-1.066667 13.653333-2.986666l211.413334-100.266667L842.453333 512l-118.4 56.106667z" fill="currentColor"></path></svg></button>
-          <div class="map-legend" id="map-legend"><span><i class="legend-online"></i>在线车辆</span><span><i class="legend-warning"></i>预警车辆</span><span><i class="legend-alarm"></i>告警车辆</span></div>
-          <div class="map-layer-popover" id="map-layer-popover" aria-hidden="true"><strong>地图图层</strong><label><input type="checkbox" data-layer="district" checked> 行政区边界</label><label><input type="checkbox" data-layer="vehicle" checked> 测试车辆</label><label><input type="checkbox" data-layer="incident" checked> 异常事件</label><label><input type="checkbox" data-layer="accident" checked> 事故点位</label><label><input type="checkbox" data-layer="route" checked> 实时轨迹</label><label><input type="checkbox" data-layer="road" checked> 开放道路</label></div>
+          <div class="map-legend" id="map-legend"><span><i class="legend-vehicle-icon manual"></i>人工驾驶</span><span><i class="legend-vehicle-icon auto"></i>自动驾驶</span><span><i class="legend-vehicle-icon offline"></i>离线</span></div>
+          <div class="map-layer-popover" id="map-layer-popover" aria-hidden="true">
+            <strong>图层</strong>
+            <div class="map-layer-section">
+              <span class="map-layer-section-title">底图</span>
+              <label class="map-layer-option"><input type="radio" name="cockpit-base-map" data-base-map="satellite"><i class="map-layer-check"></i><span>卫星影像</span></label>
+              <label class="map-layer-option"><input type="radio" name="cockpit-base-map" data-base-map="normal" checked><i class="map-layer-check"></i><span>电子地图</span></label>
+            </div>
+            <div class="map-layer-section">
+              <span class="map-layer-section-title">业务图层</span>
+              <label class="map-layer-option"><input type="checkbox" data-layer="vehicle" checked><i class="map-layer-check"></i><span>网联车辆</span></label>
+              <label class="map-layer-option"><input type="checkbox" data-layer="incident"><i class="map-layer-check"></i><span>异常车辆</span></label>
+              <label class="map-layer-option"><input type="checkbox" data-layer="accident"><i class="map-layer-check"></i><span>事故点位</span></label>
+              <label class="map-layer-option"><input type="checkbox" data-layer="fence"><i class="map-layer-check"></i><span>电子围栏</span></label>
+              <label class="map-layer-option"><input type="checkbox" data-layer="road"><i class="map-layer-check"></i><span>道路矢量</span></label>
+            </div>
+          </div>
           <aside class="cockpit-video-panel" id="cockpit-video-panel" aria-hidden="true" aria-label="车辆视频面板">
             <header class="cockpit-video-header"><div class="cockpit-video-heading"><div class="cockpit-video-title-row"><strong id="cockpit-video-title">未选择车辆</strong><span class="cockpit-video-status" id="cockpit-video-status"><i></i><span>在线</span></span></div><small id="cockpit-video-context">车载多路视频</small></div><button type="button" class="cockpit-panel-close" id="cockpit-video-close" aria-label="关闭视频面板" title="关闭视频面板">×</button></header>
             <div class="cockpit-video-body" id="cockpit-video-pane"></div>
@@ -84,7 +100,6 @@
             <button class="metric-tile" type="button" data-chart="incident" data-key="warning" data-value="45" aria-pressed="false"><span>预警事件</span><strong>45</strong><small>起</small></button>
             <button class="metric-tile" type="button" data-chart="incident" data-key="alarm" data-value="9" aria-pressed="false"><span>告警事件</span><strong>9</strong><small>起</small></button>
           </div>
-          <div class="incident-selection-hint" id="incident-selection-hint">点击模块查看区域异常事件聚合</div>
           <div class="donut-wrap incident-donut-wrap">
             <div class="donut-chart" id="incident-donut" style="--donut: conic-gradient(#fadb14 0 29.63%, #fa8c16 29.63% 74.07%, #ff6b9b 74.07% 100%);"><div class="donut-hole"><strong id="incident-total">54</strong><span id="incident-total-label">事件总数</span></div></div>
             <div class="legend-list" id="incident-legend"></div>

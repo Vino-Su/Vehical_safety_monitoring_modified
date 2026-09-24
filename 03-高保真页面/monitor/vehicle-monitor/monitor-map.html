@@ -337,20 +337,25 @@
               <button class="text-[#00000040] hover:text-[#000000d9] text-xs" onclick="document.querySelector('input[onchange*=toggleLegend]').checked=false;toggleLegend(false)">×</button>
             </div>
             <div class="space-y-1.5 text-xs">
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-[#1677ff]"></span>自动驾驶模式</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-[#52c41a]"></span>人工驾驶模式</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-[#722ed1]"></span>测试中车辆</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-[#1677ff]"></span>预警事件车辆</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-[#fa8c16]"></span>告警事件车辆</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded bg-[#fadb14]"></span>事故点位</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-4 h-0.5 bg-[#52c41a]"></span>开放道路</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-4 h-0.5 bg-[#faad14]" style="border-top:1px dashed #faad14"></span>暂停道路</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-4 h-0.5 bg-[#ff4d4f]" style="border-top:1px dashed #ff4d4f"></span>关闭道路</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded border-2 border-[#52c41a] bg-[#52c41a20]"></span>允许区域-开放</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded border-2 border-dashed border-[#faad14] bg-[#faad1420]"></span>允许区域-暂停</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded border-2 border-dashed border-[#ff4d4f] bg-[#ff4d4f20]"></span>允许区域-关闭</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded border-[3px] border-dashed border-[#ff4d4f] bg-[#ff4d4f33]" style="border-style:dashed"></span>禁止通行区域</div>
-              <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded bg-[#52c41a] text-white text-[8px] flex items-center justify-center">⚡</span>充电桩</div>
+              <div class="flex items-center gap-2" data-legend-layer="vehicles"><span class="inline-block w-3 h-3 rounded-full bg-[#1677ff]"></span>自动驾驶模式</div>
+              <div class="flex items-center gap-2" data-legend-layer="vehicles"><span class="inline-block w-3 h-3 rounded-full bg-[#52c41a]"></span>人工驾驶模式</div>
+              <div class="flex items-center gap-2" data-legend-layer="vehicles"><span class="inline-block w-3 h-3 rounded-full bg-[#722ed1]"></span>测试中车辆</div>
+              <div class="flex items-center gap-2" data-legend-layer="vehicles"><span class="inline-block w-3 h-3 rounded-full bg-[#d9d9d9]"></span>离线车辆</div>
+              <div class="flex items-center gap-2" data-legend-layer="alarms"><span class="inline-block w-3 h-3 rounded-full bg-[#1677ff]"></span>预警事件车辆</div>
+              <div class="flex items-center gap-2" data-legend-layer="alarms"><span class="inline-block w-3 h-3 rounded-full bg-[#fa8c16]"></span>告警事件车辆</div>
+              <div class="flex items-center gap-2" data-legend-layer="accidents"><span class="inline-block w-3 h-3 rounded bg-[#fadb14]"></span>事故点位</div>
+              <div class="flex items-center gap-2" data-legend-layer="trajectory"><span class="inline-block w-4 h-0.5 bg-[#1677ff]" style="border-top:1px dashed #1677ff"></span>行驶轨迹</div>
+              <div class="flex items-center gap-2" data-legend-layer="fences"><span class="inline-block w-3 h-3 rounded border-2 border-[#52c41a] bg-[#52c41a20]"></span>允许区域-开放</div>
+              <div class="flex items-center gap-2" data-legend-layer="fences"><span class="inline-block w-3 h-3 rounded border-2 border-dashed border-[#faad14] bg-[#faad1420]"></span>允许区域-暂停</div>
+              <div class="flex items-center gap-2" data-legend-layer="fences"><span class="inline-block w-3 h-3 rounded border-2 border-dashed border-[#ff4d4f] bg-[#ff4d4f20]"></span>允许区域-关闭</div>
+              <div class="flex items-center gap-2" data-legend-layer="fences"><span class="inline-block w-3 h-3 rounded border-[3px] border-dashed border-[#ff4d4f] bg-[#ff4d4f33]" style="border-style:dashed"></span>禁止通行区域</div>
+              <div class="flex items-center gap-2" data-legend-layer="roads"><span class="inline-block w-4 h-0.5 bg-[#52c41a]"></span>开放道路</div>
+              <div class="flex items-center gap-2" data-legend-layer="roads"><span class="inline-block w-4 h-0.5 bg-[#faad14]" style="border-top:1px dashed #faad14"></span>暂停道路</div>
+              <div class="flex items-center gap-2" data-legend-layer="roads"><span class="inline-block w-4 h-0.5 bg-[#ff4d4f]" style="border-top:1px dashed #ff4d4f"></span>关闭道路</div>
+              <div class="flex items-center gap-2" data-legend-layer="facilities"><span class="inline-block w-3 h-3 rounded bg-[#52c41a] text-white text-[8px] flex items-center justify-center">⚡</span>充电桩</div>
+              <div class="flex items-center gap-2" data-legend-layer="facilities"><span class="inline-block w-3 h-3 rounded bg-[#722ed1] text-white text-[8px] flex items-center justify-center">🚦</span>交通信号灯</div>
+              <div class="flex items-center gap-2" data-legend-layer="facilities"><span class="inline-block w-3 h-3 rounded bg-[#1677ff] text-white text-[8px] flex items-center justify-center">📡</span>路侧传感器</div>
+              <div class="flex items-center gap-2" data-legend-layer="historyAccidents"><span class="inline-block w-3 h-3 rounded bg-[#d9d9d9] text-white text-[8px] flex items-center justify-center">⚠</span>历史事故</div>
             </div>
           </div>
             </div>
@@ -423,6 +428,8 @@ var warningQuickFilter='all';
 var selectedWarningId=null;
 var vehicleDrawerCollapsed=true;
 var layerVisibility={vehicles:true,trajectory:false,alarms:true,accidents:false,fences:false,roads:true,facilities:false,historyAccidents:false};
+// 图例总开关状态（对应图层面板"辅助显示-图例"），与图层显隐状态共同决定图例面板是否可见
+var legendSwitchEnabled=true;
 var DISTRICT_AGGREGATE_ZOOM=12;
 var districtAggregateData=[
   {id:'fancheng',name:'樊城区',center:[112.155,32.070],bounds:[[32.045,112.130],[32.100,112.185]]},
@@ -1067,6 +1074,7 @@ function loadFacilityLayer(){
 function applyInitialLayerVisibility(){
   updateMapVisibility();
   syncDistrictOverviewLayers();
+  syncLegendVisibility();
 }
 
 function syncDistrictOverviewLayers(){
@@ -1236,6 +1244,7 @@ function createTrajectoryLayers(v,points){
   layerVisibility.trajectory=true;
   var trajectoryToggle=document.querySelector('input[onchange*=trajectory]');
   if(trajectoryToggle)trajectoryToggle.checked=true;
+  syncLegendVisibility();
 }
 
 function buildTrajectoryData(v,timeFrom,timeTo){
@@ -1531,6 +1540,7 @@ function updateTrajectoryProgress(){
 
 function toggleLayer(layerName,visible){
   layerVisibility[layerName]=visible;
+  syncLegendVisibility();
   if(layerName==='vehicles'){
     updateMapVisibility();
     return;
@@ -1606,9 +1616,24 @@ function switchBaseMap(type){
   }
 }
 
-function toggleLegend(visible){
+// 图例与图层联动：图例项以 data-legend-layer 标记归属图层，图层开关变化时同步显隐；
+// 所有图例项均不可见时整体隐藏面板（图例总开关关闭时同样整体隐藏）
+function syncLegendVisibility(){
   var legend=document.getElementById('legendPanel');
-  if(legend)legend.style.display=visible?'':'none';
+  if(!legend)return;
+  var items=legend.querySelectorAll('[data-legend-layer]');
+  var visibleCount=0;
+  Array.prototype.forEach.call(items,function(item){
+    var visible=layerVisibility[item.getAttribute('data-legend-layer')]!==false;
+    item.style.display=visible?'':'none';
+    if(visible)visibleCount++;
+  });
+  legend.style.display=(legendSwitchEnabled&&visibleCount>0)?'':'none';
+}
+
+function toggleLegend(visible){
+  legendSwitchEnabled=!!visible;
+  syncLegendVisibility();
 }
 
 function focusVehicle(vid){

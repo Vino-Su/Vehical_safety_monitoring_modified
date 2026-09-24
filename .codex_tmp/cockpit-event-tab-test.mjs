@@ -10,8 +10,8 @@ const check = (name, ok, detail = '') => {
 };
 
 try {
-  for (const width of [1920, 3840]) {
-    const page = await browser.newPage({ viewport: { width, height: 1080 } });
+  for (const { width, height } of [{ width: 1366, height: 768 }, { width: 1920, height: 1080 }, { width: 3840, height: 1080 }]) {
+    const page = await browser.newPage({ viewport: { width, height } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.goto('http://127.0.0.1:9188/03-高保真页面/cockpit/index.html');
@@ -29,7 +29,7 @@ try {
     const popupBounds = await popup.boundingBox();
     const mapBounds = await page.locator('#cockpit-map').boundingBox();
     check(`${width} popup visible`, popupBounds.y >= mapBounds.y && popupBounds.y + popupBounds.height <= mapBounds.y + mapBounds.height, JSON.stringify({ popupBounds, mapBounds }));
-    await page.screenshot({ path: `07-bugs/驾驶舱_车辆详情异常事件_${width}x1080_20260923.png` });
+    await page.screenshot({ path: `07-bugs/驾驶舱_入口默认Tab_车辆_${width}x${height}_20260923.png` });
     await popup.locator('[data-popup-tab="events"]').press('ArrowLeft');
     check(`${width} keyboard tab`, await popup.locator('[data-popup-tab="realtime"]').getAttribute('aria-selected') === 'true');
     await popup.locator('[data-popup-action="video"]').click();
@@ -40,14 +40,18 @@ try {
     await page.locator('.incident-vehicle-marker').first().click();
     await popup.waitFor();
     const badge = Number(await page.locator('.incident-vehicle-marker b').first().textContent());
-    await popup.locator('[data-popup-tab="events"]').click();
+    check(`${width} incident default tab`, await popup.locator('[data-popup-tab="events"]').getAttribute('aria-selected') === 'true' && await popup.locator('[data-popup-pane="events"]').isVisible() && await popup.locator('[data-popup-pane="realtime"]').isHidden());
     check(`${width} incident marker count`, await popup.locator('.cockpit-popup-event').count() === badge, String(badge));
+    await page.waitForTimeout(350);
+    await page.screenshot({ path: `07-bugs/驾驶舱_入口默认Tab_异常事件_${width}x${height}_20260923.png` });
+    await popup.locator('[data-popup-tab="realtime"]').click();
+    check(`${width} incident can show realtime`, await popup.locator('[data-popup-pane="realtime"]').isVisible());
 
     await page.locator('#vehicle-list-trigger').click();
     await page.locator('[data-vehicle-search]').fill('鄂F·A001');
     await page.locator('[data-vehicle-locate="鄂F·A001"]').click();
     await popup.waitFor();
-    check(`${width} list locate detail`, await popup.locator('[data-popup-tab="events"]').count() === 1);
+    check(`${width} list locate default tab`, await popup.locator('[data-popup-tab="realtime"]').getAttribute('aria-selected') === 'true');
 
     await page.locator('#vehicle-list-trigger').click();
     await page.locator('[data-vehicle-search]').fill('DA202605004');
