@@ -220,13 +220,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cockpi
 .incident-summary-filter.warning strong { color: var(--cockpit-primary); }
 .incident-summary-filter.alarm strong { color: var(--cockpit-orange); }
 .incident-summary-filter small { position: absolute; right: 12px; bottom: 11px; color: var(--cockpit-text-muted); font-size: 11px; }
-.incident-list-table { min-width: 1080px; }
+.incident-list-table { min-width: 1180px; }
 .incident-list-table th:nth-child(1), .incident-list-table td:nth-child(1) { width: 14%; }
 .incident-list-table th:nth-child(2), .incident-list-table td:nth-child(2) { width: 9%; }
 .incident-list-table th:nth-child(3), .incident-list-table td:nth-child(3) { width: 11%; }
-.incident-list-table th:nth-child(4), .incident-list-table td:nth-child(4) { width: 12%; }
-.incident-list-table th:nth-child(5), .incident-list-table td:nth-child(5) { width: 11%; }
-.incident-list-table th:nth-child(6), .incident-list-table td:nth-child(6) { width: 18%; }
+.incident-list-table th:nth-child(4), .incident-list-table td:nth-child(4) { width: 13%; }
+.incident-list-table th:nth-child(5), .incident-list-table td:nth-child(5) { width: 12%; }
+.incident-list-table th:nth-child(6), .incident-list-table td:nth-child(6) { width: 16%; }
 .incident-list-table th:nth-child(7), .incident-list-table td:nth-child(7) { width: 14%; }
 .incident-list-table th:nth-child(8), .incident-list-table td:nth-child(8) { width: 8%; }
 .incident-list-table th.vehicle-action-cell, .incident-list-table td.vehicle-action-cell { width: 7%; text-align: center; }

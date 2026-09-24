@@ -129,7 +129,7 @@ var VideoWorkbench=(function(){
   function renderVehicleSelector(st,plate){
     if(!st.onSelectVehicle)return '<span>'+plate+'</span>';
     return '<select class="ant-input vw-vehicle-select" aria-label="选择视频车辆" onchange="VideoWorkbench.selectVehicle(\''+st.id+'\',this.value)">'+
-      vehicleData.map(function(item){return '<option value="'+item.id+'"'+(item.id===st.vehicleId?' selected':'')+'>'+item.plate+'</option>'}).join('')+
+      vehicleData.map(function(item){return '<option value="'+item.id+'"'+(item.id===st.vehicleId?' selected':'')+'>'+item.plate+'-'+item.company+'</option>'}).join('')+
     '</select>';
   }
 
@@ -142,7 +142,7 @@ var VideoWorkbench=(function(){
     var html=
       '<div class="vw-workbench vw-layout-'+st.layout+'">'+
       '<div class="vw-toolbar">'+
-        '<div class="vw-vehicle-title">'+renderVehicleSelector(st,plate)+(v?'<em>'+v.company+' | '+v.level+'</em>':'')+'</div>'+
+        '<div class="vw-vehicle-title">'+renderVehicleSelector(st,plate)+'</div>'+
         '<div class="vw-tool-actions">'+
           (st.layout==='multi'||st.isFullscreen?'<button class="ant-btn ant-btn-xs" onclick="VideoWorkbench.setGrid(\''+st.id+'\',1)">单路</button><button class="ant-btn ant-btn-xs" onclick="VideoWorkbench.setGrid(\''+st.id+'\',4)">4路</button><button class="ant-btn ant-btn-xs" onclick="VideoWorkbench.setGrid(\''+st.id+'\',9)">9路</button>':'')+
           (st.mode==='live'?'<button class="ant-btn ant-btn-xs" onclick="VideoWorkbench.enterPlayback(\''+st.id+'\')">历史回放</button>':'<button class="ant-btn ant-btn-xs" onclick="VideoWorkbench.backToLive(\''+st.id+'\')">回到实时</button>')+
