@@ -17,7 +17,9 @@
   var ACCIDENT_ICON_SVG = '<svg class="accident-dot-svg" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M834.24 712.48v49.6H237.92v-49.6h46.4c-15.84-62.56-31.68-124.64-47.52-186.88-7.36 2.08-14.08 4-20.96 5.76-11.52 2.88-22.56-3.68-25.44-15.04-2.88-11.2 3.68-22.72 15.04-26.4 4.64-1.44 9.44-2.56 14.08-4.16 9.92-3.36 19.36-4.64 28 4.32 0.16-1.76 0.32-2.72 0.32-3.68 1.92-35.2 4.16-70.24 5.92-105.44 1.12-22.72 16-42.88 36.96-48.8 59.84-16.96 119.84-33.76 179.68-50.72 23.04-6.56 46.08-13.12 69.28-19.52h11.52c0.48 0.32 0.96 0.64 1.6 0.8 15.68 2.88 27.68 11.36 36.48 25.6 16.96 27.52 34.24 54.88 51.36 82.4 0.8 1.44 1.76 2.72 3.04 4.48 3.2-6.4 7.52-10.88 13.6-12.64 7.68-2.4 15.36-4.64 23.04-6.4 14.72-3.36 27.68 10.08 24.32 25.28-1.76 8.48-7.04 13.92-14.88 16.32-6.88 2.08-13.76 4-20.96 6.08 12.32 48.64 24.64 96.64 36.96 145.12-123.36 34.88-246.4 69.6-369.44 104.32 13.28 19.84 15.52 39.36 1.12 59.2h402.72c-38.56-9.12-49.6-42.4-46.4-65.28 4.16-29.44 27.04-50.4 54.72-50.4 26.72 0.16 49.92 21.12 54.08 48.64 3.84 25.44-8.8 58.08-45.44 67.2 25.6-0.16 51.36-0.16 77.12-0.16zM602.56 400c-0.16-0.8-0.16-1.28-0.32-1.6-14.24-25.12-28.16-50.4-42.88-75.36-8.32-14.08-25.76-20.8-40.64-16.64-63.04 17.76-126.08 35.52-189.12 53.44-17.12 4.8-28.48 20.64-28.64 39.2-0.32 27.36-0.48 54.88-0.64 82.24 0 1.12 0.16 2.4 0.32 4 100.96-28.64 201.44-56.96 301.92-85.28z m6.88 108c17.92 0 32.48-14.88 32.32-33.12 0-17.44-13.92-31.52-31.04-31.52-17.76 0-32.64 15.04-32.64 32.96-0.16 17.6 13.92 31.68 31.36 31.68z m-288.16 81.28c17.76 0 32.64-15.04 32.48-32.96-0.16-17.44-13.92-31.52-31.04-31.52-17.92-0.16-32.64 14.88-32.64 33.28 0.16 17.44 13.92 31.2 31.2 31.2zM512 1.6C230.08 1.6 1.6 230.08 1.6 512s228.48 510.4 510.4 510.4 510.4-228.48 510.4-510.4S793.92 1.6 512 1.6z"/></svg>';
   var state = { selectedArea: null, selectedVehicleId: null, modalOpen: false, modalType: null, map: null, mapLayers: {}, layerVisibility: { vehicle: false, incident: false, accident: false, fence: false, road: false }, vehicleMarkers: {}, vehicleFocusMarker: null, roadMode: false, roadFilter: 'all', roadArea: 'all', roadPage: 1, roadViewMode: null, roadData: [], fenceData: [], applicationFilter: 'all', applicationPage: 1, applicationDateFrom: '', applicationDateTo: '', vehicleMode: true, vehicleFilter: 'all', vehicleViewMode: null, vehicleData: [], vehicleSearch: '', incidentMode: false, incidentFilter: 'total', incidentRange: '本年', incidentViewMode: null, incidentListFilter: 'total', incidentListPage: 1, incidentDateFrom: '', incidentDateTo: '', accidentMode: false, accidentRange: '本年', accidentViewMode: null, accidentData: [], accidentPage: 1, accidentDateFrom: '', accidentDateTo: '', accidentMarkers: {}, accidentFocusMarker: null };
   var BUSINESS_LAYER_KEYS = ['vehicle', 'incident', 'accident', 'fence', 'road'];
+  var AGGREGATE_LAYER_KEYS = ['vehicle', 'incident', 'accident', 'road'];
   var trajectoryState = { vehicleId: null, points: [], currentIndex: 0, currentTime: null, playing: false, speed: 1, timer: null, playbackDate: '', startTime: '08:00:00', endTime: '14:32:00', line: null, passedLine: null, marker: null };
+  var eventReplayState = null;
   var cockpitVehicleIndex = {};
   var palette = ['#00cfe8', '#1677ff', '#fa8c16', '#9254de', '#ff6b9b'];
   var vehiclePalette = ['#00cfe8', '#1677ff', '#748390'];
@@ -668,7 +670,8 @@
     var acceleration = v.acceleration == null ? '--' : v.acceleration + ' m/s²';
     var gear = v.gear ? v.gear + '档' : '--';
     var eventItems = events.slice().sort(function (a, b) { return (b.occurredAt || '').localeCompare(a.occurredAt || ''); }).map(function (event) {
-      return '<article class="cockpit-popup-event"><div class="cockpit-popup-event-head"><span class="cockpit-popup-category ' + (event.category === 'alarm' ? 'alarm' : 'warning') + '">' + (event.category === 'alarm' ? '告警' : '预警') + '</span><strong>' + vehicleListEscape(event.type || '--') + '</strong><time>' + vehicleListEscape(event.occurredAt || '--') + '</time></div>' +
+      var eventIndex = (vehicle.events || []).indexOf(event);
+      return '<article class="cockpit-popup-event"><div class="cockpit-popup-event-head"><span class="cockpit-popup-category ' + (event.category === 'alarm' ? 'alarm' : 'warning') + '">' + (event.category === 'alarm' ? '告警' : '预警') + '</span><strong>' + vehicleListEscape(event.type || '--') + '</strong><time>' + vehicleListEscape(event.occurredAt || '--') + '</time><button type="button" class="cockpit-popup-replay" data-event-replay-index="' + eventIndex + '"' + (id && eventIndex >= 0 ? '' : ' disabled title="事件关联车辆暂不可用"') + '>回放</button></div>' +
         '<div class="cockpit-popup-event-meta"><span>位置：' + vehicleListEscape(event.location || '--') + '</span><span>触发规则：' + vehicleListEscape(event.rule || '--') + '</span><span>状态：' + vehicleListEscape(event.status || '--') + '</span></div></article>';
     }).join('');
     return '<div class="cockpit-vehicle-popup" data-vehicle-id="' + vehicleListEscape(id || '') + '">' +
@@ -696,6 +699,12 @@
     container.addEventListener('click', function (event) {
       var tab = event.target.closest('[data-popup-tab]');
       if (tab) { event.stopPropagation(); selectTab(tab, false); return; }
+      var replay = event.target.closest('[data-event-replay-index]');
+      if (replay) {
+        event.preventDefault(); event.stopPropagation();
+        if (!replay.disabled) replayCockpitEvent(replay.closest('.cockpit-vehicle-popup').dataset.vehicleId, Number(replay.dataset.eventReplayIndex));
+        return;
+      }
       var action = event.target.closest('[data-popup-action]');
       if (!action || action.disabled) return;
       event.stopPropagation();
@@ -859,6 +868,62 @@
   function cockpitDateText(date) {
     return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
   }
+  function cockpitEventReplayWindow(occurredAt) {
+    var parts = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(String(occurredAt || ''));
+    if (!parts) return null;
+    var at = new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]), Number(parts[4]), Number(parts[5]), Number(parts[6]));
+    if (isNaN(at.getTime()) || cockpitDateText(at) !== parts[1] + '-' + parts[2] + '-' + parts[3] || secToTime(timeToSeconds(parts[4] + ':' + parts[5] + ':' + parts[6])) !== parts[4] + ':' + parts[5] + ':' + parts[6]) return null;
+    var from = new Date(Math.max(at.getTime() - 60000, new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime()));
+    var startTime = secToTime(from.getHours() * 3600 + from.getMinutes() * 60 + from.getSeconds());
+    var eventTime = parts[4] + ':' + parts[5] + ':' + parts[6];
+    return { playbackDate: cockpitDateText(at), startTime: startTime, endTime: startTime === eventTime ? '00:01:00' : eventTime, currentTime: eventTime };
+  }
+  function renderCockpitEventReplay(event, v, range) {
+    var card = document.getElementById('cockpit-event-replay');
+    if (!card) return;
+    card.innerHTML = '<div class="cockpit-event-replay-head"><strong>异常事件回放</strong><button type="button" data-exit-event-replay>退出回放</button></div>' +
+      '<div class="cockpit-event-replay-type">' + (event.category === 'alarm' ? '告警' : '预警') + ' · ' + vehicleListEscape(event.type || '--') + '</div>' +
+      '<span class="cockpit-event-replay-line">' + vehicleListEscape(v.plate) + ' · ' + vehicleListEscape(v.company || '--') + '</span>' +
+      '<span class="cockpit-event-replay-line">发生时间：' + vehicleListEscape(event.occurredAt) + '</span>' +
+      '<span class="cockpit-event-replay-line">' + vehicleListEscape(event.location || '--') + '</span>' +
+      '<div class="cockpit-event-replay-range">回放范围：' + range.startTime + ' - ' + range.endTime + '</div>';
+    card.classList.add('is-open'); card.setAttribute('aria-hidden', 'false');
+  }
+  function cockpitReplayFeedback(message) {
+    var stage = document.getElementById('map-stage');
+    if (!stage) return;
+    var notice = document.getElementById('cockpit-replay-feedback');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'cockpit-replay-feedback'; notice.className = 'cockpit-replay-feedback'; notice.setAttribute('role', 'status');
+      stage.appendChild(notice);
+    }
+    notice.textContent = message;
+    notice.classList.add('is-visible');
+    clearTimeout(notice.hideTimer);
+    notice.hideTimer = setTimeout(function () { notice.classList.remove('is-visible'); }, 3500);
+  }
+  function exitCockpitEventReplay() {
+    if (!eventReplayState) return;
+    var videoWasOpen = eventReplayState.videoWasOpen;
+    eventReplayState = null;
+    var card = document.getElementById('cockpit-event-replay');
+    if (card) { card.classList.remove('is-open'); card.setAttribute('aria-hidden', 'true'); card.innerHTML = ''; }
+    closeCockpitTrajectory();
+    if (!videoWasOpen) closeCockpitVideo();
+  }
+  function replayCockpitEvent(id, index) {
+    var entry = cockpitVehicleById(id);
+    var event = entry && entry.raw && entry.raw.events && entry.raw.events[index];
+    if (!event || !entry.normalized) { cockpitReplayFeedback('未找到异常事件关联车辆'); return; }
+    var range = cockpitEventReplayWindow(event.occurredAt);
+    if (!range) { cockpitReplayFeedback('异常事件时间无效，无法打开回放'); return; }
+    if (!eventReplayState) eventReplayState = { videoWasOpen: document.getElementById('cockpit-video-panel').classList.contains('is-open') };
+    if (state.map) state.map.closePopup();
+    showCockpitTrajectory(id, range);
+    openCockpitVideo(id, Object.assign({ timeSource: 'external' }, range));
+    renderCockpitEventReplay(event, entry.normalized, range);
+  }
   function clearCockpitTrajectoryLayers() {
     [trajectoryState.line, trajectoryState.passedLine, trajectoryState.marker].forEach(function (layer) { if (layer && state.map) state.map.removeLayer(layer); });
     trajectoryState.line = null; trajectoryState.passedLine = null; trajectoryState.marker = null;
@@ -948,10 +1013,13 @@
   function reloadCockpitTrajectory() {
     var panel = document.getElementById('cockpit-trajectory-panel');
     if (!panel || !trajectoryState.vehicleId) return;
+    var vehicleId = trajectoryState.vehicleId;
+    var date = panel.querySelector('[data-traj-date]').value;
     var start = panel.querySelector('[data-traj-start]').value;
     var end = panel.querySelector('[data-traj-end]').value;
     if (timeToSeconds(end) <= timeToSeconds(start)) return;
-    showCockpitTrajectory(trajectoryState.vehicleId, { playbackDate: panel.querySelector('[data-traj-date]').value, startTime: start, endTime: end });
+    if (eventReplayState) exitCockpitEventReplay();
+    showCockpitTrajectory(vehicleId, { playbackDate: date, startTime: start, endTime: end });
   }
   function toggleCockpitTrajectory() {
     if (!trajectoryState.points.length) return;
@@ -971,6 +1039,7 @@
     if (trajectoryState.playing) { toggleCockpitTrajectory(); toggleCockpitTrajectory(); }
   }
   function closeCockpitTrajectory() {
+    if (eventReplayState) { exitCockpitEventReplay(); return; }
     var panel = document.getElementById('cockpit-trajectory-panel');
     clearCockpitTrajectoryLayers();
     trajectoryState.vehicleId = null; trajectoryState.points = [];
@@ -988,14 +1057,18 @@
     if (!panel || !pane || typeof VideoWorkbench === 'undefined') return;
     setCockpitVideoHeader(v);
     panel.classList.add('is-open'); panel.setAttribute('aria-hidden', 'false');
-    if (!VideoWorkbench.getInstance('cockpit-video-pane')) {
+    var instance = VideoWorkbench.getInstance('cockpit-video-pane');
+    if (!instance) {
       VideoWorkbench.mount({ container: pane, vehicleId: v.id, layout: 'single', mode: playback ? 'playback' : 'live', timeSource: playback ? 'external' : 'now', onSelectVehicle: selectCockpitVideoVehicle });
     } else {
-      VideoWorkbench.selectVehicle('cockpit-video-pane', v.id);
+      if (playback && instance.mode === 'playback') VideoWorkbench.backToLive('cockpit-video-pane');
+      if (eventReplayState) VideoWorkbench.setVehicle('cockpit-video-pane', v.id);
+      else VideoWorkbench.selectVehicle('cockpit-video-pane', v.id);
     }
     if (playback) VideoWorkbench.enterPlayback('cockpit-video-pane', playback);
   }
   function selectCockpitVideoVehicle(id) {
+    if (eventReplayState) { eventReplayState.videoWasOpen = true; exitCockpitEventReplay(); }
     var entry = cockpitVehicleById(id);
     if (!entry || !entry.normalized) return;
     state.selectedVehicleId = entry.normalized.id;
@@ -1015,6 +1088,7 @@
     }
   }
   function closeCockpitVideo() {
+    if (eventReplayState) exitCockpitEventReplay();
     var panel = document.getElementById('cockpit-video-panel');
     if (panel) { panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true'); }
     var instance = typeof VideoWorkbench !== 'undefined' && VideoWorkbench.getInstance('cockpit-video-pane');
@@ -1030,6 +1104,51 @@
     if (state.accidentMode) updateAccidentView(true);
   }
   function layerIsVisible(key) { return state.layerVisibility[key] === true; }
+  function activeAggregateKey() {
+    if (state.roadMode) return 'road';
+    if (state.incidentMode) return 'incident';
+    if (state.accidentMode) return 'accident';
+    if (state.vehicleMode) return 'vehicle';
+    return null;
+  }
+  function aggregateMetricsForArea(area) {
+    var road = state.roadData.find(function (item) { return item.name === area.name; });
+    var roadCount = road ? (state.roadFilter === 'all' ? road.roadCount : (state.roadFilter === 'open' ? road.openCount : road.pausedCount)) : 0;
+    var incidentLabel = state.incidentFilter === 'warning' ? '预警' : (state.incidentFilter === 'alarm' ? '告警' : '异常');
+    var roadLabel = state.roadFilter === 'open' ? '开放' : (state.roadFilter === 'paused' ? '暂停' : '路段');
+    var metrics = {
+      vehicle: { key: 'vehicle', label: state.vehicleFilter === 'online' ? '在线' : (state.vehicleFilter === 'mileage' ? '里程车' : '车辆'), full: vehicleFilterLabel(), unit: '辆', count: vehicleCountForArea(area) },
+      incident: { key: 'incident', label: incidentLabel, full: incidentLabel + '事件', unit: '起', count: incidentCountForArea(area) },
+      accident: { key: 'accident', label: '事故', full: '事故', unit: '起', count: accidentRecords().filter(function (record) { return record.area === area.name; }).length },
+      road: { key: 'road', label: roadLabel, full: roadLabel + '路段', unit: '段', count: roadCount }
+    };
+    var primary = activeAggregateKey();
+    var keys = AGGREGATE_LAYER_KEYS.filter(layerIsVisible);
+    if (keys.indexOf(primary) !== -1) {
+      keys.splice(keys.indexOf(primary), 1);
+      keys.unshift(primary);
+    }
+    return keys.map(function (key) { return metrics[key]; });
+  }
+  function renderAggregateClusters() {
+    var map = state.map;
+    var layer = state.mapLayers.aggregate;
+    if (!map || !layer) return;
+    layer.clearLayers();
+    if (map.getZoom() >= VEHICLE_EXPAND_ZOOM) return;
+    state.vehicleData.forEach(function (area) {
+      var metrics = aggregateMetricsForArea(area);
+      if (!metrics.length) return;
+      var description = metrics.map(function (metric) { return metric.full + metric.count + metric.unit; }).join('，');
+      var items = metrics.map(function (metric) {
+        return '<span class="aggregate-metric aggregate-' + metric.key + '" title="' + metric.full + ' ' + metric.count + metric.unit + '"><small>' + metric.label + '</small><strong>' + metric.count + '</strong></span>';
+      }).join('');
+      var html = '<div class="aggregate-cluster is-count-' + metrics.length + ' is-' + metrics[0].key + '" role="button" aria-label="' + area.name + '，' + description + '，点击放大地图"><span class="aggregate-area">' + area.name + '</span><span class="aggregate-metrics">' + items + '</span></div>';
+      var marker = L.marker(area.center, { icon: L.divIcon({ className: 'aggregate-marker', html: html, iconSize: [112, 112], iconAnchor: [56, 56] }), title: area.name + '：' + description, keyboard: true });
+      marker.on('click', function () { map.flyTo(area.center, VEHICLE_EXPAND_ZOOM, { duration: .45 }); });
+      layer.addLayer(marker);
+    });
+  }
   function syncLayerControlInputs() {
     document.querySelectorAll('#map-layer-popover input[data-layer]').forEach(function (input) {
       input.checked = layerIsVisible(input.dataset.layer);
@@ -1060,6 +1179,7 @@
     }
     syncLayerControlInputs();
     renderMapLegend();
+    renderAggregateClusters();
   }
   function applyPanelLayerDefaults(defaults) {
     BUSINESS_LAYER_KEYS.forEach(function (key) {
@@ -1081,18 +1201,7 @@
     if (!force && state.accidentViewMode === mode) return;
     state.accidentViewMode = mode;
     layer.clearLayers();
-    if (mode === 'cluster') {
-      state.vehicleData.forEach(function (area) {
-        var count = accidentRecords().filter(function (record) { return record.area === area.name; }).length;
-        if (!count) return;
-        var html = '<div class="accident-cluster-icon" role="button" tabindex="0" aria-label="' + area.name + '，' + count + '起事故"><span>' + area.name + '</span><strong>' + count + '</strong><small>事故</small></div>';
-        var marker = L.marker(area.center, { icon: L.divIcon({ className: '', html: html, iconSize: [104, 104], iconAnchor: [52, 52] }), title: area.name, keyboard: true });
-        function focus() { map.flyTo(area.center, Math.max(map.getZoom(), VEHICLE_EXPAND_ZOOM), { duration: .45 }); }
-        marker.on('click', focus);
-        marker.on('keypress', function (event) { if (event.originalEvent && (event.originalEvent.key === 'Enter' || event.originalEvent.key === ' ')) { event.originalEvent.preventDefault(); focus(); } });
-        marker.addTo(layer);
-      });
-    } else if (mode === 'points') {
+    if (mode === 'points') {
       state.accidentMarkers = {};
       accidentRecords().forEach(function (record) {
         var label = record.area + ' · ' + record.date + ' · 事故点位';
@@ -1103,6 +1212,7 @@
         marker.addTo(layer);
       });
     }
+    renderAggregateClusters();
   }
   function setAccidentModuleSelected(selected) {
     var module = document.getElementById('accident-module');
@@ -1144,25 +1254,8 @@
     if (!force && state.incidentViewMode === mode) return;
     state.incidentViewMode = mode;
     layer.clearLayers();
-    if (mode === 'cluster') renderIncidentClusters();
     if (mode === 'points') renderIncidentPoints();
-  }
-  function focusIncidentArea(area) {
-    if (!state.map || !layerIsVisible('incident')) return;
-    state.map.flyTo(area.center, Math.max(state.map.getZoom(), VEHICLE_EXPAND_ZOOM), { duration: .45 });
-  }
-  function renderIncidentClusters() {
-    var layer = state.mapLayers.incident;
-    if (!layer) return;
-    state.vehicleData.forEach(function (area) {
-      var count = incidentCountForArea(area);
-      if (!count) return;
-      var html = '<div class="incident-cluster-icon" role="button" tabindex="0" aria-label="' + area.name + '，' + count + '起异常事件"><span>' + area.name + '</span><strong>' + count + '</strong><small>异常事件</small></div>';
-      var marker = L.marker(area.center, { icon: L.divIcon({ className: '', html: html, iconSize: [104, 104], iconAnchor: [52, 52] }), title: area.name, keyboard: true });
-      marker.on('click', function () { focusIncidentArea(area); });
-      marker.on('keypress', function (event) { if (event.originalEvent && (event.originalEvent.key === 'Enter' || event.originalEvent.key === ' ')) { event.originalEvent.preventDefault(); focusIncidentArea(area); } });
-      marker.addTo(layer);
-    });
+    renderAggregateClusters();
   }
   function renderIncidentPoints() {
     var layer = state.mapLayers.incident;
@@ -1219,26 +1312,8 @@
     if (!force && state.vehicleViewMode === mode) return;
     state.vehicleViewMode = mode;
     layer.clearLayers();
-    if (mode === 'cluster') renderVehicleClusters();
     if (mode === 'points' || mode === 'icons') renderVehiclePoints(mode === 'icons');
-  }
-  function focusVehicleArea(area) {
-    if (!state.map || !layerIsVisible('vehicle')) return;
-    state.map.flyTo(area.center, Math.max(state.map.getZoom(), VEHICLE_EXPAND_ZOOM), { duration: .45 });
-  }
-  function renderVehicleClusters() {
-    var layer = state.mapLayers.vehicle;
-    if (!layer) return;
-    state.vehicleData.forEach(function (area) {
-      var count = vehicleCountForArea(area);
-      var html = '<div class="map-cluster-icon" role="button" tabindex="0" aria-label="' + area.name + '，' + count + '辆' + vehicleFilterLabel() + '"><span>' + area.name + '</span><strong>' + count + '</strong><small>' + vehicleFilterLabel() + '</small></div>';
-      var marker = L.marker(area.center, { icon: L.divIcon({ className: '', html: html, iconSize: [104, 104], iconAnchor: [52, 52] }), title: area.name, keyboard: true });
-      marker.on('click', function () { focusVehicleArea(area); });
-      marker.on('keypress', function (event) {
-        if (event.originalEvent && (event.originalEvent.key === 'Enter' || event.originalEvent.key === ' ')) { event.originalEvent.preventDefault(); focusVehicleArea(area); }
-      });
-      marker.addTo(layer);
-    });
+    renderAggregateClusters();
   }
   function renderVehiclePoints(showIcons) {
     var layer = state.mapLayers.vehicle;
@@ -1316,29 +1391,8 @@
     if (!force && state.roadViewMode === mode) return;
     state.roadViewMode = mode;
     layer.clearLayers();
-    if (mode === 'segment') renderRoadSegments(); else if (mode === 'cluster') renderRoadClusters();
-  }
-  function focusRoadArea(area) {
-    var map = state.map;
-    if (!map || !layerIsVisible('road')) return;
-    map.flyTo(area.center, Math.max(map.getZoom(), ROAD_EXPAND_ZOOM), { duration: .45 });
-  }
-  function renderRoadClusters() {
-    var layer = state.mapLayers.road;
-    if (!layer) return;
-    state.roadData.forEach(function (area) {
-      var matching = roadSegmentsForFilter(area);
-      var allCount = area.roadCount;
-      var filterCount = state.roadFilter === 'all' ? allCount : (state.roadFilter === 'open' ? area.openCount : area.pausedCount);
-      var filterLabel = state.roadFilter === 'all' ? '路段总数' : roadStatusLabel(state.roadFilter) + '路段';
-      var clusterClass = state.roadFilter === 'paused' ? ' is-paused' : '';
-      var html = '<div class="road-cluster-icon' + clusterClass + '" role="button" tabindex="0" aria-label="' + area.name + '，' + filterCount + '段' + filterLabel + '"><span>' + area.name + '</span><strong>' + filterCount + '</strong><small>' + filterLabel + '</small></div>';
-      var marker = L.marker(area.center, { icon: L.divIcon({ className: '', html: html, iconSize: [104, 104], iconAnchor: [52, 52] }), title: area.name, keyboard: true });
-      marker.on('click', function () { focusRoadArea(area); });
-      marker.on('keypress', function (event) { if (event.originalEvent && (event.originalEvent.key === 'Enter' || event.originalEvent.key === ' ')) { event.originalEvent.preventDefault(); focusRoadArea(area); } });
-      marker.addTo(layer);
-      if (!matching.length && state.roadFilter !== 'all') marker.setOpacity(.38);
-    });
+    if (mode === 'segment') renderRoadSegments();
+    renderAggregateClusters();
   }
   function renderRoadSegments() {
     var layer = state.mapLayers.road;
@@ -1432,6 +1486,7 @@
     var routeLayer = L.layerGroup();
     var roadLayer = L.layerGroup();
     var fenceLayer = L.layerGroup();
+    var aggregateLayer = L.layerGroup();
     var districtData = [
       { name: '樊城区', center: [32.064, 112.122], polygon: [[32.105,112.055],[32.108,112.16],[32.065,112.19],[32.02,112.15],[32.03,112.07]], count: 34, online: 34, mileageCount: 8, vehicles: [
         { plate: '鄂F·A001', status: 'manual', mileage: 486, position: [32.082,112.095], events: [{ type: '车速超限', category: 'alarm', status: '待处理', period: '本月' }, { type: '通信中断', category: 'warning', status: '已完成', period: '本年' }] }, { plate: '鄂F·A002', status: 'auto', mileage: 728, position: [32.078,112.16], events: [{ type: '路径规划异常', category: 'warning', status: '待审核', period: '本月' }] }, { plate: '鄂F·A007', status: 'offline', mileage: 120, position: [32.06,112.13], events: [{ type: '车载终端异常', category: 'warning', status: '已完成', period: '全部' }] }
@@ -1493,11 +1548,12 @@
     L.circleMarker([32.11,112.31], { radius: 4, color: '#00cfe8', weight: 2, fillColor: '#00cfe8', fillOpacity: 1 }).addTo(routeLayer);
 
     districtLayer.addTo(map); vehicleLayer.addTo(map); routeLayer.addTo(map);
-    state.map = map; state.mapLayers = { district: districtLayer, vehicle: vehicleLayer, incident: incidentLayer, accident: accidentLayer, route: routeLayer, road: roadLayer, fence: fenceLayer, trajectory: null };
+    state.map = map; state.mapLayers = { district: districtLayer, vehicle: vehicleLayer, incident: incidentLayer, accident: accidentLayer, route: routeLayer, road: roadLayer, fence: fenceLayer, aggregate: aggregateLayer, trajectory: null };
+    aggregateLayer.addTo(map);
     applyPanelLayerDefaults({ vehicle: true });
     renderFenceLayer();
     updateVehicleView(true);
-    map.on('zoomend', function () { updateRoadView(); updateVehicleView(); updateIncidentView(); updateAccidentView(); });
+    map.on('zoomend', function () { updateRoadView(); updateVehicleView(); updateIncidentView(); updateAccidentView(); renderAggregateClusters(); });
     window.setTimeout(function () { map.invalidateSize(); }, 80);
     if (window.ResizeObserver) new ResizeObserver(function () { map.invalidateSize({ animate: false }); }).observe(mapEl);
 
@@ -1519,6 +1575,15 @@
     document.addEventListener('click', function (event) { if (!layer.contains(event.target) && !layerBtn.contains(event.target)) { layer.classList.remove('is-open'); layer.setAttribute('aria-hidden', 'true'); } });
     var videoClose = document.getElementById('cockpit-video-close');
     if (videoClose) videoClose.addEventListener('click', closeCockpitVideo);
+    var videoPane = document.getElementById('cockpit-video-pane');
+    if (videoPane) videoPane.addEventListener('click', function (event) {
+      if (!eventReplayState || !event.target.closest('button[onclick*="VideoWorkbench.backToLive"]')) return;
+      event.preventDefault(); event.stopPropagation();
+      eventReplayState.videoWasOpen = true;
+      exitCockpitEventReplay();
+    }, true);
+    var replayCard = document.getElementById('cockpit-event-replay');
+    if (replayCard) replayCard.addEventListener('click', function (event) { if (event.target.closest('[data-exit-event-replay]')) exitCockpitEventReplay(); });
   }
 
   function bindOverlay() {
