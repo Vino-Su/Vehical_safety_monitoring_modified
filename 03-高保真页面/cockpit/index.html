@@ -78,7 +78,7 @@
             <div class="map-layer-section">
               <span class="map-layer-section-title">业务图层</span>
               <label class="map-layer-option"><input type="checkbox" data-layer="vehicle" checked><i class="map-layer-check"></i><span>网联车辆</span></label>
-              <label class="map-layer-option"><input type="checkbox" data-layer="incident"><i class="map-layer-check"></i><span>异常车辆</span></label>
+              <label class="map-layer-option"><input type="checkbox" data-layer="incident"><i class="map-layer-check"></i><span>异常事件</span></label>
               <label class="map-layer-option"><input type="checkbox" data-layer="accident"><i class="map-layer-check"></i><span>事故点位</span></label>
               <label class="map-layer-option"><input type="checkbox" data-layer="fence"><i class="map-layer-check"></i><span>电子围栏</span></label>
               <label class="map-layer-option"><input type="checkbox" data-layer="road"><i class="map-layer-check"></i><span>道路矢量</span></label>
@@ -97,12 +97,12 @@
         <section class="module module-chart incident-module" id="incident-module" tabindex="0" role="button" aria-pressed="false" aria-label="选择异常事件地图视图">
           <div class="module-heading"><span></span><h2>异常事件统计</h2><button class="module-link incident-list-trigger" type="button" id="incident-list-trigger" aria-label="查看异常事件列表" title="查看异常事件列表">&gt;&gt;</button><div class="range-tabs" data-range="incident"><button type="button">本月</button><button type="button" class="is-active">本年</button><button type="button">全部</button></div></div>
           <div class="metric-grid metric-grid-3 compact" data-metric-group="incident">
-            <button class="metric-tile is-selected" type="button" data-chart="incident" data-key="total" data-value="54" aria-pressed="true"><span>事件总数</span><strong>54</strong><small>起</small></button>
-            <button class="metric-tile" type="button" data-chart="incident" data-key="warning" data-value="45" aria-pressed="false"><span>预警事件</span><strong>45</strong><small>起</small></button>
-            <button class="metric-tile" type="button" data-chart="incident" data-key="alarm" data-value="9" aria-pressed="false"><span>告警事件</span><strong>9</strong><small>起</small></button>
+            <button class="metric-tile is-selected" type="button" data-chart="incident" data-key="total" data-value="0" aria-pressed="true"><span>事件总数</span><strong>--</strong><small>起</small></button>
+            <button class="metric-tile" type="button" data-chart="incident" data-key="warning" data-value="0" aria-pressed="false"><span>预警事件</span><strong>--</strong><small>起</small></button>
+            <button class="metric-tile" type="button" data-chart="incident" data-key="alarm" data-value="0" aria-pressed="false"><span>告警事件</span><strong>--</strong><small>起</small></button>
           </div>
           <div class="donut-wrap incident-donut-wrap">
-            <div class="donut-chart" id="incident-donut" style="--donut: conic-gradient(#fadb14 0 29.63%, #fa8c16 29.63% 74.07%, #ff6b9b 74.07% 100%);"><div class="donut-hole"><strong id="incident-total">54</strong><span id="incident-total-label">事件总数</span></div></div>
+            <div class="donut-chart" id="incident-donut" style="--donut: conic-gradient(rgba(61,112,136,.45) 0 100%);"><div class="donut-hole"><strong id="incident-total">--</strong><span id="incident-total-label">事件总数</span></div></div>
             <div class="legend-list" id="incident-legend"></div>
           </div>
           <div class="incident-events" aria-label="实时异常事件">

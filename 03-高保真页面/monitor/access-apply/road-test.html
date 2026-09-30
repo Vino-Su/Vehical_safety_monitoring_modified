@@ -8,7 +8,7 @@
   <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#1677ff',hover:'#4096ff',disabled:'#85a5cc'}}}}}</script>
   <script src="../../components/pagination-component.js"></script>
   <link rel="stylesheet" href="../../components/application-lineage.css?v=1">
-  <link rel="stylesheet" href="../../components/access-apply-framework.css?v=8">
+  <link rel="stylesheet" href="../../components/access-apply-framework.css?v=9">
   <link rel="stylesheet" href="../../components/material-review-comments.css?v=2">
   <style>.version-node{padding:8px 10px;border-left:2px solid #f0f0f0;margin-left:8px;position:relative}.version-node::before{content:'';position:absolute;left:-6px;top:12px;width:10px;height:10px;border-radius:50%;border:2px solid}.version-node.current{border-left-color:#1677ff;background:#f0f5ff}.version-node.current::before{border-color:#1677ff;background:#1677ff}.version-node.passed{border-left-color:#52c41a}.version-node.passed::before{border-color:#52c41a;background:#52c41a}.version-node.expired{border-left-color:#d9d9d9}.version-node.expired::before{border-color:#d9d9d9;background:#d9d9d9}.version-node.processing{border-left-color:#fa8c16}.version-node.processing::before{border-color:#fa8c16;background:#fa8c16}.version-node.changed{border-left-color:#1677ff}.version-node.changed::before{border-color:#1677ff;background:#1677ff;border-radius:2px;transform:rotate(45deg)}.version-node.add-vehicle{margin-left:24px;border-left-color:#13c2c2}.version-node.add-vehicle::before{border-color:#13c2c2;background:#13c2c2}.ant-tag-blue{color:#1677ff;background:#e6f4ff;border-color:#91caff}.change-highlight{background:#fff7e6;border-left:3px solid #fa8c16;padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:8px}.change-old{color:#00000073;text-decoration:line-through;font-size:12px}.change-new{color:#fa8c16;font-weight:500;font-size:13px}.multi-select{position:relative;display:inline-block}.multi-select-panel{display:none;position:absolute;top:100%;left:0;z-index:1000;background:#fff;border:1px solid #d9d9d9;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:8px 0;min-width:180px;max-height:260px;overflow-y:auto}.multi-select-panel label{display:flex;align-items:center;padding:5px 12px;cursor:pointer;font-size:13px;color:#000000d9}.multi-select-panel label:hover{background:#f5f5f5}.multi-select-panel input[type=checkbox]{margin-right:8px}.material-info{position:relative;display:inline-flex;vertical-align:middle}.material-info-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;padding:0;border:1px solid #91caff;border-radius:50%;background:#e6f4ff;color:#1677ff;font-size:11px;font-weight:600;line-height:1;cursor:pointer}.material-info-btn:hover,.material-info-btn:focus{border-color:#1677ff;outline:none}.material-tooltip{display:none;position:absolute;z-index:1200;top:22px;left:0;width:420px;max-width:calc(80vw);padding:10px 12px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.12);color:#000000d9;font-size:12px;font-weight:400;line-height:1.65;text-align:left;white-space:normal}.material-info:hover .material-tooltip,.material-info:focus-within .material-tooltip,.material-info.is-open .material-tooltip{display:block}.attachment-group{margin-top:16px;border:1px solid #f0f0f0;border-radius:6px;overflow:visible}.attachment-group-title{padding:10px 12px;background:#fafafa;border-bottom:1px solid #f0f0f0;color:#000000d9;font-size:14px;font-weight:600}.attachment-row{padding:12px;border-bottom:1px solid #f0f0f0}.attachment-row:last-child{border-bottom:0}.attachment-name{display:flex;align-items:center;gap:6px;margin-bottom:8px;color:#000000d9;font-size:14px}.attachment-subtitle{margin-left:auto;color:#00000073;font-size:12px;font-weight:400}.attachment-file-actions{display:flex;align-items:center;gap:8px;min-height:24px;flex-wrap:wrap}</style>
 <style>
@@ -51,7 +51,7 @@
 <script>
 const PAGE_ID='road-test';
 var pager;
-var statusMap={draft:{label:'草稿',cls:'ant-tag-default'},pending_review:{label:'待初审',cls:'ant-tag-processing'},pending_committee:{label:'待专班审核',cls:'ant-tag-processing'},pending_expert:{label:'待专家评审',cls:'ant-tag-processing'},pending_meeting:{label:'待专题会审议',cls:'ant-tag-processing'},pending_committee_confirm:{label:'待专班审核确认',cls:'ant-tag-processing'},rejected:{label:'已退回',cls:'ant-tag-error'},withdrawn:{label:'已撤回',cls:'ant-tag-default'},pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},pending_plate_review:{label:'待牌照审核',cls:'ant-tag-processing'},plate_rejected:{label:'牌照审核退回',cls:'ant-tag-error'},active:{label:'已生效',cls:'ant-tag-success'},expired:{label:'已过期',cls:'ant-tag-default'},changed:{label:'已变更',cls:'ant-tag-blue'},terminated:{label:'已终止',cls:'ant-tag-error'}};
+var statusMap={draft:{label:'草稿',cls:'ant-tag-default'},pending_review:{label:'待初审',cls:'ant-tag-processing'},pending_committee:{label:'待专班审核',cls:'ant-tag-processing'},pending_expert:{label:'待专家评审',cls:'ant-tag-processing'},pending_meeting:{label:'待专题会审议',cls:'ant-tag-processing'},pending_committee_confirm:{label:'待专班审核确认',cls:'ant-tag-processing'},rejected:{label:'已退回',cls:'ant-tag-error'},withdrawn:{label:'已撤回',cls:'ant-tag-default'},pending_offline_material:{label:'待线下材料回传',cls:'ant-tag-warning'},pending_offline_material_review:{label:'待线下材料审核',cls:'ant-tag-processing'},pending_plate:{label:'待上传牌照',cls:'ant-tag-warning'},pending_plate_review:{label:'待牌照审核',cls:'ant-tag-processing'},plate_rejected:{label:'牌照审核退回',cls:'ant-tag-error'},active:{label:'已生效',cls:'ant-tag-success'},expired:{label:'已过期',cls:'ant-tag-default'},changed:{label:'已变更',cls:'ant-tag-blue'},terminated:{label:'已终止',cls:'ant-tag-error'}};
 var typeMap={initial:{label:'初次申请'},renewal:{label:'延期申请'},change:{label:'变更申请'},add_vehicle:{label:'新增相同配置车辆'}};
 var testModeMap={road_test:{label:'主驾有人'},auto_test:{label:'自动驾驶'}};
 var appData=[
@@ -60,7 +60,7 @@ var appData=[
   {id:'RT202604003',type:'change',testMode:'road_test',company:'D公司',origId:'RT202603002',vehicleCount:1,roadCount:1,status:'rejected',time:'2026-04-08 14:08:42',validFrom:'-',validTo:'-'},
   {id:'RT202604004',type:'add_vehicle',testMode:'road_test',company:'A公司',origId:'RT202604001',vehicleCount:1,roadCount:2,status:'active',time:'2026-04-12 11:36:55',validFrom:'2026-04-20',validTo:'2026-10-20'},
   {id:'RT202604005',type:'initial',testMode:'auto_test',company:'D公司',origId:'-',vehicleCount:1,roadCount:1,status:'pending_review',time:'2026-04-24 16:42:11',validFrom:'2026-05-01',validTo:'2026-11-01'},
-  {id:'RT202604006',type:'initial',testMode:'auto_test',company:'上海E公司',origId:'-',vehicleCount:1,roadCount:2,status:'pending_plate',time:'2026-04-25 09:55:24',validFrom:'2026-05-01',validTo:'2026-11-01'},
+  {id:'RT202604006',type:'initial',testMode:'auto_test',company:'上海E公司',origId:'-',vehicleCount:1,roadCount:2,status:'pending_offline_material',processStatus:'approved',currentStage:'offline_material_upload',time:'2026-04-25 09:55:24',validFrom:'2026-05-01',validTo:'2026-11-01'},
   {id:'RT202604007',type:'initial',testMode:'road_test',company:'G公司',origId:'-',vehicleCount:1,roadCount:2,status:'active',time:'2026-04-28 13:18:07',validFrom:'2026-05-01',validTo:'2026-11-01'},
   {id:'RT202603001',type:'initial',testMode:'road_test',company:'B公司',origId:'-',vehicleCount:1,roadCount:2,status:'expired',time:'2026-03-01 08:30:12',validFrom:'2026-03-15',validTo:'2026-04-30'},
   {id:'RT202603002',type:'initial',testMode:'road_test',company:'D公司',origId:'-',vehicleCount:1,roadCount:1,status:'active',time:'2026-03-10 15:21:48',validFrom:'2026-03-20',validTo:'2026-09-20'},
@@ -76,7 +76,7 @@ var appData=[
   {id:'RT202605007',type:'initial',testMode:'road_test',company:'M公司',origId:'-',vehicleCount:1,roadCount:1,status:'changed',time:'2026-03-10 16:12:44',validFrom:'2026-03-20',validTo:'2026-07-15'},
   {id:'RT202605008',type:'change',testMode:'road_test',company:'M公司',origId:'RT202605007',vehicleCount:1,roadCount:2,status:'active',time:'2026-05-12 09:48:31',validFrom:'2026-05-20',validTo:'2027-01-20'}
 ];
-function getOps(d){var ops=['<button class="ant-btn-link whitespace-nowrap" onclick="openDetail(\''+d.id+'\')">查看</button>'];if(d.status==='draft')ops.push('<button class="ant-btn-link whitespace-nowrap">编辑</button>','<button class="ant-btn-link whitespace-nowrap">提交</button>');if(d.status==='rejected')ops.push('<button class="ant-btn-link whitespace-nowrap">重新提交</button>');if(d.status==='pending_review'||d.status==='pending_committee'||d.status==='pending_expert')ops.push('<button class="ant-btn-link whitespace-nowrap">撤回</button>');if(d.status==='active'){ops.push('<button class="ant-btn-link whitespace-nowrap" onclick="openReportSubmitPage(\''+d.id+'\')">报告提交</button>');var hasPendingDerive=appData.some(function(a){return a.origId===d.id&&['draft','pending_review','pending_committee','pending_committee_confirm','pending_expert','pending_meeting','pending_plate'].indexOf(a.status)>-1;});var dAttr=hasPendingDerive?' disabled style="color:#00000040;cursor:not-allowed" title="存在进行中的派生申请，延期/变更/新增车辆三类互斥（见PRD 4.14）"':'';var cRenew=hasPendingDerive?'':('onclick="openRenewalPage(\''+d.id+'\')"');var cChange=hasPendingDerive?'':('onclick="openChangePage(\''+d.id+'\')"');var cAddV=hasPendingDerive?'':('onclick="openAddVehiclePage(\''+d.id+'\')"');var vt=new Date(d.validTo);var nm=new Date();var tm=new Date(nm.getTime()+90*24*60*60*1000);if(vt<=tm)ops.push('<button class="ant-btn-link whitespace-nowrap" '+cRenew+dAttr+'>延期</button>');ops.push('<button class="ant-btn-link whitespace-nowrap" '+cChange+dAttr+'>变更</button>','<button class="ant-btn-link whitespace-nowrap" '+cAddV+dAttr+'>新增相同配置车辆</button>');}if(d.status==='pending_plate')ops.push('<button class="ant-btn-link whitespace-nowrap" onclick="openPlateUploadModal(\''+d.id+'\')">上传牌照</button>');return ops.join('');}
+function getOps(d){var ops=['<button class="ant-btn-link whitespace-nowrap" onclick="openDetail(\''+d.id+'\')">查看</button>'];if(d.status==='draft')ops.push('<button class="ant-btn-link whitespace-nowrap">编辑</button>','<button class="ant-btn-link whitespace-nowrap">提交</button>');if(d.status==='rejected')ops.push('<button class="ant-btn-link whitespace-nowrap">重新提交</button>');if(d.status==='pending_review'||d.status==='pending_committee'||d.status==='pending_expert')ops.push('<button class="ant-btn-link whitespace-nowrap">撤回</button>');if(d.status==='active'){ops.push('<button class="ant-btn-link whitespace-nowrap" onclick="openReportSubmitPage(\''+d.id+'\')">报告提交</button>');var hasPendingDerive=appData.some(function(a){return a.origId===d.id&&['draft','pending_review','pending_committee','pending_committee_confirm','pending_expert','pending_meeting','pending_plate','pending_offline_material','pending_offline_material_review'].indexOf(a.status)>-1;});var dAttr=hasPendingDerive?' disabled style="color:#00000040;cursor:not-allowed" title="存在进行中的派生申请，延期/变更/新增车辆三类互斥（见PRD 4.14）"':'';var cRenew=hasPendingDerive?'':('onclick="openRenewalPage(\''+d.id+'\')"');var cChange=hasPendingDerive?'':('onclick="openChangePage(\''+d.id+'\')"');var cAddV=hasPendingDerive?'':('onclick="openAddVehiclePage(\''+d.id+'\')"');var vt=new Date(d.validTo);var nm=new Date();var tm=new Date(nm.getTime()+90*24*60*60*1000);if(vt<=tm)ops.push('<button class="ant-btn-link whitespace-nowrap" '+cRenew+dAttr+'>延期</button>');ops.push('<button class="ant-btn-link whitespace-nowrap" '+cChange+dAttr+'>变更</button>','<button class="ant-btn-link whitespace-nowrap" '+cAddV+dAttr+'>新增相同配置车辆</button>');}if(d.currentStage==='offline_material_upload'||d.status==='pending_offline_material'||d.status==='pending_plate')ops.push('<button class="ant-btn-link whitespace-nowrap" onclick="openOfflineMaterialUploadModal(\''+d.id+'\')">线下材料回传</button>');return ops.join('');}
 
 function toggleMultiSelect(id){var panel=document.getElementById(id+'Panel');panel.classList.toggle('show');}
 function getMultiSelectValues(id){var cbs=document.querySelectorAll('#'+id+'Panel input[type=checkbox]');var vals=[];cbs.forEach(function(cb){if(cb.checked)vals.push(cb.value);});return vals;}
@@ -177,7 +177,7 @@ function openLegacyApplyModal(){selectedRoads=[];selectedVehicles=[];selectedPer
 '<div>4. 自动驾驶道路测试安全员需满足：不少于40小时专业技能培训 + 不少于100小时自动驾驶测试车辆远程控制操作</div>'+
 '</div></div></div>'+
 '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>申请主体</div><div class="ant-form-control"><div class="ant-select" style="width:100%">请选择申请主体<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg></div></div></div><div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>测试周期</div><div class="ant-form-control"><div class="flex gap-2 items-center"><input class="ant-input" type="date" style="width:120px"><span>至</span><input class="ant-input" type="date" style="width:120px"></div></div></div><div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>测试路段或区域</div><div class="ant-form-control"><div><button class="ant-btn ant-btn-sm ant-btn-primary" onclick="openRoadSelectModal()">+ 添加路段或区域</button></div><div style="overflow-x:auto;margin-top:8px"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th>序号</th><th>道路名称</th><th>道路类型</th><th>道路状态</th><th>操作</th></tr></thead><tbody id="roadTableBody"><tr><td colspan="5" style="text-align:center;color:#00000073;padding:24px">暂未选择测试路段</td></tr></tbody></table></div></div></div><div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>测试车辆</div><div class="ant-form-control"><div><button class="ant-btn ant-btn-sm ant-btn-primary" onclick="openVehicleSelectModal()">+ 添加车辆</button><span class="text-xs text-[#00000073] ml-2">选择车辆后需填写临时牌照号及有效期</span></div><div style="overflow-x:auto;margin-top:8px"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th>序号</th><th>VIN码</th><th>生产企业</th><th>型号</th><th>级别</th><th>临时牌照号</th><th>有效期至</th><th>操作</th></tr></thead><tbody id="vehicleTableBody"><tr><td colspan="8" style="text-align:center;color:#00000073;padding:24px">暂未选择测试车辆</td></tr></tbody></table></div></div></div><div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>测试人员</div><div class="ant-form-control"><div><button class="ant-btn ant-btn-sm ant-btn-primary" onclick="openPersonSelectModal()">+ 添加人员</button></div><div style="overflow-x:auto;margin-top:8px"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th>序号</th><th>姓名</th><th>性别</th><th>年龄</th><th>证件号码</th><th>人员类型</th><th>操作</th></tr></thead><tbody id="personTableBody"><tr><td colspan="7" style="text-align:center;color:#00000073;padding:24px">暂未选择测试人员</td></tr></tbody></table></div></div></div><div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>道路测试项目</div><div class="ant-form-control"><input class="ant-input" placeholder="请输入道路测试项目" style="width:100%"></div></div><h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">申请材料（共16项）</h4>'+mh;openModal('新增道路测试准入申请',formHtml,{wide:true,fullscreen:true,footer:'<button class="ant-btn" onclick="closeModal()">保存草稿</button><button class="ant-btn ant-btn-primary" onclick="closeModal()">提交申请</button>',onOpen:function(){updateFlowPreview();renderRoadTable();renderVehicleTable();renderPersonTable();}});}
-function updateFlowPreview(){var el=document.getElementById('flowPreview');if(!el)return;var steps=['提交申请','第三方初审','市工作专班审核','专家评审','专班专题会议审议','上传临时牌照'];var h='<div class="text-xs text-[#00000073] mb-2">申请流程预览</div><div class="flex items-center gap-0 text-xs flex-wrap">';steps.forEach(function(s,i){h+='<div class="flex items-center"><div class="w-5 h-5 rounded-full text-white flex items-center justify-center text-[10px]" style="background:#1677ff">'+(i+1)+'</div><span class="ml-1 whitespace-nowrap">'+s+'</span></div>';if(i<steps.length-1)h+='<div class="w-3 h-0.5 mx-1" style="background:#d9d9d9"></div>';});h+='</div>';el.innerHTML=h;}
+function updateFlowPreview(){var el=document.getElementById('flowPreview');if(!el)return;var steps=['提交申请','第三方初审','市工作专班审核','专家评审','专班专题会议审议','线下材料回传'];var h='<div class="text-xs text-[#00000073] mb-2">申请流程预览</div><div class="flex items-center gap-0 text-xs flex-wrap">';steps.forEach(function(s,i){h+='<div class="flex items-center"><div class="w-5 h-5 rounded-full text-white flex items-center justify-center text-[10px]" style="background:#1677ff">'+(i+1)+'</div><span class="ml-1 whitespace-nowrap">'+s+'</span></div>';if(i<steps.length-1)h+='<div class="w-3 h-0.5 mx-1" style="background:#d9d9d9"></div>';});h+='</div>';el.innerHTML=h;}
 function toggleTestMode(val){var el=document.getElementById('autoTestPrecondition');if(el)el.style.display=val==='auto_test'?'block':'none';}
 
 var roadTestApplicationFiles=[
@@ -234,7 +234,7 @@ document.addEventListener('click',function(event){if(!event.target.closest('.mat
 
 function getDetailData(id){var d=appData.find(function(x){return x.id===id;});if(!d)return null;var base={id:d.id,type:d.type,typeLabel:typeMap[d.type].label,company:d.company,origId:d.origId,status:d.status,statusLabel:statusMap[d.status].label,statusCls:statusMap[d.status].cls,time:d.time,validFrom:d.validFrom,validTo:d.validTo,testMode:d.testMode};var detailMap={'RT202604001':{roads:[{name:'襄阳市区道路',type:'城市道路',status:'开放'},{name:'高新区环线路',type:'城市道路',status:'开放'},{name:'襄阳经开区主干道',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012345',brand:'T品牌',model:'秦PLUS DM-i',level:'L3',plate:'-',plateExpiry:'-'},{vin:'LSVAU2180N2012346',brand:'T品牌',model:'汉EV',level:'L3',plate:'鄂F·A006',plateExpiry:'2026-10-15',source:'add_vehicle',sourceAppId:'RT202604004'}],persons:[{name:'张明',gender:'男',age:35,unit:'A公司',idType:'身份证',idNo:'420600199101011234'},{name:'李芳',gender:'女',age:30,unit:'A公司',idType:'身份证',idNo:'420600199301022345'}]},'RT202604002':{roads:[{name:'东风汽车专用测试道路',type:'专用测试道路',status:'开放'},{name:'襄阳市区道路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012347',brand:'E品牌',model:'ES6',level:'L4',plate:'鄂F·B003',plateExpiry:'2026-10-05'}],persons:[{name:'王强',gender:'男',age:40,unit:'B公司',idType:'身份证',idNo:'420600198501033456'}]},'RT202604003':{roads:[{name:'D公司专属测试路线',type:'专用测试道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012348',brand:'U品牌',model:'阿尔法T',level:'L3',plate:'-',plateExpiry:'-'}],persons:[{name:'陈伟',gender:'男',age:38,unit:'D公司',idType:'身份证',idNo:'420600198701044567'}]},'RT202604004':{roads:[{name:'襄阳市区道路',type:'城市道路',status:'开放'},{name:'高新区环线路',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012349',brand:'金龙',model:'T5',level:'L4',plate:'鄂F·A005',plateExpiry:'2026-10-20'}],persons:[{name:'张明',gender:'男',age:35,unit:'A公司',idType:'身份证',idNo:'420600199101011234'}]},'RT202604009':{roads:[{name:'襄阳市区道路',type:'城市道路',status:'开放'},{name:'东津新区测试路段',type:'城市道路',status:'暂停'}],vehicles:[{vin:'LSVAU2180N2012351',brand:'C公司',model:'RT6',level:'L4',plate:'-',plateExpiry:'-'}],persons:[{name:'陈伟',gender:'男',age:38,unit:'C公司',idType:'身份证',idNo:'420600198701044567'}]},'RT202604010':{roads:[{name:'襄阳经开区主干道',type:'城市道路',status:'开放'}],vehicles:[{vin:'LSVAU2180N2012352',brand:'H公司',model:'UNI-V',level:'L3',plate:'鄂F·C007',plateExpiry:'2026-10-20'}],persons:[{name:'赵静',gender:'女',age:33,unit:'H公司',idType:'身份证',idNo:'420600199201055678'}]}};var detail=detailMap[id];if(!detail){detail={roads:[{name:'襄阳市区道路',type:'城市道路',status:'开放'}],areas:[],vehicles:[{vin:'LSVAU2180N2012350',brand:'V品牌',model:'E-HS3',level:'L4',plate:'鄂F·D009',plateExpiry:'2026-11-01'}],persons:[{name:'张明',gender:'男',age:35,unit:'A公司',idType:'身份证',idNo:'420600199101011234'}]};}if(!detail.areas)detail.areas=[];return Object.assign({},base,detail);}
 
-function getFlowSteps(type,status){var isInit=(type==='initial');var steps=[];steps.push({label:'提交申请',done:true});steps.push({label:'第三方初审',done:status!=='draft'});if(isInit){steps.push({label:'市工作专班审核',done:['pending_expert','pending_meeting','pending_plate','active','expired','terminated'].indexOf(status)>-1});steps.push({label:'专家评审',done:['pending_meeting','pending_plate','active','expired','terminated'].indexOf(status)>-1});steps.push({label:'专班专题会议审议',done:['pending_plate','active','expired','terminated'].indexOf(status)>-1});}else{steps.push({label:'市工作专班审核确认',done:['pending_plate','active','expired','terminated'].indexOf(status)>-1});}steps.push({label:'上传临时牌照',done:['active','expired','terminated'].indexOf(status)>-1});if(status==='rejected'){steps[steps.length-1].error=true;steps[steps.length-1].done=false;}if(status==='terminated'){steps.push({label:'已终止',done:true,error:true});}return steps;}
+function getFlowSteps(type,status){var isInit=(type==='initial');var materialDone=['active','expired','terminated'].indexOf(status)>-1;var materialCurrent=['pending_offline_material','pending_offline_material_review'].indexOf(status)>-1;var steps=[];steps.push({label:'提交申请',done:true});steps.push({label:'第三方初审',done:status!=='draft'});if(isInit){steps.push({label:'市工作专班审核',done:['pending_expert','pending_meeting','pending_offline_material','pending_offline_material_review','active','expired','terminated'].indexOf(status)>-1});steps.push({label:'专家评审',done:['pending_meeting','pending_offline_material','pending_offline_material_review','active','expired','terminated'].indexOf(status)>-1});steps.push({label:'专班专题会议审议',done:['pending_offline_material','pending_offline_material_review','active','expired','terminated'].indexOf(status)>-1});}else{steps.push({label:'市工作专班审核确认',done:['pending_offline_material','pending_offline_material_review','active','expired','terminated'].indexOf(status)>-1});}steps.push({label:'线下材料回传',done:materialDone,current:materialCurrent});if(status==='rejected'){steps[steps.length-1].error=true;steps[steps.length-1].done=false;}if(status==='terminated'){steps.push({label:'已终止',done:true,error:true});}return steps;}
 
 function buildFlowLog(id){var d=getDetailData(id);if(!d)return '';var isInit=(d.type==='initial');var logs=[];logs.push({title:'提交申请',handler:d.company,time:d.time+' 09:00',opinion:'提交'+d.typeLabel,status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'});if(d.status==='pending_review'){logs.push({title:'第三方初审',handler:'第三方专业管理机构',time:'审批中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'});return renderFLH(logs);}logs.push({title:'第三方初审',handler:'第三方专业管理机构',time:d.time+' 通过',opinion:'审核结论：通过',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'});if(isInit){if(d.status==='pending_committee'){logs.push({title:'市工作专班审核',handler:'市工作专班',time:'审批中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'});return renderFLH(logs);}logs.push({title:'市工作专班审核',handler:'市工作专班',time:'通过',opinion:'审核结论：通过',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'});if(d.status==='pending_expert'){logs.push({title:'专家评审',handler:'第三方专业管理机构',time:'评审中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'});return renderFLH(logs);}logs.push({title:'专家评审',handler:'第三方专业管理机构',time:'通过',opinion:'专家评审意见：通过',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'});if(d.status==='pending_meeting'){logs.push({title:'专班专题会议审议',handler:'市工作专班',time:'审议中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'});return renderFLH(logs);}logs.push({title:'专班专题会议审议',handler:'市工作专班',time:'通过',opinion:'审议结论：通过',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'});}else{if(d.status==='pending_committee_confirm'){logs.push({title:'市工作专班审核确认',handler:'市工作专班',time:'审批中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'});return renderFLH(logs);}if(d.status==='rejected'){logs.push({title:'市工作专班审核确认',handler:'市工作专班',time:'退回',opinion:'审核结论：退回\n审核意见：材料不完整',status:'已退回',color:'#ff4d4f',dot:'✗',tagCls:'ant-tag-error'});return renderFLH(logs);}logs.push({title:'市工作专班审核确认',handler:'市工作专班',time:'通过',opinion:'审核结论：通过',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'});}if(d.status==='rejected'&&!logs.some(function(l){return l.title.indexOf('退回')>-1})){logs.push({title:'审批退回',handler:'-',time:'-',opinion:'审核结论：退回\n审核意见：材料不完整',status:'已退回',color:'#ff4d4f',dot:'✗',tagCls:'ant-tag-error'});return renderFLH(logs);}if(d.status==='pending_plate'){logs.push({title:'上传临时牌照',handler:d.company,time:'待上传',opinion:'',status:'待处理',color:'#fa8c16',dot:'●',tagCls:'ant-tag-warning'});return renderFLH(logs);}logs.push({title:'上传临时牌照',handler:d.company,time:'已上传',opinion:'已上传临时牌照信息',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'});if(d.status==='terminated'){logs.push({title:'资格终止',handler:'市工作专班',time:'已终止',opinion:'终止原因：车辆与声明不符',status:'已终止',color:'#ff4d4f',dot:'✗',tagCls:'ant-tag-error'});}return renderFLH(logs);}
 function renderFLH(logs){var h='<div class="space-y-3">';logs.forEach(function(l,i){var hn=i<logs.length-1;var bs=hn?'border-left:2px solid '+l.color+';margin-left:5px;padding-left:12px':'margin-left:17px;padding-left:0';h+='<div class="relative pb-3" style="'+bs+'"><div class="absolute w-3 h-3 rounded-full flex items-center justify-center text-[8px] text-white font-bold mt-1" style="left:-7px;top:0;background:'+l.color+'">'+l.dot+'</div><div class="min-w-0"><div class="flex items-center justify-between mb-2"><span class="text-sm font-medium text-[#000000d9]">'+l.title+'</span><span class="ant-tag '+l.tagCls+' text-[10px]">'+l.status+'</span></div><div class="text-xs text-[#00000073] space-y-1"><div><span class="text-[#00000040]">处理人：</span>'+l.handler+'</div><div><span class="text-[#00000040]">处理时间：</span>'+l.time+'</div>';if(l.opinion)h+='<div class="whitespace-pre-line mt-1.5 p-2 bg-[#fafafa] rounded"><span class="text-[#00000040]">处理意见：</span>'+l.opinion+'</div>';h+='</div></div></div>';});return h+'</div>';}
@@ -268,7 +268,7 @@ lh+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b b
 if(d.status==='pending_committee'){lh+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b border-[#f0f0f0]">市工作专班审核</h4><div class="bg-[#fff7e6] border border-[#ffd591] rounded-lg p-4 text-sm"><div class="flex items-center gap-2 mb-2"><span class="text-[#fa8c16] font-medium">待审核</span><span class="text-[#00000073]">— 等待市工作专班审核</span></div></div>';}
 if(d.status!=='pending_committee'&&isInit&&['pending_expert','pending_meeting','pending_plate','active','expired','terminated'].indexOf(d.status)>-1){lh+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b border-[#f0f0f0]">市工作专班审核</h4><div class="space-y-2">';var reports=[{name:'第三方初审意见',time:'2026-05-05',file:'第三方初审意见_'+id+'.pdf'},{name:'市工作专班审核意见',time:'2026-05-05',file:'市工作专班审核意见_'+id+'.pdf'}];reports.forEach(function(r){lh+='<div class="flex items-center justify-between p-3 bg-[#fafafa] rounded-lg"><div><div class="text-sm text-[#000000d9]">'+r.name+'</div><div class="text-xs text-[#00000073] mt-1">提交时间：'+r.time+'</div></div><div class="flex gap-2"><button class="ant-btn-link ant-btn-sm">预览</button><button class="ant-btn-link ant-btn-sm">下载</button></div></div>';});lh+='</div>';}
 if(d.status==='active'||d.status==='expired'){lh+='<h4 class="text-sm font-semibold text-[#000000d9] mb-2 mt-4 pb-2 border-b border-[#f0f0f0]">测试报告</h4><div class="space-y-2">';var testReports=[{type:'阶段性报告',name:'2026年第一季度阶段性测试报告',time:'2026-07-15',period:'2026-05-01 至 2026-06-30'},{type:'阶段性报告',name:'2026年第二季度阶段性测试报告',time:'2026-10-12',period:'2026-07-01 至 2026-09-30'},{type:'总结性报告',name:'道路测试总结性报告',time:'2026-10-20',period:'2026-05-01 至 2026-10-05'}];testReports.forEach(function(r){var tagCls=r.type==='总结性报告'?'ant-tag-success':'ant-tag-processing';lh+='<div class="flex items-center justify-between p-3 bg-[#fafafa] rounded-lg"><div><div class="flex items-center gap-2"><span class="text-sm text-[#000000d9]">'+r.name+'</span><span class="ant-tag '+tagCls+' text-[10px]">'+r.type+'</span></div><div class="text-xs text-[#00000073] mt-1">报告周期：'+r.period+'　提交时间：'+r.time+'</div></div><div class="flex gap-2"><button class="ant-btn-link ant-btn-sm">预览</button><button class="ant-btn-link ant-btn-sm">下载</button></div></div>';});lh+='</div>';}
-lh+='<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">审批流程进度</h4><div class="flex items-center gap-0 text-xs flex-wrap">';var currentIdx=-1;for(var ci=0;ci<steps.length;ci++){if(!steps[ci].done&&!steps[ci].error){currentIdx=ci;break;}}steps.forEach(function(s,i){var isCurrent=(i===currentIdx);var bg=s.error?'#ff4d4f':s.done?'#52c41a':(isCurrent?'#1677ff':'#d9d9d9');var icon=s.error?'✗':s.done?'✓':(i+1);var labelCls=s.error?'text-[#ff4d4f]':(isCurrent?'text-[#1677ff] font-medium':'');lh+='<div class="flex items-center"><div class="w-6 h-6 rounded-full text-white flex items-center justify-center text-xs'+(isCurrent?' ring-2 ring-[#91caff] ring-offset-1':'')+'" style="background:'+bg+'">'+icon+'</div><span class="ml-1 '+labelCls+'">'+s.label+'</span>'+(isCurrent?'<span class="ml-1 text-[10px] text-[#1677ff]">← 当前</span>':'')+'</div>';if(i<steps.length-1){var nextDone=s.done;var nextIsCurrent=(i+1===currentIdx);var lineBg=s.done&&nextDone?'#52c41a':(s.done&&nextIsCurrent)?'#52c41a':'#d9d9d9';lh+='<div class="w-6 h-0.5" style="background:'+lineBg+'"></div>';}});lh+='</div>';
+lh+='<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-4 pb-2 border-b border-[#f0f0f0]">审批流程进度</h4><div class="flex items-center gap-0 text-xs flex-wrap">';var currentIdx=-1;for(var ci=0;ci<steps.length;ci++){if(!steps[ci].done&&!steps[ci].error){currentIdx=ci;break;}}steps.forEach(function(s,i){var isCurrent=(i===currentIdx);var bg=s.error?'#ff4d4f':s.done?'#52c41a':(isCurrent?'#1677ff':'#d9d9d9');var icon=s.error?'✗':s.done?'✓':(i+1);var labelCls=s.error?'text-[#ff4d4f]':(isCurrent?'text-[#1677ff] font-medium':s.done?'text-[#389e0d]':'text-[#00000073]');var label=s.label==='plate_upload'?'牌照上传':s.label==='plate_confirmation'?'牌照确认':s.label==='plate_correction'?'牌照修改':s.label;lh+='<div class="flex items-center"><div class="w-6 h-6 rounded-full text-white flex items-center justify-center text-xs'+(isCurrent?' ring-2 ring-[#91caff] ring-offset-1':'')+'" style="background:'+bg+'">'+icon+'</div><span class="ml-1 '+labelCls+'">'+label+'</span></div>';if(i<steps.length-1){var nextDone=s.done;var nextIsCurrent=(i+1===currentIdx);var lineBg=s.done&&nextDone?'#52c41a':(s.done&&nextIsCurrent)?'#52c41a':'#d9d9d9';lh+='<div class="w-6 h-0.5" style="background:'+lineBg+'"></div>';}});lh+='</div>';
 lh+='<h4 class="text-sm font-semibold text-[#000000d9] mb-4 mt-4 pb-2 border-b border-[#f0f0f0]">流程日志</h4>'+buildFlowLog(id);
 
 var footerBtns='<button class="ant-btn" onclick="closeModal()">关闭</button>';
@@ -652,7 +652,7 @@ function roadTestFrameworkRecord(id) {
       if (String(values.testType || '').indexOf('自动驾驶') > -1) groups.push({ title: '自动驾驶道路测试补充材料', items: autoRoadTestSupplementMaterials });
       return groups;
     })(),
-    flowSteps: ['第三方初审', '专班办公室审核', '专家评审', '专题会审议', '牌照上传', '牌照确认']
+    flowSteps: ['第三方初审', '专班办公室审核', '专家评审', '专题会审议', '线下材料回传']
   };
 }
 
@@ -1094,7 +1094,439 @@ openRenewalPage = function (id) {
 })();
 </script>
 <script>var plateFlowLogOriginal=buildFlowLog;buildFlowLog=function(id){var d=getDetailData(id);if(d&&d.status==='pending_plate_review')return renderFLH([{title:'提交牌照信息',handler:d.company,time:d.time,opinion:'牌照信息已提交',status:'已处理',color:'#52c41a',dot:'✓',tagCls:'ant-tag-success'},{title:'第三方牌照审核',handler:'第三方专业管理机构',time:'审核中',opinion:'',status:'处理中',color:'#1677ff',dot:'●',tagCls:'ant-tag-processing'}]);if(d&&d.status==='plate_rejected')return renderFLH([{title:'第三方牌照审核',handler:'第三方专业管理机构',time:'已退回',opinion:'审核意见：'+(d.plateReviewReason||'请修改牌照信息'),status:'已退回',color:'#ff4d4f',dot:'✗',tagCls:'ant-tag-error'},{title:'修改临时牌照',handler:d.company,time:'待处理',opinion:'请根据审核意见修改后重新提交',status:'待处理',color:'#fa8c16',dot:'●',tagCls:'ant-tag-warning'}]);return plateFlowLogOriginal(id);};</script>
-<script src="../../components/access-flow-pages.js?v=6"></script>
+<script src="../../components/access-flow-pages.js?v=7"></script>
 <script src="../../components/report-submission-modal.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+  var F = window.AccessFlowModel;
+  if (!F) return;
+
+  var uploadStage = 'offline_material_upload';
+  var reviewStage = 'offline_material_review';
+  var correctionStage = 'offline_material_correction';
+  var materialStages = [uploadStage, reviewStage, correctionStage];
+  var offlineMaterialRegistry = window.__roadTestOfflineMaterialRegistry = window.__roadTestOfflineMaterialRegistry || {};
+
+  F.stageMap[uploadStage] = { label: '线下材料回传', role: 'enterprise' };
+  F.stageMap[reviewStage] = { label: '线下材料回传', role: 'third-party' };
+  F.stageMap[correctionStage] = { label: '线下材料回传', role: 'enterprise' };
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+    });
+  }
+  function notify(message) {
+    if (typeof window.showToastMsg === 'function') return window.showToastMsg(message);
+    if (typeof window.showToast === 'function') return window.showToast(message);
+    window.alert(message);
+  }
+  function recordById(id) { return (window.appData || []).find(function (record) { return record.id === id; }) || null; }
+  function detailById(id) { return typeof window.getDetailData === 'function' ? window.getDetailData(id) : recordById(id); }
+  function recordNeedsOfflineMaterial(record) {
+    return !!record && (record.type === 'initial' || record.type === 'add_vehicle' || (record.type === 'change' && (record.requiresPlate !== false))) && record.type !== 'renewal';
+  }
+  function isMaterialStage(stage) { return materialStages.indexOf(stage) > -1; }
+  function safeOriginalDeclaration(record) { return record && (record.originalDeclarationFile || ('道路测试安全性自我声明_' + record.id + '.pdf')); }
+  function getVehicles(id) {
+    var detail = detailById(id) || {};
+    var record = recordById(id) || {};
+    if (record.type === 'add_vehicle') return record.addVehicles || detail.addVehicles || detail.vehicles || [];
+    if (record.type === 'change') return (detail.vehicles || record.vehicles || []).filter(function (vehicle) { return vehicle.changeStatus === 'added' || vehicle.source === 'change' || !vehicle.changeStatus; });
+    return detail.vehicles || record.vehicles || [];
+  }
+  function storedPlate(id, vehicle) {
+    var record = recordById(id) || {};
+    var state = offlineMaterialRegistry[id] || record.offlineMaterial || {};
+    var plates = state.plates || {};
+    var shared = (window.__plateRegistrationRegistry && window.__plateRegistrationRegistry[id] || {})[vehicle.vin] || {};
+    return Object.assign({
+      plate: vehicle.plate && vehicle.plate !== '-' ? vehicle.plate : '',
+      plateValidFrom: vehicle.plateValidFrom && vehicle.plateValidFrom !== '-' ? vehicle.plateValidFrom : '',
+      plateExpiry: vehicle.plateExpiry && vehicle.plateExpiry !== '-' ? vehicle.plateExpiry : '',
+      photo: !!vehicle.platePhoto
+    }, shared, plates[vehicle.vin] || {});
+  }
+  function migrateLegacyMaterialRecords() {
+    (window.appData || []).forEach(function (record) {
+      if (!recordNeedsOfflineMaterial(record)) return;
+      if (record.status === 'pending_plate' || record.status === 'pending_plate_review' || record.status === 'plate_rejected' || ['plate_upload', 'plate_confirmation', 'plate_correction'].indexOf(record.currentStage) > -1) {
+        record.processStatus = record.status === 'plate_rejected' ? 'returning' : 'approved';
+        record.currentStage = record.status === 'plate_rejected' ? correctionStage : record.status === 'pending_plate_review' ? reviewStage : uploadStage;
+        record.status = record.currentStage === correctionStage ? 'offline_material_correction' : record.currentStage === reviewStage ? 'pending_offline_material_review' : 'pending_offline_material';
+        record.offlineMaterial = record.offlineMaterial || {};
+      }
+    });
+  }
+  migrateLegacyMaterialRecords();
+
+  var originalProgress = F.progress;
+  F.progress = function (record) {
+    F.ensureRecord(record);
+    var current = record.currentStage;
+    if (!isMaterialStage(current) && current !== 'completed') {
+      var ordinarySteps = originalProgress(record).filter(function (step) {
+        return ['牌照上传', '牌照确认', '牌照修改'].indexOf(step.label) < 0;
+      });
+      if (F.needsPlate(record)) ordinarySteps.push({ label: '线下材料回传', done: false, current: false });
+      return ordinarySteps;
+    }
+    if (current === 'completed' && !F.needsPlate(record)) return originalProgress(record);
+    var path = F.approvalPath(record);
+    var steps = path.map(function (stage) { return { label: F.stageMap[stage] ? F.stageMap[stage].label : stage, done: true, current: false }; });
+    var completed = current === 'completed';
+    steps.push({ label: '线下材料回传', done: completed, current: !completed, error: current === correctionStage });
+    return steps;
+  };
+
+  var originalPass = F.pass;
+  F.pass = function (record, opinion) {
+    F.ensureRecord(record);
+    if (record.currentStage !== reviewStage) return originalPass(record, opinion);
+    record.flowLogs = record.flowLogs || [];
+    record.flowLogs.push({ eventId: 'offline_material_passed_' + Date.now(), eventType: 'stage_passed', stage: reviewStage, result: 'passed', handler: '第三方专业管理机构', handledAt: '2026-09-29 15:30:00', opinion: opinion || '线下材料审核通过' });
+    record.processStatus = 'active';
+    record.currentStage = 'completed';
+    record.status = 'active';
+    record.node = 'done';
+    return record;
+  };
+  var originalReject = F.reject;
+  F.reject = function (record, opinion) {
+    F.ensureRecord(record);
+    if (record.currentStage !== reviewStage) return originalReject(record, opinion);
+    record.flowLogs = record.flowLogs || [];
+    record.flowLogs.push({ eventId: 'offline_material_returned_' + Date.now(), eventType: 'stage_returned', returnCycleId: 'offline_material_' + Date.now(), stageInstanceId: reviewStage + '_round_1', stage: reviewStage, result: 'returned', handler: '第三方专业管理机构', handledAt: '2026-09-29 15:30:00', opinion: opinion || '请补充或更换线下回传材料。', returnToStage: correctionStage, closed: false });
+    record.processStatus = 'returning';
+    record.currentStage = correctionStage;
+    record.status = 'offline_material_correction';
+    record.node = 'done';
+    return record;
+  };
+  var originalResubmit = F.resubmit;
+  F.resubmit = function (record) {
+    F.ensureRecord(record);
+    if (record.currentStage !== correctionStage) return originalResubmit(record);
+    record.flowLogs = record.flowLogs || [];
+    record.flowLogs.push({ eventId: 'offline_material_resubmitted_' + Date.now(), eventType: 'return_cycle_closed', stage: correctionStage, result: 'resubmitted', handler: record.company || '申请主体', handledAt: '2026-09-29 15:30:00', opinion: '线下材料补正完成，重新提交第三方审核' });
+    record.processStatus = 'approved';
+    record.currentStage = reviewStage;
+    record.status = 'pending_offline_material_review';
+    return record;
+  };
+
+  function renderDeclarationStatus(id) {
+    var record = recordById(id) || {};
+    var state = offlineMaterialRegistry[id] || record.offlineMaterial || {};
+    var file = state.stampedDeclarationFile || '';
+    if (file) return '<span class="text-[#52c41a]">✓</span><span class="text-sm text-[#1677ff]">' + esc(file) + '</span><span class="text-xs text-[#00000073]">待第三方审核</span>';
+    return '<span class="text-xs text-[#ff4d4f]">未上传盖章版声明</span>';
+  }
+  window.handleOfflineDeclarationUpload = function (input, id) {
+    var file = input && input.files && input.files[0];
+    if (!file) return;
+    offlineMaterialRegistry[id] = offlineMaterialRegistry[id] || {};
+    offlineMaterialRegistry[id].stampedDeclarationFile = file.name;
+    var status = document.getElementById('offline-declaration-status-' + id);
+    if (status) status.innerHTML = renderDeclarationStatus(id);
+  };
+  window.handleOfflinePlatePhotoUpload = function (vin, input) {
+    var file = input && input.files && input.files[0];
+    if (!file) return;
+    if (!/image\/(jpeg|png)/i.test(file.type) && !/\.(jpe?g|png)$/i.test(file.name)) {
+      notify('牌照照片仅支持 JPG/PNG 格式');
+      input.value = '';
+      return;
+    }
+    var cell = document.querySelector('.offline-plate-photo[data-vin="' + vin + '"]');
+    if (cell) {
+      cell.dataset.uploaded = 'true';
+      cell.innerHTML = '<span class="text-[#52c41a]">✓ ' + esc(file.name) + '</span>';
+    }
+  };
+  window.openOfflineMaterialUploadModal = function (id) {
+    var record = recordById(id);
+    var vehicles = getVehicles(id).filter(function (vehicle) { return vehicle && vehicle.vin; });
+    if (!record || !vehicles.length) { notify('当前申请暂无待回传车辆材料'); return; }
+    var state = offlineMaterialRegistry[id] || record.offlineMaterial || {};
+    offlineMaterialRegistry[id] = state;
+    var declaration = '<div class="ant-form-item"><div class="ant-form-label">原始安全性自我声明</div><div class="ant-form-control"><div class="flex items-center gap-2"><span class="text-[#52c41a]">✓</span><span class="text-sm text-[#1677ff]">' + esc(safeOriginalDeclaration(record)) + '</span><span class="text-xs text-[#00000073]">申请时提交，审核依据，只读保留</span><button type="button" class="ant-btn-link ant-btn-sm">预览</button><button type="button" class="ant-btn-link ant-btn-sm">下载</button></div></div></div>';
+    declaration += '<div class="ant-form-item"><div class="ant-form-label"><span class="required">*</span>盖章版安全性自我声明</div><div class="ant-form-control"><div class="flex items-center gap-2 flex-wrap"><button type="button" class="ant-btn ant-btn-sm" onclick="document.getElementById(\'offline-stamped-input-' + id + '\').click()">上传盖章版文件</button><input id="offline-stamped-input-' + id + '" type="file" class="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onchange="handleOfflineDeclarationUpload(this,\'' + esc(id) + '\')"><span id="offline-declaration-status-' + id + '" class="flex items-center gap-2">' + renderDeclarationStatus(id) + '</span></div><div class="text-xs text-[#00000073] mt-1">须与原始安全性自我声明内容一致，仅补充盖章信息；原始声明不会被覆盖。</div></div></div>';
+    var rows = vehicles.map(function (vehicle) {
+      var saved = storedPlate(id, vehicle);
+      var photo = saved.photo ? '<span class="text-[#52c41a]">✓ 已上传</span>' : '<span class="text-xs text-[#ff4d4f]">未上传</span> <button type="button" class="ant-btn-link ant-btn-sm" onclick="document.getElementById(\'offline-photo-' + esc(vehicle.vin) + '\').click()">上传</button>';
+      return '<tr class="offline-plate-row" data-vin="' + esc(vehicle.vin) + '"><td class="text-xs col-code">' + esc(vehicle.vin) + '</td><td>' + esc(vehicle.model || '-') + '</td><td><input class="ant-input offline-plate-number" data-vin="' + esc(vehicle.vin) + '" value="' + esc(saved.plate || '') + '" placeholder="如：鄂F·A001" style="width:140px"></td><td><input class="ant-input offline-plate-start" type="date" value="' + esc(saved.plateValidFrom || '') + '" style="width:125px"> <span class="text-[#00000073]">至</span> <input class="ant-input offline-plate-end" type="date" value="' + esc(saved.plateExpiry || '') + '" style="width:125px"></td><td><span class="offline-plate-photo" data-vin="' + esc(vehicle.vin) + '" data-uploaded="' + (saved.photo ? 'true' : 'false') + '">' + photo + '</span><input id="offline-photo-' + esc(vehicle.vin) + '" type="file" class="hidden" accept=".jpg,.jpeg,.png,image/jpeg,image/png" onchange="handleOfflinePlatePhotoUpload(\'' + esc(vehicle.vin) + '\',this)"></td></tr>';
+    }).join('');
+    var notice = record.currentStage === correctionStage ? '<div class="bg-[#fff1f0] border border-[#ffa39e] rounded-md px-3 py-2 mb-4 text-sm"><strong>线下材料补正：</strong>' + esc(record.returnReason || '请根据第三方审核意见补充或更换材料。') + '</div>' : '<div class="bg-[#fff7e6] border border-[#ffd591] rounded-md px-3 py-2 mb-4 text-sm">请一次提交盖章版安全性自我声明和本申请全部车辆的临时牌照信息，提交后由第三方统一审核。</div>';
+    var html = notice + declaration + '<h4 class="text-sm font-semibold text-[#000000d9] mb-3 mt-5 pb-2 border-b border-[#f0f0f0]">临时牌照材料</h4><div style="overflow-x:auto"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th class="col-code">VIN码</th><th>车辆型号</th><th>临时牌照号</th><th class="col-code">有效期</th><th class="col-code">牌照照片</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    openModal('线下材料回传 - ' + id, html, { wide: true, footer: '<button class="ant-btn" onclick="closeModal()">取消</button><button class="ant-btn ant-btn-primary" onclick="submitOfflineMaterial(\'' + esc(id) + '\')">提交第三方审核</button>' });
+  };
+  window.submitOfflineMaterial = function (id) {
+    var record = recordById(id);
+    var declarationState = offlineMaterialRegistry[id] || (record && record.offlineMaterial) || {};
+    var declarationFile = declarationState.stampedDeclarationFile || '';
+    if (!declarationFile) { notify('请上传盖章版安全性自我声明'); return; }
+    var rows = Array.prototype.slice.call(document.querySelectorAll('.offline-plate-row'));
+    var plates = {};
+    for (var index = 0; index < rows.length; index += 1) {
+      var row = rows[index], vin = row.dataset.vin;
+      var number = row.querySelector('.offline-plate-number').value.trim();
+      var start = row.querySelector('.offline-plate-start').value;
+      var end = row.querySelector('.offline-plate-end').value;
+      var photo = row.querySelector('.offline-plate-photo').dataset.uploaded === 'true';
+      if (!number || !start || !end || !photo) { notify('请完整填写全部车辆牌照信息并上传牌照照片'); return; }
+      if (start >= end) { notify('有效期起须早于有效期止'); return; }
+      plates[vin] = { plate: number, plateValidFrom: start, plateExpiry: end, photo: true };
+    }
+    if (!record) return;
+    record.offlineMaterial = { originalDeclarationFile: safeOriginalDeclaration(record), stampedDeclarationFile: declarationFile, stampedDeclarationVersion: '基于申请时声明', submittedAt: '2026-09-29 15:30:00', submittedBy: record.company || '申请主体', plates: plates };
+    offlineMaterialRegistry[id] = record.offlineMaterial;
+    record.processStatus = 'approved';
+    record.currentStage = reviewStage;
+    record.status = 'pending_offline_material_review';
+    record.flowLogs = record.flowLogs || [];
+    record.flowLogs.push({ eventId: 'offline_material_submitted_' + Date.now(), eventType: 'offline_material_submitted', stage: uploadStage, result: 'submitted', handler: record.company || '申请主体', handledAt: '2026-09-29 15:30:00', opinion: '盖章版安全性自我声明及临时牌照材料已提交，等待第三方审核', attachment: declarationFile });
+    closeModal();
+    if (typeof window.renderTable === 'function') window.renderTable();
+    notify('线下材料已提交，等待第三方审核');
+  };
+
+  function renderOfflineMaterialPanel(record) {
+    if (!recordNeedsOfflineMaterial(record)) return '';
+    var state = offlineMaterialRegistry[record.id] || record.offlineMaterial || {};
+    var stamped = state.stampedDeclarationFile || (record.currentStage === 'completed' ? '盖章版道路测试安全性自我声明_' + record.id + '.pdf' : '');
+    var reviewLabel = record.currentStage === reviewStage ? '待第三方审核' : record.currentStage === correctionStage ? '待补正' : record.currentStage === 'completed' ? '已审核通过' : '待回传';
+    var vehicles = getVehicles(record.id);
+    var plateCount = vehicles.filter(function (vehicle) { return storedPlate(record.id, vehicle).plate; }).length;
+    return '<section data-offline-material-panel="true" class="mt-4"><h4 class="text-sm font-semibold text-[#000000d9] mb-2 pb-2 border-b border-[#f0f0f0]">线下材料回传</h4><div class="text-xs text-[#00000073] mb-2">原始声明只读保留；盖章版声明作为其回传版本，与本申请车辆牌照材料一并提交第三方审核。</div><div class="space-y-2 text-sm"><div class="flex items-center gap-2"><span class="text-xs text-[#00000040]">原始声明</span><span class="text-[#1677ff]">' + esc(safeOriginalDeclaration(record)) + '</span><span class="text-xs text-[#00000073]">只读</span></div><div class="flex items-center gap-2"><span class="text-xs text-[#00000040]">盖章版声明</span>' + (stamped ? '<span class="text-[#1677ff]">' + esc(stamped) + '</span><span class="ant-tag ant-tag-success">' + reviewLabel + '</span>' : '<span class="text-[#ff4d4f]">未回传</span>') + '</div><div class="flex items-center gap-2"><span class="text-xs text-[#00000040]">临时牌照材料</span><span>' + plateCount + ' / ' + vehicles.length + ' 辆已登记</span><span class="ant-tag ' + (plateCount === vehicles.length ? 'ant-tag-success' : 'ant-tag-warning') + '">' + reviewLabel + '</span></div></div></section>';
+  }
+  function decorateOfflineMaterialDetail(id) {
+    var record = recordById(id), body = document.querySelector('#modal-mask .ant-modal-body');
+    if (!record || !body || body.querySelector('[data-offline-material-panel]')) return;
+    var attachmentPanel = body.querySelector('.detail-attachment-panel');
+    if (attachmentPanel) attachmentPanel.insertAdjacentHTML('afterend', renderOfflineMaterialPanel(record));
+    else body.insertAdjacentHTML('beforeend', renderOfflineMaterialPanel(record));
+    if (record.currentStage === uploadStage || record.currentStage === correctionStage) {
+      var heading = Array.prototype.slice.call(body.querySelectorAll('h4')).find(function (item) { return /测试车辆/.test(item.textContent); });
+      if (heading && !heading.querySelector('[data-offline-material-entry]')) {
+        heading.classList.add('flex', 'items-center', 'justify-between', 'gap-2');
+        heading.insertAdjacentHTML('beforeend', '<button type="button" data-offline-material-entry="true" class="ant-btn ant-btn-primary ant-btn-sm" onclick="openOfflineMaterialUploadModal(\'' + esc(id) + '\')">线下材料回传</button>');
+      }
+    }
+  }
+  var originalOpenDetail = window.openDetail;
+  if (typeof originalOpenDetail === 'function') {
+    window.openDetail = function (id) {
+      var result = originalOpenDetail.apply(this, arguments);
+      window.setTimeout(function () { decorateOfflineMaterialDetail(id); }, 140);
+      return result;
+    };
+  }
+  if (typeof F.canHandle === 'function') {
+    var originalCanHandle = F.canHandle;
+    F.canHandle = function (record, role) {
+      if (record && [uploadStage, correctionStage].indexOf(record.currentStage) > -1 && (role || F.currentRole()) === 'admin') return false;
+      return originalCanHandle(record, role);
+    };
+  }
+})();
+</script>
+<script>
+(function () {
+  function syncOfflineMaterialCopy() {
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    var node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue && node.nodeValue.indexOf('临时行驶车号牌在审批通过后另行上传。') > -1) {
+        node.nodeValue = node.nodeValue.replace('临时行驶车号牌在审批通过后另行上传。', '专题会审议通过后，在“线下材料回传”环节与盖章版安全性自我声明一并提交。');
+      }
+    }
+    var panel = document.getElementById('msStatusPanel');
+    if (panel) {
+      Array.prototype.forEach.call(panel.querySelectorAll('input[value="pending_plate"]'), function (input) {
+        var label = input.parentElement;
+        if (label) label.remove();
+      });
+      if (!panel.querySelector('input[value="pending_offline_material"]')) {
+        panel.insertAdjacentHTML('beforeend', '<label><input type="checkbox" value="pending_offline_material">待线下材料回传</label><label><input type="checkbox" value="pending_offline_material_review">待线下材料审核</label>');
+      }
+    }
+  }
+  document.addEventListener('click', function () { window.setTimeout(syncOfflineMaterialCopy, 0); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncOfflineMaterialCopy);
+  else syncOfflineMaterialCopy();
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var originalOpenOffline = window.openOfflineMaterialUploadModal;
+  var originalHandlePhoto = window.handleOfflinePlatePhotoUpload;
+  var originalSubmitOffline = window.submitOfflineMaterial;
+  var offlinePhotoState = window.__roadTestOfflinePhotoState = window.__roadTestOfflinePhotoState || {};
+
+  function escHistory(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+    });
+  }
+  function previewPlatePhoto(photo) {
+    var image = photo && photo.photoUrl ? '<img src="' + escHistory(photo.photoUrl) + '" alt="牌照照片" style="max-width:100%;max-height:260px;object-fit:contain;border:1px solid #f0f0f0;border-radius:4px">' : '<div class="flex items-center justify-center" style="height:180px;background:#fafafa;border:1px dashed #d9d9d9;border-radius:4px;color:#00000073">当前原型未留存图片实体</div>';
+    openModal('牌照照片 - ' + escHistory(photo.plate || ''), '<div class="text-center">' + image + '<div class="text-xs text-[#00000073] mt-3">' + escHistory(photo.photoFile || '未留存图片') + '</div></div>', { footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>' });
+  }
+  function historyForVin(vin) {
+    var rows = [];
+    (window.appData || []).forEach(function (record) {
+      var history = record.plateHistory && record.plateHistory[vin];
+      if (Array.isArray(history)) rows = rows.concat(history);
+    });
+    if (rows.length) return rows;
+    return [
+      { plate: '鄂F·A001', validFrom: '2026-03-15', validTo: '2026-04-30', status: '已过期', photoFile: '', photoUrl: '' },
+      { plate: '鄂F·A005', validFrom: '2026-05-01', validTo: '2026-10-20', status: '当前有效', photoFile: '', photoUrl: '' }
+    ];
+  }
+  function currentPlatePhoto(id, vin) {
+    var record = (window.appData || []).find(function (item) { return item.id === id; }) || {};
+    var history = record.plateHistory && record.plateHistory[vin];
+    if (Array.isArray(history) && history.length) return history[history.length - 1];
+    var plate = record.offlineMaterial && record.offlineMaterial.plates && record.offlineMaterial.plates[vin];
+    return plate || {};
+  }
+  function adjustOfflineMaterialDetail(id) {
+    var body = document.querySelector('#modal-mask .ant-modal-body');
+    if (!body) return;
+    var panel = body.querySelector('[data-offline-material-panel]');
+    if (panel) {
+      Array.prototype.forEach.call(panel.querySelectorAll('.space-y-2 > div'), function (row) {
+        if (/^原始声明/.test((row.textContent || '').trim())) row.remove();
+      });
+      var hint = panel.querySelector('h4 + div');
+      if (hint) hint.textContent = '盖章版声明基于申请时提交的安全性自我声明，仅展示本次回传版本。';
+    }
+    var heading = Array.prototype.slice.call(body.querySelectorAll('h4')).find(function (item) { return /测试车辆/.test(item.textContent); });
+    var table = heading && heading.nextElementSibling && heading.nextElementSibling.querySelector('table');
+    if (!table || table.querySelector('thead th[data-plate-photo-column]')) return;
+    var header = table.querySelector('thead tr'), actionHeader = header && header.lastElementChild;
+    if (!header) return;
+    var photoHeader = document.createElement('th'); photoHeader.dataset.platePhotoColumn = 'true'; photoHeader.textContent = '牌照图片';
+    header.insertBefore(photoHeader, actionHeader || null);
+    Array.prototype.forEach.call(table.querySelectorAll('tbody tr'), function (row) {
+      var vinCell = row.cells[1], vin = vinCell && vinCell.textContent.trim();
+      if (!vin) return;
+      var photo = currentPlatePhoto(id, vin), cell = row.insertCell(row.cells.length - 1);
+      cell.dataset.platePhotoColumn = 'true';
+      cell.innerHTML = photo.photoFile || photo.photoUrl ? '<button type="button" class="ant-btn-link ant-btn-sm" onclick="openPlatePhotoPreview(window.__roadTestDetailPhotos[' + JSON.stringify(vin) + '])">查看图片</button>' : '<span class="text-xs text-[#00000073]">未留存图片</span>';
+      window.__roadTestDetailPhotos = window.__roadTestDetailPhotos || {};
+      window.__roadTestDetailPhotos[vin] = photo;
+    });
+  }
+  window.getRoadTestPlateHistory = historyForVin;
+  function removeStandaloneApprovalAttachments() {
+    var body = document.querySelector('#modal-mask .ant-modal-body');
+    if (!body) return;
+    var heading = Array.prototype.slice.call(body.querySelectorAll('h4')).find(function (item) { return item.textContent.trim() === '市工作专班审核'; });
+    var section = heading && heading.nextElementSibling;
+    var logHeading = Array.prototype.slice.call(body.querySelectorAll('h4')).find(function (item) { return item.textContent.trim() === '流程日志'; });
+    if (!heading || !section || !logHeading || !section.querySelector('button')) return;
+    heading.remove();
+    section.remove();
+  }
+  window.openPlatePhotoPreview = previewPlatePhoto;
+  window.openPlateHistoryModal = function (vin) {
+    var historyData = historyForVin(vin);
+    var h = '<div style="overflow-x:auto"><table class="ant-table" style="width:100%;font-size:13px"><thead><tr><th>序号</th><th>临时牌照号</th><th>有效期起</th><th>有效期止</th><th>状态</th><th>牌照图片</th></tr></thead><tbody>';
+    historyData.forEach(function (row, index) {
+      var photoAction = row.photoFile || row.photoUrl ? '<button type="button" class="ant-btn-link ant-btn-sm" onclick="openPlatePhotoPreview(window.__roadTestHistoryRows[' + index + '])">查看图片</button>' : '<span class="text-xs text-[#00000073]">未留存图片</span>';
+      h += '<tr><td>' + (index + 1) + '</td><td class="text-xs">' + escHistory(row.plate) + '</td><td>' + escHistory(row.validFrom) + '</td><td>' + escHistory(row.validTo) + '</td><td><span class="ant-tag ' + (row.status === '当前有效' ? 'ant-tag-success' : 'ant-tag-default') + '">' + escHistory(row.status) + '</span></td><td>' + photoAction + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    window.__roadTestHistoryRows = historyData;
+    openModal('牌照历史记录 - ' + escHistory(vin), h, { footer: '<button class="ant-btn" onclick="closeModal()">关闭</button>' });
+  };
+  if (typeof originalOpenOffline === 'function') {
+    window.openOfflineMaterialUploadModal = function (id) {
+      window.__roadTestOfflinePhotoCurrentId = id;
+      return originalOpenOffline.apply(this, arguments);
+    };
+  }
+  if (typeof originalHandlePhoto === 'function') {
+    window.handleOfflinePlatePhotoUpload = function (vin, input) {
+      originalHandlePhoto.apply(this, arguments);
+      var file = input && input.files && input.files[0], id = window.__roadTestOfflinePhotoCurrentId;
+      if (!file || !id) return;
+      offlinePhotoState[id] = offlinePhotoState[id] || {};
+      offlinePhotoState[id][vin] = { photoFile: file.name, photoUrl: URL.createObjectURL(file) };
+    };
+  }
+  if (typeof originalSubmitOffline === 'function') {
+    window.submitOfflineMaterial = function (id) {
+      var photoState = offlinePhotoState[id] || {};
+      var result = originalSubmitOffline.apply(this, arguments);
+      var record = (window.appData || []).find(function (item) { return item.id === id; });
+      if (!record || record.status !== 'pending_offline_material_review') return result;
+      record.plateHistory = record.plateHistory || {};
+      Object.keys(record.offlineMaterial.plates || {}).forEach(function (vin) {
+        var plate = record.offlineMaterial.plates[vin], photo = photoState[vin] || {};
+        record.offlineMaterial.plates[vin].photoFile = photo.photoFile || '';
+        record.offlineMaterial.plates[vin].photoUrl = photo.photoUrl || '';
+        record.plateHistory[vin] = record.plateHistory[vin] || [];
+        record.plateHistory[vin].forEach(function (item) { if (item.status === '当前有效') item.status = '已过期'; });
+        record.plateHistory[vin].push({ plate: plate.plate, validFrom: plate.plateValidFrom, validTo: plate.plateExpiry, status: '当前有效', photoFile: photo.photoFile || '', photoUrl: photo.photoUrl || '', source: '线下材料回传', submittedAt: record.offlineMaterial.submittedAt });
+      });
+      return result;
+    };
+  }
+  var previousOpenDetail = window.openDetail;
+  if (typeof previousOpenDetail === 'function') {
+    window.openDetail = function (id) {
+      var result = previousOpenDetail.apply(this, arguments);
+      window.setTimeout(function () { adjustOfflineMaterialDetail(id); removeStandaloneApprovalAttachments(); }, 180);
+      return result;
+    };
+  }
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var flow = window.AccessFlowModel;
+  if (!flow) return;
+  var attachmentNames = {
+    '第三方初审': '第三方初审意见',
+    '专班办公室审核': '市工作专班审核意见',
+    '专家评审': '专家评审意见',
+    '专题会审议': '专题会审议意见',
+    '专班审核确认': '专班审核确认意见'
+  };
+  function safe(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+    });
+  }
+  function jsString(value) { return String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+  var originalDisplayLogs = flow.displayLogs;
+  flow.displayLogs = function (record) {
+    var logs = originalDisplayLogs(record);
+    return logs.map(function (log) {
+      if (!log.attach && log.status === '已处理' && attachmentNames[log.title]) log.attach = attachmentNames[log.title] + '_' + record.id + '.pdf';
+      return log;
+    });
+  };
+  window.renderFLH = function (logs) {
+    var html = '<div class="space-y-3">';
+    (logs || []).forEach(function (log, index) {
+      var hasNext = index < logs.length - 1;
+      var border = hasNext ? 'border-left:2px solid ' + log.color + ';margin-left:5px;padding-left:12px' : 'margin-left:17px;padding-left:0';
+      html += '<div class="relative pb-3" style="' + border + '"><div class="absolute w-3 h-3 rounded-full flex items-center justify-center text-[8px] text-white font-bold mt-1" style="left:-7px;top:0;background:' + log.color + '">' + log.dot + '</div><div class="min-w-0"><div class="flex items-center justify-between mb-2"><span class="text-sm font-medium text-[#000000d9]">' + safe(log.title) + '</span><span class="ant-tag ' + safe(log.tagCls) + ' text-[10px]">' + safe(log.status) + '</span></div><div class="text-xs text-[#00000073] space-y-1"><div><span class="text-[#00000040]">处理人：</span>' + safe(log.handler) + '</div><div><span class="text-[#00000040]">处理时间：</span>' + safe(log.time) + '</div>';
+      if (log.opinion) html += '<div class="whitespace-pre-line mt-1.5 p-2 bg-[#fafafa] rounded"><span class="text-[#00000040]">处理意见：</span>' + safe(log.opinion) + '</div>';
+      if (log.attach) html += '<div class="aaf-log-attachment mt-2 flex items-center gap-2"><span class="text-[#00000040]">审核意见附件：</span><span class="text-[#1677ff]">' + safe(log.attach) + '</span><button type="button" class="ant-btn-link ant-btn-sm" onclick="openRoadDetailFile(\'' + jsString(log.attach) + '\')">预览</button><button type="button" class="ant-btn-link ant-btn-sm" onclick="downloadRoadDetailFile(\'' + jsString(log.attach) + '\')">下载</button></div>';
+      html += '</div></div></div>';
+    });
+    return html + '</div>';
+  };
+})();
+</script>
 </body>
 </html>

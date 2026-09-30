@@ -254,7 +254,7 @@
     if (window.AccessFlowModel) {
       return '<div class="aaf-flow">' + window.AccessFlowModel.progress(record).map(function (item, index) {
         var dotClass = item.error ? 'is-error' : item.done ? 'is-done' : item.current ? 'is-current' : '';
-        return '<div class="aaf-flow-step ' + dotClass + '"><div class="aaf-flow-dot">' + (item.error ? '×' : item.done ? '✓' : index + 1) + '</div><div><div class="aaf-flow-title">' + esc(item.label) + (item.current ? '（当前）' : '') + '</div></div></div>';
+        return '<div class="aaf-flow-step ' + dotClass + '"><div class="aaf-flow-dot">' + (item.error ? '×' : item.done ? '✓' : index + 1) + '</div><div><div class="aaf-flow-title">' + esc(item.label) + '</div></div></div>';
       }).join('') + '</div>';
     }
     var steps = record.flowSteps || ['提交申请', '初审', '专班审核', '审批完成'];
@@ -277,7 +277,14 @@
     }).join('') + '</div>';
   }
   function detailLogs(record) {
-    if (window.AccessFlowModel) return window.AccessFlowModel.displayLogs(record).map(function (log) { return { title: log.title, handler: log.handler, time: log.time, opinion: log.opinion, status: log.status, tone: log.status === '已退回' ? 'error' : log.status === '处理中' || log.status === '退回处理中' ? 'current' : 'done' }; });
+    if (window.AccessFlowModel) {
+      var approvalAttachments = { '第三方初审': '第三方初审意见', '专班办公室审核': '市工作专班审核意见', '专家评审': '专家评审意见', '专题会审议': '专题会审议意见', '专班审核确认': '专班审核确认意见' };
+      return window.AccessFlowModel.displayLogs(record).map(function (log) {
+        var isApproval = !!approvalAttachments[log.title];
+        var sampleAttachment = isApproval && (log.status === '已处理' || log.status === '已退回') ? approvalAttachments[log.title] + '_' + record.id + '.pdf' : '';
+        return { title: log.title, handler: log.handler, time: log.time, opinion: log.opinion, attachment: log.attach || sampleAttachment, attachmentLabel: isApproval ? '审核意见附件' : '附件', status: log.status, tone: log.status === '已退回' ? 'error' : log.status === '处理中' || log.status === '退回处理中' ? 'current' : 'done' };
+      });
+    }
     if (state.config && typeof state.config.getFlowLogs === 'function') return state.config.getFlowLogs(record) || [];
     if (Array.isArray(record.flowLogs) && record.flowLogs.length) return record.flowLogs;
     var pendingReview = record.status === 'pending_review';
@@ -293,7 +300,8 @@
     return '<div class="aaf-log-list">' + (logs.length ? logs.map(function (log) {
       var tone = log.tone || (log.status === '已退回' ? 'error' : log.status === '处理中' ? 'current' : 'done');
       var issueList = log.title === '第三方初审' && record.status === 'rejected' && window.MaterialReviewComments ? window.MaterialReviewComments.renderIssueList(record, '第三方初审问题清单') : '';
-      return '<article class="aaf-log-item ' + tone + '"><div class="aaf-log-marker">' + (tone === 'error' ? '×' : tone === 'done' ? '✓' : '●') + '</div><div class="aaf-log-content"><div class="aaf-log-head"><strong>' + esc(log.title || '-') + '</strong><span>' + esc(log.status || '-') + '</span></div><div class="aaf-log-meta">处理人：' + esc(log.handler || '-') + '　时间：' + esc(log.time || '-') + '</div>' + (log.opinion ? '<div class="aaf-log-opinion">' + esc(log.opinion).replace(/\n/g, '<br>') + '</div>' : '') + issueList + '</div></article>';
+      var attachment = log.attachment ? '<div class="aaf-log-attachment" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#00000073"><span>' + esc(log.attachmentLabel || '附件') + '：</span><span style="color:#1677ff">' + esc(log.attachment) + '</span><button type="button" class="ant-btn-link ant-btn-sm" onclick="AccessApplyFramework.preview(\'' + js(log.attachment) + '\')">预览</button><button type="button" class="ant-btn-link ant-btn-sm" onclick="AccessApplyFramework.download(\'' + js(log.attachment) + '\')">下载</button></div>' : '';
+      return '<article class="aaf-log-item ' + tone + '"><div class="aaf-log-marker">' + (tone === 'error' ? '×' : tone === 'done' ? '✓' : '●') + '</div><div class="aaf-log-content"><div class="aaf-log-head"><strong>' + esc(log.title || '-') + '</strong><span>' + esc(log.status || '-') + '</span></div><div class="aaf-log-meta">处理人：' + esc(log.handler || '-') + '　时间：' + esc(log.time || '-') + '</div>' + (log.opinion ? '<div class="aaf-log-opinion">' + esc(log.opinion).replace(/\n/g, '<br>') + '</div>' : '') + attachment + issueList + '</div></article>';
     }).join('') : '<div class="aaf-empty-cell">暂无流程日志</div>') + '</div>';
   }
   function originalSource(record) {

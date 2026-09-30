@@ -16,7 +16,7 @@
     if (document.getElementById('accessFlowSharedStyle')) return;
     var style = document.createElement('style');
     style.id = 'accessFlowSharedStyle';
-    style.textContent = '.access-flow-summary{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;min-height:48px;padding:8px 16px;margin-bottom:16px;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;font-size:14px}.access-flow-summary-main{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.access-flow-summary-label{color:#00000073;margin-right:6px}.access-flow-summary-owner{color:#00000073}.access-flow-summary-owner strong{color:#000000d9;font-weight:500}.access-flow-summary-return{color:#ad6800;font-size:12px}.access-flow-stage-cell{min-width:136px}.access-flow-progress{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap}.access-flow-progress-item{display:flex;align-items:center}.access-flow-progress-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;background:#d9d9d9}.access-flow-progress-item.is-done .access-flow-progress-dot{background:#52c41a}.access-flow-progress-item.is-current .access-flow-progress-dot{background:#1677ff;box-shadow:0 0 0 3px #e6f4ff}.access-flow-progress-item.is-returned .access-flow-progress-dot{background:#ff4d4f}.access-flow-progress-label{margin-left:5px;font-size:12px;color:#000000d9;white-space:nowrap}.access-flow-progress-line{width:24px;height:2px;background:#d9d9d9;margin:11px 7px 0}.access-flow-progress-line.is-done{background:#52c41a}.access-flow-table.access-flow-wide{min-width:1360px}.access-flow-wide th:nth-last-child(3),.access-flow-wide td:nth-last-child(3){min-width:190px;white-space:nowrap}.access-flow-wide th:nth-last-child(2),.access-flow-wide td:nth-last-child(2){min-width:170px;white-space:nowrap}#mainTbody td:last-child{min-width:112px;white-space:nowrap}#mainTbody td:last-child .ant-btn-link{white-space:nowrap}';
+    style.textContent = '.access-flow-summary{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;min-height:48px;padding:8px 16px;margin-bottom:16px;background:#fafafa;border:1px solid #f0f0f0;border-radius:6px;font-size:14px}.access-flow-summary-main{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.access-flow-summary-label{color:#00000073;margin-right:6px}.access-flow-summary-owner{color:#00000073}.access-flow-summary-owner strong{color:#000000d9;font-weight:500}.access-flow-summary-return{color:#ad6800;font-size:12px}.access-flow-stage-cell{min-width:136px}.access-flow-progress{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap}.access-flow-progress-item{display:flex;align-items:center}.access-flow-progress-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;background:#d9d9d9}.access-flow-progress-item.is-done .access-flow-progress-dot{background:#52c41a}.access-flow-progress-item.is-current .access-flow-progress-dot{background:#1677ff;box-shadow:0 0 0 3px #e6f4ff}.access-flow-progress-item.is-returned .access-flow-progress-dot{background:#ff4d4f}.access-flow-progress-item.is-done .access-flow-progress-label{color:#389e0d}.access-flow-progress-item.is-current .access-flow-progress-label{color:#1677ff;font-weight:500}.access-flow-progress-label{margin-left:5px;font-size:12px;color:#00000073;white-space:nowrap}.access-flow-progress-line{width:24px;height:2px;background:#d9d9d9;margin:11px 7px 0}.access-flow-progress-line.is-done{background:#52c41a}.access-flow-table.access-flow-wide{min-width:1360px}.access-flow-wide th:nth-last-child(3),.access-flow-wide td:nth-last-child(3){min-width:190px;white-space:nowrap}.access-flow-wide th:nth-last-child(2),.access-flow-wide td:nth-last-child(2){min-width:170px;white-space:nowrap}#mainTbody td:last-child{min-width:112px;white-space:nowrap}#mainTbody td:last-child .ant-btn-link{white-space:nowrap}';
     document.head.appendChild(style);
   }
   function ownerLabel(stage) {
@@ -46,13 +46,20 @@
     Array.prototype.forEach.call(document.querySelectorAll('#modal-mask .ant-modal-header .aaf-title-status'), function (tagNode) { tagNode.remove(); });
     body.insertAdjacentHTML('afterbegin', summaryHtml(record));
     removeDuplicateContextFields(body);
+    Array.prototype.forEach.call(body.querySelectorAll('h4, .aaf-section-title'), function (heading) {
+      if (heading.textContent.trim() !== '审批流程进度') return;
+      var progress = heading.nextElementSibling;
+      if (progress && (progress.classList.contains('aaf-flow') || progress.classList.contains('access-flow-progress') || progress.classList.contains('flex'))) {
+        progress.outerHTML = renderProgress(record);
+      }
+    });
   }
   function renderProgress(record) {
     var steps = F.progress(record), html = '<div class="access-flow-progress">';
     steps.forEach(function (step, index) {
       var cls = step.error ? ' is-returned' : step.current ? ' is-current' : step.done ? ' is-done' : '';
       var icon = step.error ? '×' : step.done ? '✓' : (index + 1);
-      html += '<div class="access-flow-progress-item' + cls + '"><span class="access-flow-progress-dot">' + icon + '</span><span class="access-flow-progress-label">' + esc(step.label) + (step.current ? '（当前）' : '') + '</span></div>';
+      html += '<div class="access-flow-progress-item' + cls + '"><span class="access-flow-progress-dot">' + icon + '</span><span class="access-flow-progress-label">' + esc(step.label) + '</span></div>';
       if (index < steps.length - 1) html += '<span class="access-flow-progress-line' + (step.done ? ' is-done' : '') + '"></span>';
     });
     return html + '</div>';

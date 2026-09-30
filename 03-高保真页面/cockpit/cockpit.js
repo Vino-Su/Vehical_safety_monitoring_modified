@@ -15,6 +15,10 @@
   var ACCIDENT_YEAR = new Date().getFullYear();
   var ACCIDENT_LOCATE_ZOOM = 15;
   var ACCIDENT_ICON_SVG = '<svg class="accident-dot-svg" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M834.24 712.48v49.6H237.92v-49.6h46.4c-15.84-62.56-31.68-124.64-47.52-186.88-7.36 2.08-14.08 4-20.96 5.76-11.52 2.88-22.56-3.68-25.44-15.04-2.88-11.2 3.68-22.72 15.04-26.4 4.64-1.44 9.44-2.56 14.08-4.16 9.92-3.36 19.36-4.64 28 4.32 0.16-1.76 0.32-2.72 0.32-3.68 1.92-35.2 4.16-70.24 5.92-105.44 1.12-22.72 16-42.88 36.96-48.8 59.84-16.96 119.84-33.76 179.68-50.72 23.04-6.56 46.08-13.12 69.28-19.52h11.52c0.48 0.32 0.96 0.64 1.6 0.8 15.68 2.88 27.68 11.36 36.48 25.6 16.96 27.52 34.24 54.88 51.36 82.4 0.8 1.44 1.76 2.72 3.04 4.48 3.2-6.4 7.52-10.88 13.6-12.64 7.68-2.4 15.36-4.64 23.04-6.4 14.72-3.36 27.68 10.08 24.32 25.28-1.76 8.48-7.04 13.92-14.88 16.32-6.88 2.08-13.76 4-20.96 6.08 12.32 48.64 24.64 96.64 36.96 145.12-123.36 34.88-246.4 69.6-369.44 104.32 13.28 19.84 15.52 39.36 1.12 59.2h402.72c-38.56-9.12-49.6-42.4-46.4-65.28 4.16-29.44 27.04-50.4 54.72-50.4 26.72 0.16 49.92 21.12 54.08 48.64 3.84 25.44-8.8 58.08-45.44 67.2 25.6-0.16 51.36-0.16 77.12-0.16zM602.56 400c-0.16-0.8-0.16-1.28-0.32-1.6-14.24-25.12-28.16-50.4-42.88-75.36-8.32-14.08-25.76-20.8-40.64-16.64-63.04 17.76-126.08 35.52-189.12 53.44-17.12 4.8-28.48 20.64-28.64 39.2-0.32 27.36-0.48 54.88-0.64 82.24 0 1.12 0.16 2.4 0.32 4 100.96-28.64 201.44-56.96 301.92-85.28z m6.88 108c17.92 0 32.48-14.88 32.32-33.12 0-17.44-13.92-31.52-31.04-31.52-17.76 0-32.64 15.04-32.64 32.96-0.16 17.6 13.92 31.68 31.36 31.68z m-288.16 81.28c17.76 0 32.64-15.04 32.48-32.96-0.16-17.44-13.92-31.52-31.04-31.52-17.92-0.16-32.64 14.88-32.64 33.28 0.16 17.44 13.92 31.2 31.2 31.2zM512 1.6C230.08 1.6 1.6 230.08 1.6 512s228.48 510.4 510.4 510.4 510.4-228.48 510.4-510.4S793.92 1.6 512 1.6z"/></svg>';
+  var INCIDENT_CATEGORY_SVG = {
+    warning: '<svg class="incident-point-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2.6 22.4 20.4H1.6Z"/><rect x="10.96" y="8.9" width="2.08" height="6.2" rx="1.04" fill="#0b1c28"/><circle cx="12" cy="17.4" r="1.15" fill="#0b1c28"/></svg>',
+    alarm: '<svg class="incident-point-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2.2 20.5 7.1v9.8L12 21.8 3.5 16.9V7.1Z"/><rect x="10.96" y="8.2" width="2.08" height="6.2" rx="1.04" fill="#0b1c28"/><circle cx="12" cy="16.9" r="1.15" fill="#0b1c28"/></svg>'
+  };
   var state = { selectedArea: null, selectedVehicleId: null, modalOpen: false, modalType: null, map: null, mapLayers: {}, layerVisibility: { vehicle: false, incident: false, accident: false, fence: false, road: false }, vehicleMarkers: {}, vehicleFocusMarker: null, roadMode: false, roadFilter: 'all', roadArea: 'all', roadPage: 1, roadViewMode: null, roadData: [], fenceData: [], applicationFilter: 'all', applicationPage: 1, applicationDateFrom: '', applicationDateTo: '', vehicleMode: true, vehicleFilter: 'all', vehicleViewMode: null, vehicleData: [], vehicleSearch: '', incidentMode: false, incidentFilter: 'total', incidentRange: '本年', incidentViewMode: null, incidentListFilter: 'total', incidentListPage: 1, incidentDateFrom: '', incidentDateTo: '', accidentMode: false, accidentRange: '本年', accidentViewMode: null, accidentData: [], accidentPage: 1, accidentDateFrom: '', accidentDateTo: '', accidentMarkers: {}, accidentFocusMarker: null, incidentMarkers: {}, incidentFocusMarker: null };
   var BUSINESS_LAYER_KEYS = ['vehicle', 'incident', 'accident', 'fence', 'road'];
   var AGGREGATE_LAYER_KEYS = ['vehicle', 'incident', 'accident', 'road'];
@@ -36,11 +40,6 @@
       labels: ['临牌有效期', '电子围栏越界', '测试时段合规性'], values: [16, 24, 14], total: 54,
       selected: { total: ['事件总数', 54], warning: ['预警事件', 45], alarm: ['告警事件', 9] }
     }
-  };
-  var incidentRangeData = {
-    '本月': { total: 54, warning: 45, alarm: 9 },
-    '本年': { total: 128, warning: 101, alarm: 27 },
-    '全部': { total: 246, warning: 188, alarm: 58 }
   };
   var applicationCategories = [
     { key: 'all', label: '申请总数', count: 128 },
@@ -75,27 +74,85 @@
     { plate: '鄂F·A009', company: '襄阳智行科技', application: '道路测试', mode: '自动驾驶', speed: 24, status: 'online', lastReport: '09-21 18:21:39' }
   ];
   var incidentRows = [];
-  var incidentTypes = ['车速超限', '通信中断', '电子围栏越界', '临牌有效期', '非规定时段测试', '路径规划异常'];
-  var incidentDescriptions = ['车辆运行速度超过当前道路限速', '车载终端连续未上报有效数据', '车辆驶入限制区域', '临时牌照已超过有效期限', '车辆在非规定测试时段运行', '自动驾驶路径规划出现异常'];
-  var incidentVehicles = [
-    ['鄂F·A001', '襄阳智行科技'], ['鄂F·A002', '襄阳智行科技'], ['鄂F·A003', '汉江智能出行'],
-    ['鄂F·A004', '襄阳智行科技'], ['鄂F·A005', '汉江智能出行'], ['鄂F·A006', '东津无人配送'],
-    ['鄂F·A007', '东津无人配送'], ['鄂F·A008', '汉江智能出行'], ['鄂F·A009', '襄阳智行科技']
+  // 按业务发生频次加权：预警类事件多于告警类事件
+  var INCIDENT_TYPE_POOL = [
+    { type: '通信中断', category: 'warning' }, { type: '通信中断', category: 'warning' }, { type: '通信中断', category: 'warning' }, { type: '通信中断', category: 'warning' },
+    { type: '路径规划异常', category: 'warning' }, { type: '路径规划异常', category: 'warning' }, { type: '路径规划异常', category: 'warning' },
+    { type: '非规定时段测试', category: 'warning' }, { type: '非规定时段测试', category: 'warning' },
+    { type: '车速超限', category: 'alarm' }, { type: '车速超限', category: 'alarm' },
+    { type: '电子围栏越界', category: 'alarm' }, { type: '临牌有效期', category: 'alarm' }
   ];
-  for (var incidentIndex = 0; incidentIndex < 36; incidentIndex++) {
-    var incidentDate = new Date(2026, 8 - (incidentIndex % 9), 1 + (incidentIndex * 3) % 26, 8 + (incidentIndex % 10), 12 + (incidentIndex * 7) % 48, 10 + (incidentIndex * 11) % 48);
-    var incidentCategory = incidentIndex % 3 === 0 ? 'alarm' : 'warning';
-    var incidentVehicle = incidentVehicles[incidentIndex % incidentVehicles.length];
-    var incidentTypeIndex = incidentIndex % incidentTypes.length;
-    incidentRows.push({
-      id: 'EW01-' + incidentDate.getFullYear() + String(incidentDate.getMonth() + 1).padStart(2, '0') + '-' + String(incidentIndex + 1).padStart(3, '0'),
-      category: incidentCategory, plate: incidentVehicle[0], company: incidentVehicle[1], type: incidentTypes[incidentTypeIndex],
-      description: incidentDescriptions[incidentTypeIndex], date: incidentDate.toISOString().slice(0, 10),
-      time: [String(incidentDate.getHours()).padStart(2, '0'), String(incidentDate.getMinutes()).padStart(2, '0'), String(incidentDate.getSeconds()).padStart(2, '0')].join(':'),
-      status: incidentIndex % 4 === 0 ? '待处理' : (incidentIndex % 4 === 1 ? '处理中' : '已完成')
-    });
+  var INCIDENT_TYPE_DESCRIPTIONS = {
+    '车速超限': '车辆运行速度超过当前道路限速', '通信中断': '车载终端连续未上报有效数据',
+    '电子围栏越界': '车辆驶入限制区域', '临牌有效期': '临时牌照已超过有效期限',
+    '非规定时段测试': '车辆在非规定测试时段运行', '路径规划异常': '自动驾驶路径规划出现异常'
+  };
+  // [距当前月数, 事件条数]，事件时间围绕演示基准月倒推生成，保证本月/本年/全部三档均有数据
+  var INCIDENT_MONTH_BUCKETS = [[0, 12], [1, 5], [2, 4], [3, 4], [4, 3], [5, 2], [6, 2], [7, 1], [8, 1], [9, 4], [10, 3], [11, 3], [12, 2], [13, 2], [14, 2], [15, 2], [16, 2]];
+
+  function incidentCurrentMonthText() {
+    var now = new Date();
+    return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   }
-  incidentRows.sort(function (a, b) { return (b.date + b.time).localeCompare(a.date + a.time); });
+  function incidentRoadSegments(roads, areaName) {
+    var entry = (roads || []).filter(function (item) { return item.name === areaName; })[0];
+    return (entry && entry.segments) || [];
+  }
+  function incidentCompanyFor(plate, areaName) {
+    var row = vehicleListRows.filter(function (item) { return item.plate === plate; })[0];
+    return (row && row.company) || areaName;
+  }
+  function incidentPointOnPath(segment, ratio, offset) {
+    var path = segment && segment.path;
+    if (!path || path.length < 2) return null;
+    var span = (path.length - 1) * Math.min(.999, Math.max(0, ratio));
+    var from = path[Math.floor(span)];
+    var to = path[Math.min(path.length - 1, Math.floor(span) + 1)];
+    var weight = span - Math.floor(span);
+    return [
+      Number((from[0] + (to[0] - from[0]) * weight + offset[0]).toFixed(5)),
+      Number((from[1] + (to[1] - from[1]) * weight + offset[1]).toFixed(5))
+    ];
+  }
+  // 事件点位取业务系统采集到的事件触发位置，落在区域测试路段上，与车辆实时位置无关
+  function buildIncidentData(areas, roads) {
+    var list = areas || [];
+    var rows = [];
+    var anchor = new Date();
+    var anchorYear = anchor.getFullYear();
+    var anchorMonth = anchor.getMonth();
+    var sequence = 0;
+    INCIDENT_MONTH_BUCKETS.forEach(function (bucket) {
+      var monthsAgo = bucket[0];
+      var at = new Date(anchorYear, anchorMonth - monthsAgo, 1);
+      var monthText = at.getFullYear() + '-' + String(at.getMonth() + 1).padStart(2, '0');
+      for (var index = 0; index < bucket[1]; index++) {
+        sequence += 1;
+        var area = list[(sequence + monthsAgo) % list.length];
+        var vehicles = area.vehicles || [];
+        var vehicle = vehicles.length ? vehicles[(sequence + monthsAgo) % vehicles.length] : null;
+        if (!vehicle) return;
+        var segments = incidentRoadSegments(roads, area.name);
+        var hotspot = sequence % 5 === 0;
+        var segment = segments.length ? segments[(hotspot ? sequence + 1 : sequence) % segments.length] : null;
+        var position = segment ? incidentPointOnPath(segment, hotspot ? .5 : .15 + ((sequence * 7) % 8) / 10, hotspot ? [0, 0] : [((sequence % 3) - 1) * .0009, ((sequence % 5) - 2) * .0011]) : null;
+        if (!position) position = [area.center[0], area.center[1]];
+        var typeEntry = INCIDENT_TYPE_POOL[(sequence * 5 + monthsAgo * 3) % INCIDENT_TYPE_POOL.length];
+        rows.push({
+          id: 'EW01-' + monthText.replace('-', '') + '-' + String(sequence).padStart(3, '0'),
+          category: typeEntry.category, plate: vehicle.plate, company: incidentCompanyFor(vehicle.plate, area.name),
+          area: area.name, type: typeEntry.type, description: INCIDENT_TYPE_DESCRIPTIONS[typeEntry.type] || '--',
+          date: monthText + '-' + String(1 + (sequence * 7) % 27).padStart(2, '0'),
+          time: [8 + (sequence * 3) % 11, (sequence * 11) % 60, (sequence * 13) % 60].map(function (value) { return String(value).padStart(2, '0'); }).join(':'),
+          status: monthsAgo === 0 ? ['待处理', '处理中', '已完成', '已完成'][sequence % 4] : (monthsAgo <= 3 ? ['已完成', '处理中', '已完成', '已完成'][sequence % 4] : '已完成'),
+          lat: position[0], lon: position[1], location: segment ? segment.name : area.name + '测试道路',
+          rule: cockpitEventRules[typeEntry.type] || '--'
+        });
+      }
+    });
+    rows.sort(function (a, b) { return (b.date + b.time).localeCompare(a.date + a.time) || b.id.localeCompare(a.id); });
+    incidentRows = rows;
+  }
   var cockpitFenceData = [
     { id: 1, name: '樊城区-高新区测试路段-东津新区', fenceType: '允许通行区域', runStatus: '开放', length: '18.6', speedLimit: 60, ruleConfig: ['车辆越界报警'], coords: [[32.042,112.135],[32.048,112.145],[32.055,112.150],[32.060,112.142],[32.058,112.128],[32.050,112.122],[32.042,112.135]] },
     { id: 2, name: '樊城区-襄城环线路段-B品牌试验场', fenceType: '允许通行区域', runStatus: '开放', length: '12.5', speedLimit: 80, ruleConfig: ['车辆越界报警'], coords: [[32.010,112.120],[32.015,112.130],[32.020,112.128],[32.022,112.115],[32.016,112.108],[32.010,112.120]] },
@@ -106,6 +163,85 @@
     { id: 7, name: '鱼梁洲经开区新建测试区', fenceType: '允许通行区域', runStatus: '待配置矢量', length: '0', speedLimit: null, ruleConfig: ['车辆越界报警'], coords: null }
   ];
 
+  function ensureChartTooltip(container) {
+    var tooltip = container.querySelector('.chart-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'chart-tooltip';
+      tooltip.setAttribute('role', 'tooltip');
+      tooltip.setAttribute('aria-hidden', 'true');
+      container.appendChild(tooltip);
+    }
+    return tooltip;
+  }
+  function hideChartTooltip(tooltip) {
+    if (!tooltip) return;
+    tooltip.classList.remove('is-visible');
+    tooltip.setAttribute('aria-hidden', 'true');
+  }
+  function positionChartTooltip(container, tooltip, clientX, clientY) {
+    var rect = container.getBoundingClientRect();
+    var x = clientX - rect.left;
+    var y = clientY - rect.top;
+    var width = tooltip.offsetWidth || 120;
+    var height = tooltip.offsetHeight || 42;
+    x = Math.max(width / 2 + 6, Math.min(rect.width - width / 2 - 6, x));
+    y = Math.max(height + 8, Math.min(rect.height - 6, y - 12));
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+  }
+  function showChartTooltip(tooltip, html, container, clientX, clientY) {
+    tooltip.innerHTML = html;
+    tooltip.setAttribute('aria-hidden', 'false');
+    tooltip.classList.add('is-visible');
+    positionChartTooltip(container, tooltip, clientX, clientY);
+  }
+  function bindDonutTooltip(chart) {
+    if (!chart || chart.dataset.tooltipBound) return;
+    chart.dataset.tooltipBound = 'true';
+    var tooltip = ensureChartTooltip(chart);
+    function update(event) {
+      var data = chart._donutTooltipData;
+      if (!data || !data.values.length || !data.sum) return;
+      var rect = chart.getBoundingClientRect();
+      var x = event.clientX - rect.left - rect.width / 2;
+      var y = event.clientY - rect.top - rect.height / 2;
+      var radius = Math.sqrt(x * x + y * y);
+      var outerRadius = Math.min(rect.width, rect.height) / 2;
+      var innerRadius = outerRadius * .23;
+      if (radius < innerRadius || radius > outerRadius) { hideChartTooltip(tooltip); return; }
+      var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
+      if (angle < 0) angle += 360;
+      var cursor = 0;
+      var index = data.values.length - 1;
+      data.values.some(function (value, valueIndex) {
+        var end = cursor + (value / data.sum) * 360;
+        if (angle >= cursor && angle < end) { index = valueIndex; return true; }
+        cursor = end;
+        return false;
+      });
+      var value = data.displayValues[index];
+      var percent = data.sum ? (value / data.sum * 100).toFixed(1) : '0.0';
+      showChartTooltip(tooltip, '<strong>' + data.labels[index] + '</strong><span>数量 ' + Number(value).toLocaleString('zh-CN') + ' · ' + percent + '%</span>', chart, event.clientX, event.clientY);
+    }
+    chart.addEventListener('pointermove', update);
+    chart.addEventListener('pointerleave', function () { hideChartTooltip(tooltip); });
+  }
+  function bindLineTooltip(chart) {
+    if (!chart) return;
+    var tooltip = ensureChartTooltip(chart);
+    chart.querySelectorAll('.chart-point').forEach(function (point) {
+      function show(event) {
+        var label = point.getAttribute('data-label') || '--';
+        var count = point.getAttribute('data-count') || '0';
+        showChartTooltip(tooltip, '<strong>' + label + '</strong><span>事故数 ' + count + ' 起</span>', chart, event.clientX, event.clientY);
+      }
+      point.addEventListener('pointerenter', show);
+      point.addEventListener('pointermove', show);
+      point.addEventListener('pointerleave', function () { hideChartTooltip(tooltip); });
+    });
+  }
+
   function setDonut(type, key) {
     var data = chartData[type];
     var total = data.total;
@@ -115,6 +251,7 @@
     var labelEl = document.getElementById(type + '-total-label');
     var legend = document.getElementById(type + '-legend');
     if (!chart || !totalEl || !legend) return;
+    bindDonutTooltip(chart);
     var values = data.values.slice();
     var ratio = Math.max(0.16, Math.min(1, selected[1] / total));
     if (key !== Object.keys(data.selected)[0]) {
@@ -128,6 +265,7 @@
       return colors[index] + ' ' + start.toFixed(2) + '% ' + end.toFixed(2) + '%';
     }).join(', ');
     chart.style.setProperty('--donut', 'conic-gradient(' + stops + ')');
+    chart._donutTooltipData = { labels: data.labels.slice(), values: values.slice(), displayValues: data.labels[0] === '暂无事件' ? values.map(function () { return 0; }) : values.slice(), sum: sum };
     totalEl.textContent = selected[1].toLocaleString('zh-CN');
     labelEl.textContent = selected[0];
     legend.innerHTML = data.labels.map(function (label, index) {
@@ -143,13 +281,15 @@
         if (!group) return;
         group.querySelectorAll('.metric-tile').forEach(function (other) { other.classList.remove('is-selected'); other.setAttribute('aria-pressed', 'false'); });
         tile.classList.add('is-selected'); tile.setAttribute('aria-pressed', 'true');
-        var chartType = tile.dataset.chart; if (chartType) setDonut(chartType, tile.dataset.key);
+        var chartType = tile.dataset.chart;
+        if (chartType && chartType !== 'incident') setDonut(chartType, tile.dataset.key);
         if (chartType === 'vehicle') {
           state.vehicleFilter = tile.dataset.key || 'all';
           if (!state.vehicleMode) setVehicleModuleSelected(true); else updateVehicleView(true);
         }
         if (chartType === 'incident') {
           state.incidentFilter = tile.dataset.key || 'total';
+          applyIncidentChart();
           if (!state.incidentMode) setIncidentModuleSelected(true); else updateIncidentView(true);
         }
       });
@@ -414,6 +554,19 @@
     if (marker && state.map && state.map.hasLayer(marker)) state.map.removeLayer(marker);
     if (key in state) state[key] = null;
   }
+  // flyTo 结束后执行回调；地图已在目标位置时 moveend 可能不触发，用定时兜底
+  function afterCockpitMapMove(map, position, zoom, callback) {
+    var done = false;
+    function run() {
+      if (done) return;
+      done = true;
+      map.off('moveend', run);
+      callback();
+    }
+    map.once('moveend', run);
+    map.flyTo(position, zoom, { duration: .65 });
+    window.setTimeout(run, 900);
+  }
   function locateVehicleFromList(plate) {
     var row = vehicleListRows.find(function (item) { return item.plate === plate; });
     var target = row && vehicleListLocation(row);
@@ -422,19 +575,14 @@
     if (!state.vehicleMode) setVehicleModuleSelected(true);
     state.selectedVehicleId = target.id;
     var map = state.map;
-    var targetZoom = Math.max(map.getZoom(), VEHICLE_ICON_ZOOM);
-    map.once('moveend', function () {
+    afterCockpitMapMove(map, target.position, Math.max(map.getZoom(), VEHICLE_ICON_ZOOM), function () {
       updateVehicleView(true);
-      var marker = target.id && state.vehicleMarkers[target.id];
-      if (marker) {
-        marker.openPopup();
-        return;
-      }
-      if (state.vehicleFocusMarker && state.map.hasLayer(state.vehicleFocusMarker)) state.map.removeLayer(state.vehicleFocusMarker);
+      var marker = target.id ? state.vehicleMarkers[target.id] : null;
+      if (marker && state.mapLayers.vehicle && state.mapLayers.vehicle.hasLayer(marker)) { marker.openPopup(); return; }
+      clearCockpitFocusMarker('vehicleFocusMarker');
       state.vehicleFocusMarker = L.circleMarker(target.position, { radius: 10, color: '#00cfe8', weight: 2, fillColor: '#00cfe8', fillOpacity: .22, className: 'vehicle-focus-marker' }).addTo(map);
-      state.vehicleFocusMarker.bindPopup(cockpitVehiclePopup(null, { plate: row.plate, status: row.status, mileage: null, events: [], row: row }), { closeButton: true, maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' }).openPopup();
+      state.vehicleFocusMarker.bindPopup(cockpitVehiclePopup(null, { plate: row.plate, status: row.status, mileage: null, row: row }), { closeButton: true, maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' }).openPopup();
     });
-    map.flyTo(target.position, targetZoom, { duration: .65 });
   }
   var ACCIDENT_SCENE_COLORS = [['#2f6fb5', '#00cfe8'], ['#a8562c', '#fa8c16'], ['#4b3f8f', '#9254de'], ['#2f8f6a', '#52c41a']];
   var ACCIDENT_SCENE_LAYOUTS = {
@@ -469,17 +617,19 @@
   function accidentPopupHtml(record) {
     if (!record) return '';
     var occurredAt = [record.date, record.time].filter(Boolean).join(' ') || '--';
-    return '<div class="accident-popup">' +
-      '<div class="cockpit-popup-head"><span class="cockpit-popup-kicker">交通事故</span><strong>事故 ' + vehicleListEscape(record.id) + '</strong></div>' +
-      '<div class="accident-popup-grid">' +
+    var replayable = !!cockpitVehicleEntryByPlate(record.plate);
+    return '<div class="cockpit-vehicle-popup accident-popup">' +
+      '<div class="cockpit-popup-head"><strong>事故 ' + vehicleListEscape(record.id) + '</strong></div>' +
+      '<div class="cockpit-popup-grid">' +
       '<div><span>车牌号</span><b>' + vehicleListEscape(record.plate || '--') + '</b></div>' +
       '<div><span>企业</span><b>' + vehicleListEscape(record.company || '--') + '</b></div>' +
       '<div><span>事故类型</span><b>' + vehicleListEscape(record.type || '--') + '</b></div>' +
       '<div><span>发生时间</span><b>' + vehicleListEscape(occurredAt) + '</b></div>' +
-      '<div class="accident-popup-span"><span>事故地点</span><b>' + vehicleListEscape(record.location || '--') + '</b></div>' +
-      '<div class="accident-popup-span"><span>伤亡情况</span><b class="accident-casualty ' + vehicleListEscape(record.casualty || 'none') + '"><i></i>' + vehicleListEscape(record.casualtyLabel || '--') + '</b></div>' +
+      '<div class="cockpit-popup-span"><span>事故地点</span><b>' + vehicleListEscape(record.location || '--') + '</b></div>' +
+      '<div class="cockpit-popup-span"><span>伤亡情况</span><b class="accident-casualty ' + vehicleListEscape(record.casualty || 'none') + '"><i></i>' + vehicleListEscape(record.casualtyLabel || '--') + '</b></div>' +
       '</div>' +
       '<div class="accident-popup-photos"><span class="accident-popup-photos-title">现场照片</span>' + accidentPopupPhotos(record) + '</div>' +
+      '<div class="cockpit-popup-actions"><button type="button" class="cockpit-popup-action primary" data-accident-replay="' + vehicleListEscape(record.id) + '"' + (replayable ? '' : ' disabled title="事故关联车辆暂不可用"') + '>回放</button></div>' +
       '</div>';
   }
   function closeAccidentPhotoViewer() {
@@ -546,37 +696,34 @@
     closeModal();
     if (!state.accidentMode) setAccidentModuleSelected(true);
     var map = state.map;
-    var targetZoom = Math.max(map.getZoom(), ACCIDENT_LOCATE_ZOOM);
-    map.once('moveend', function () {
+    afterCockpitMapMove(map, record.position, Math.max(map.getZoom(), ACCIDENT_LOCATE_ZOOM), function () {
       updateAccidentView(true);
       var accidentLayer = state.mapLayers.accident;
       var marker = accidentLayer && map.hasLayer(accidentLayer) ? state.accidentMarkers[record.id] : null;
       if (marker) { marker.openPopup(); return; }
-      if (state.accidentFocusMarker && state.map.hasLayer(state.accidentFocusMarker)) state.map.removeLayer(state.accidentFocusMarker);
+      clearCockpitFocusMarker('accidentFocusMarker');
       state.accidentFocusMarker = L.circleMarker(record.position, { radius: 10, color: '#00cfe8', weight: 2, fillColor: '#00cfe8', fillOpacity: .22, className: 'vehicle-focus-marker' }).addTo(map);
       state.accidentFocusMarker.bindPopup(accidentPopupHtml(record), { closeButton: true, maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' }).openPopup();
     });
-    map.flyTo(record.position, targetZoom, { duration: .65 });
   }
   function locateIncidentFromList(eventId) {
     var row = incidentRows.filter(function (item) { return item.id === eventId; })[0];
-    var entry = row ? cockpitVehicleEntryByPlate(row.plate) : null;
-    var position = entry ? cockpitVehicleCoords(entry, null) : null;
-    if (!row || !entry || !position || !state.map) { cockpitModalFeedback('该事件关联车辆暂无法定位，列表已保留'); return; }
+    if (!row || !Number.isFinite(Number(row.lat)) || !Number.isFinite(Number(row.lon)) || !state.map) {
+      cockpitModalFeedback('该异常事件暂无有效定位坐标，列表已保留');
+      return;
+    }
     closeModal();
     if (!state.incidentMode) setIncidentModuleSelected(true);
-    state.selectedVehicleId = entry.normalized.id;
     var map = state.map;
-    var targetZoom = Math.max(map.getZoom(), VEHICLE_ICON_ZOOM);
-    map.once('moveend', function () {
+    var position = [Number(row.lat), Number(row.lon)];
+    afterCockpitMapMove(map, position, Math.max(map.getZoom(), VEHICLE_ICON_ZOOM), function () {
       updateIncidentView(true);
       clearCockpitFocusMarker('incidentFocusMarker');
-      var marker = state.incidentMarkers[state.selectedVehicleId];
+      var marker = state.incidentMarkers[row.id];
       if (marker) { marker.openPopup(); return; }
       state.incidentFocusMarker = L.circleMarker(position, { radius: 10, color: '#00cfe8', weight: 2, fillColor: '#00cfe8', fillOpacity: .22, className: 'vehicle-focus-marker' }).addTo(map);
-      state.incidentFocusMarker.bindPopup(cockpitVehiclePopup(entry.area, entry.raw, (entry.raw && entry.raw.events) || [], 'events'), { closeButton: true, maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' }).openPopup();
+      state.incidentFocusMarker.bindPopup(incidentPopupHtml(row), { closeButton: true, maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' }).openPopup();
     });
-    map.flyTo(position, targetZoom, { duration: .65 });
   }
   function openVehicleListModal() {
     state.modalOpen = true; state.modalType = 'vehicle'; state.vehicleSearch = '';
@@ -679,24 +826,14 @@
     '电子围栏越界': '车辆驶出授权电子围栏边界', '时段合规异常': '车辆在非规定测试时段运行',
     '临牌有效期': '临时牌照超过有效期限', '非规定时段测试': '车辆在非规定测试时段运行'
   };
-  function enrichCockpitVehicleEvents(area, vehicle) {
-    var suffix = Number((vehicle.plate.match(/\d+$/) || [0])[0]);
-    (vehicle.events || []).forEach(function (event, index) {
-      var month = event.period === '全部' ? '2025-11' : (event.period === '本年' ? '2026-05' : '2026-09');
-      event.occurredAt = event.occurredAt || month + '-' + String(10 + suffix).padStart(2, '0') + ' 09:' + String(12 + index * 11).padStart(2, '0') + ':00';
-      event.location = event.location || area.name + '测试道路';
-      event.rule = event.rule || cockpitEventRules[event.type] || '--';
-    });
-  }
   function ensureCockpitVehicleData(areas) {
     cockpitVehicleIndex = {};
     (areas || []).forEach(function (area) {
       (area.vehicles || []).forEach(function (vehicle) {
-        enrichCockpitVehicleEvents(area, vehicle);
         var row = vehicleListRows.find(function (item) { return item.plate === vehicle.plate; }) || {};
         var normalized = typeof vehicleData !== 'undefined' && vehicleData.find(function (item) { return item.plate === vehicle.plate; });
         if (!normalized) {
-          normalized = { id: 'CP-' + vehicle.plate.replace(/[^A-Za-z0-9]/g, ''), plate: vehicle.plate, company: row.company || area.name, applyType: row.application === '示范应用' ? 'demo' : (row.application === '商业化试点' ? 'operate' : 'road-test'), mode: vehicle.status === 'manual' ? 'manual' : 'auto', speed: row.speed == null ? 0 : row.speed, acceleration: 0, level: 'L3', status: cockpitVehicleStatus(vehicle), lon: vehicle.position[1], lat: vehicle.position[0], vin: 'COCKPIT-' + vehicle.plate.replace(/[^A-Za-z0-9]/g, ''), heading: 0, gear: vehicle.status === 'offline' ? 'P' : 'D', lastTime: row.lastReport || '--', alarms: (vehicle.events || []).filter(function (event) { return event.category === 'alarm'; }).length };
+          normalized = { id: 'CP-' + vehicle.plate.replace(/[^A-Za-z0-9]/g, ''), plate: vehicle.plate, company: row.company || area.name, applyType: row.application === '示范应用' ? 'demo' : (row.application === '商业化试点' ? 'operate' : 'road-test'), mode: vehicle.status === 'manual' ? 'manual' : 'auto', speed: row.speed == null ? 0 : row.speed, acceleration: 0, level: 'L3', status: cockpitVehicleStatus(vehicle), lon: vehicle.position[1], lat: vehicle.position[0], vin: 'COCKPIT-' + vehicle.plate.replace(/[^A-Za-z0-9]/g, ''), heading: 0, gear: vehicle.status === 'offline' ? 'P' : 'D', lastTime: row.lastReport || '--', alarms: incidentEventsForPlate(vehicle.plate).filter(function (item) { return item.category === 'alarm'; }).length };
           if (typeof vehicleData !== 'undefined') vehicleData.push(normalized);
         } else {
           normalized.company = row.company || normalized.company || area.name;
@@ -708,7 +845,7 @@
         }
         normalized.cockpitArea = area.name;
         normalized.cockpitMileage = vehicle.mileage;
-        normalized.cockpitEvents = vehicle.events || [];
+        normalized.cockpitEvents = incidentEventsForPlate(vehicle.plate);
         vehicle.vehicleId = normalized.id;
         vehicle.areaName = area.name;
         cockpitVehicleIndex[normalized.id] = { raw: vehicle, area: area, normalized: normalized };
@@ -731,9 +868,9 @@
     return { alarms: alarms, warnings: warnings, total: list.length };
   }
   function cockpitVehiclePopup(area, vehicle, shownEvents, initialTab) {
-    var entry = cockpitVehicleById(vehicle.vehicleId);
+    var entry = cockpitVehicleById(vehicle.vehicleId) || cockpitVehicleEntryByPlate(vehicle.plate);
     var v = entry ? entry.normalized : (vehicle.row || vehicle);
-    var events = shownEvents || vehicle.events || [];
+    var events = (shownEvents || incidentEventsForPlate(v.plate)).slice().sort(function (a, b) { return incidentOccurredAt(b).localeCompare(incidentOccurredAt(a)); });
     var showEvents = initialTab === 'events';
     var summary = cockpitEventSummary(events);
     var eventText = summary.total ? '预警 ' + summary.warnings + ' · 告警 ' + summary.alarms : '暂无异常事件';
@@ -743,10 +880,10 @@
     var speed = v.speed == null ? '--' : v.speed + ' km/h';
     var acceleration = v.acceleration == null ? '--' : v.acceleration + ' m/s²';
     var gear = v.gear ? v.gear + '档' : '--';
-    var eventItems = events.slice().sort(function (a, b) { return (b.occurredAt || '').localeCompare(a.occurredAt || ''); }).map(function (event) {
-      var eventIndex = (vehicle.events || []).indexOf(event);
-      return '<article class="cockpit-popup-event"><div class="cockpit-popup-event-head"><span class="cockpit-popup-category ' + (event.category === 'alarm' ? 'alarm' : 'warning') + '">' + (event.category === 'alarm' ? '告警' : '预警') + '</span><strong>' + vehicleListEscape(event.type || '--') + '</strong><time>' + vehicleListEscape(event.occurredAt || '--') + '</time><button type="button" class="cockpit-popup-replay" data-event-replay-index="' + eventIndex + '"' + (id && eventIndex >= 0 ? '' : ' disabled title="事件关联车辆暂不可用"') + '>回放</button></div>' +
-        '<div class="cockpit-popup-event-meta"><span>位置：' + vehicleListEscape(event.location || '--') + '</span><span>触发规则：' + vehicleListEscape(event.rule || '--') + '</span><span>状态：' + vehicleListEscape(event.status || '--') + '</span></div></article>';
+    var eventItems = events.map(function (event) {
+      var replayable = !!(id && event.id);
+      return '<article class="cockpit-popup-event"><div class="cockpit-popup-event-head"><span class="cockpit-popup-category ' + (event.category === 'alarm' ? 'alarm' : 'warning') + '">' + incidentCategoryLabel(event.category) + '</span><strong>' + vehicleListEscape(event.type || '--') + '</strong><time>' + vehicleListEscape(incidentOccurredAt(event)) + '</time><button type="button" class="cockpit-popup-replay" data-event-replay="' + vehicleListEscape(event.id || '') + '"' + (replayable ? '' : ' disabled title="事件关联车辆暂不可用"') + '>回放</button></div>' +
+        '<div class="cockpit-popup-event-meta"><span>事件编号：' + vehicleListEscape(event.id || '--') + '</span><span>发生地点：' + vehicleListEscape(event.location || '--') + '</span><span>触发规则：' + vehicleListEscape(event.rule || '--') + '</span><span>状态：' + vehicleListEscape(event.status || '--') + '</span></div></article>';
     }).join('');
     return '<div class="cockpit-vehicle-popup" data-vehicle-id="' + vehicleListEscape(id || '') + '">' +
       '<div class="cockpit-popup-head"><strong>' + vehicleListEscape(v.plate) + '-' + vehicleListEscape(v.company || '--') + '</strong></div>' +
@@ -773,10 +910,22 @@
     container.addEventListener('click', function (event) {
       var tab = event.target.closest('[data-popup-tab]');
       if (tab) { event.stopPropagation(); selectTab(tab, false); return; }
-      var replay = event.target.closest('[data-event-replay-index]');
+      var replay = event.target.closest('[data-event-replay]');
       if (replay) {
         event.preventDefault(); event.stopPropagation();
-        if (!replay.disabled) replayCockpitEvent(replay.closest('.cockpit-vehicle-popup').dataset.vehicleId, Number(replay.dataset.eventReplayIndex));
+        if (!replay.disabled) replayIncidentEvent(replay.dataset.eventReplay || '');
+        return;
+      }
+      var accidentReplay = event.target.closest('[data-accident-replay]');
+      if (accidentReplay) {
+        event.preventDefault(); event.stopPropagation();
+        if (!accidentReplay.disabled) replayAccident(accidentReplay.dataset.accidentReplay || '');
+        return;
+      }
+      var incidentVehicle = event.target.closest('[data-incident-vehicle]');
+      if (incidentVehicle) {
+        event.preventDefault(); event.stopPropagation();
+        if (!incidentVehicle.disabled) focusVehicleByPlate(incidentVehicle.dataset.incidentVehicle || '');
         return;
       }
       var action = event.target.closest('[data-popup-action]');
@@ -795,22 +944,58 @@
       event.preventDefault(); event.stopPropagation(); selectTab(tabs[next], true);
     }, true);
   }
-  function incidentPeriodRank(period) { return period === '本月' ? 1 : (period === '本年' ? 2 : 3); }
-  function incidentEventMatches(event) {
-    var rangeRank = incidentPeriodRank(state.incidentRange);
-    return incidentPeriodRank(event.period || '全部') <= rangeRank && (state.incidentFilter === 'total' || event.category === state.incidentFilter);
+  function incidentInRange(row, range) {
+    var scope = range || state.incidentRange;
+    if (scope === '本月') return row.date.slice(0, 7) === incidentCurrentMonthText();
+    if (scope === '本年') return row.date.slice(0, 4) === String(new Date().getFullYear());
+    return true;
   }
-  function vehicleIncidentEvents(vehicle) { return (vehicle.events || []).filter(incidentEventMatches); }
+  function incidentRowsInRange(range) {
+    return incidentRows.filter(function (row) { return incidentInRange(row, range); });
+  }
+  function incidentSummary(range) {
+    return incidentRowsInRange(range).reduce(function (summary, row) {
+      summary.total += 1; summary[row.category] += 1; return summary;
+    }, { total: 0, warning: 0, alarm: 0 });
+  }
+  // 地图点位、区域聚合、统计卡、环形图、事件列表、实时事件统一取用同一份筛选结果
+  function incidentFilteredRows() {
+    return incidentRowsInRange().filter(function (row) { return state.incidentFilter === 'total' || row.category === state.incidentFilter; });
+  }
+  function incidentTypeBreakdown(rows) {
+    var counts = {};
+    rows.forEach(function (row) { counts[row.type] = (counts[row.type] || 0) + 1; });
+    var sorted = Object.keys(counts).map(function (type) { return { label: type, value: counts[type] }; })
+      .sort(function (a, b) { return b.value - a.value || a.label.localeCompare(b.label, 'zh-Hans-CN'); });
+    if (sorted.length > 5) {
+      sorted = sorted.slice(0, 4).concat([{ label: '其他类型', value: sorted.slice(4).reduce(function (sum, item) { return sum + item.value; }, 0) }]);
+    }
+    return sorted;
+  }
+  function incidentOccurredAt(row) { return row.date + ' ' + row.time; }
+  function incidentEventsForPlate(plate) {
+    return incidentRows.filter(function (row) { return row.plate === plate; })
+      .sort(function (a, b) { return incidentOccurredAt(b).localeCompare(incidentOccurredAt(a)); });
+  }
   function vehicleIncidentStatus(vehicle) {
-    var events = vehicleIncidentEvents(vehicle);
+    var events = incidentEventsForPlate(vehicle.plate);
     if (!events.length) return 'none';
-    return events.some(function (event) { return event.status !== '已完成'; }) ? 'unfinished' : 'finished';
+    return events.some(function (row) { return row.status !== '已完成'; }) ? 'unfinished' : 'finished';
   }
-  function areaIncidentEvents(area) {
-    return (area.vehicles || []).reduce(function (events, vehicle) { return events.concat(vehicleIncidentEvents(vehicle)); }, []);
+  function applyIncidentChart() {
+    var labels = { total: '事件总数', warning: '预警事件', alarm: '告警事件' };
+    var key = labels[state.incidentFilter] ? state.incidentFilter : 'total';
+    var summary = incidentSummary();
+    var counts = { total: summary.total, warning: summary.warning, alarm: summary.alarm };
+    var breakdown = incidentTypeBreakdown(incidentFilteredRows());
+    chartData.incident.labels = breakdown.length ? breakdown.map(function (item) { return item.label; }) : ['暂无事件'];
+    chartData.incident.values = breakdown.length ? breakdown.map(function (item) { return item.value; }) : [1];
+    chartData.incident.total = counts[key];
+    chartData.incident.selected = { total: [labels[key], counts[key]] };
+    setDonut('incident', 'total');
   }
   function updateIncidentTiles() {
-    var summary = incidentRangeData[state.incidentRange] || incidentRangeData['本年'];
+    var summary = incidentSummary(state.incidentRange);
     var module = document.getElementById('incident-module');
     if (!module) return;
     var values = { total: summary.total, warning: summary.warning, alarm: summary.alarm };
@@ -820,9 +1005,7 @@
       if (strong) strong.textContent = values[key];
       tile.dataset.value = values[key];
     });
-    chartData.incident.total = summary.total;
-    chartData.incident.selected = { total: ['事件总数', summary.total], warning: ['预警事件', summary.warning], alarm: ['告警事件', summary.alarm] };
-    setDonut('incident', state.incidentFilter);
+    applyIncidentChart();
   }
   function setIncidentRange(range) {
     state.incidentRange = range || '本年';
@@ -852,9 +1035,10 @@
           var area = areas[(index + monthIndex * 2) % areas.length];
           var sequence = records.length + 1;
           var casualty = accidentCasualty(sequence);
+          var linkedVehicle = area.vehicles[(index + monthIndex) % area.vehicles.length];
           records.push({
             id: 'SG' + String(sequence).padStart(4, '0'), area: area.name,
-            plate: '鄂F·' + String(16000 + sequence), company: ['襄阳智行科技', '汉江智能出行', '东津无人配送'][sequence % 3],
+            plate: linkedVehicle.plate, company: incidentCompanyFor(linkedVehicle.plate, area.name),
             type: ['碰撞', '追尾', '剐蹭', '单车事故'][sequence % 4],
             location: area.name + '测试路段' + (index % 6 + 1) + '号路口',
             time: String(8 + index % 10).padStart(2, '0') + ':' + String((index * 7) % 60).padStart(2, '0') + ':33',
@@ -936,7 +1120,8 @@
     var points = counts.map(function (count, index) { return { x: 42 + index * 450 / (counts.length - 1), y: 168 - count / max * 120, count: count }; });
     var path = points.map(function (point, index) { return (index ? 'L' : 'M') + point.x + ' ' + point.y; }).join(' ');
     chart.setAttribute('aria-label', state.accidentRange + '事故趋势图，共' + records.length + '起');
-    chart.innerHTML = '<svg viewBox="0 0 520 208" preserveAspectRatio="none" aria-hidden="true"><g class="chart-grid"><path d="M42 20H500 M42 62H500 M42 104H500 M42 146H500 M42 188H500"/></g><path class="chart-area" d="' + path + ' L492 188 L42 188Z"/><path class="chart-line" d="' + path + '"/><g class="chart-points">' + points.map(function (point) { return '<circle cx="' + point.x + '" cy="' + point.y + '" r="4"/>'; }).join('') + '</g><g class="chart-values">' + points.map(function (point) { return '<text x="' + point.x + '" y="' + (point.y - 11) + '">' + point.count + '</text>'; }).join('') + '</g><g class="chart-labels">' + points.map(function (point, index) { return '<text x="' + point.x + '" y="204">' + labels[index] + '</text>'; }).join('') + '</g></svg>';
+    chart.innerHTML = '<svg viewBox="0 0 520 208" preserveAspectRatio="none" aria-hidden="true"><g class="chart-grid"><path d="M42 20H500 M42 62H500 M42 104H500 M42 146H500 M42 188H500"/></g><path class="chart-area" d="' + path + ' L492 188 L42 188Z"/><path class="chart-line" d="' + path + '"/><g class="chart-points">' + points.map(function (point, index) { return '<circle class="chart-point" cx="' + point.x + '" cy="' + point.y + '" r="4" data-label="' + labels[index] + '" data-count="' + point.count + '" tabindex="0" aria-label="' + labels[index] + '事故数 ' + point.count + ' 起"/>'; }).join('') + '</g><g class="chart-values">' + points.map(function (point) { return '<text x="' + point.x + '" y="' + (point.y - 11) + '">' + point.count + '</text>'; }).join('') + '</g><g class="chart-labels">' + points.map(function (point, index) { return '<text x="' + point.x + '" y="204">' + labels[index] + '</text>'; }).join('') + '</g></svg>';
+    bindLineTooltip(chart);
   }
 
   function cockpitDateText(date) {
@@ -947,16 +1132,20 @@
     if (!parts) return null;
     var at = new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]), Number(parts[4]), Number(parts[5]), Number(parts[6]));
     if (isNaN(at.getTime()) || cockpitDateText(at) !== parts[1] + '-' + parts[2] + '-' + parts[3] || secToTime(timeToSeconds(parts[4] + ':' + parts[5] + ':' + parts[6])) !== parts[4] + ':' + parts[5] + ':' + parts[6]) return null;
-    var from = new Date(Math.max(at.getTime() - 60000, new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime()));
+    var dayStart = new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime();
+    var from = new Date(Math.max(at.getTime() - 300000, dayStart));
+    var to = new Date(Math.min(at.getTime() + 60000, dayStart + 86399000));
     var startTime = secToTime(from.getHours() * 3600 + from.getMinutes() * 60 + from.getSeconds());
     var eventTime = parts[4] + ':' + parts[5] + ':' + parts[6];
-    return { playbackDate: cockpitDateText(at), startTime: startTime, endTime: startTime === eventTime ? '00:01:00' : eventTime, currentTime: eventTime };
+    var endTime = secToTime(to.getHours() * 3600 + to.getMinutes() * 60 + to.getSeconds());
+    return { playbackDate: cockpitDateText(at), startTime: startTime, endTime: endTime, currentTime: eventTime };
   }
   function renderCockpitEventReplay(event, v, range) {
     var card = document.getElementById('cockpit-event-replay');
     if (!card) return;
-    card.innerHTML = '<div class="cockpit-event-replay-head"><strong>异常事件回放</strong><button type="button" data-exit-event-replay>退出回放</button></div>' +
-      '<div class="cockpit-event-replay-type">' + (event.category === 'alarm' ? '告警' : '预警') + ' · ' + vehicleListEscape(event.type || '--') + '</div>' +
+    card.setAttribute('aria-label', event.kind === 'accident' ? '事故回放信息' : '异常事件回放信息');
+    card.innerHTML = '<div class="cockpit-event-replay-head"><strong>' + (event.kind === 'accident' ? '事故回放' : '异常事件回放') + '</strong><button type="button" data-exit-event-replay>退出回放</button></div>' +
+      '<div class="cockpit-event-replay-type">' + (event.kind === 'accident' ? '事故 ' + vehicleListEscape(event.id) : (event.category === 'alarm' ? '告警' : '预警')) + ' · ' + vehicleListEscape(event.type || '--') + '</div>' +
       '<span class="cockpit-event-replay-line">' + vehicleListEscape(v.plate) + ' · ' + vehicleListEscape(v.company || '--') + '</span>' +
       '<span class="cockpit-event-replay-line">发生时间：' + vehicleListEscape(event.occurredAt) + '</span>' +
       '<span class="cockpit-event-replay-line">' + vehicleListEscape(event.location || '--') + '</span>' +
@@ -986,17 +1175,46 @@
     closeCockpitTrajectory();
     if (!videoWasOpen) closeCockpitVideo();
   }
-  function replayCockpitEvent(id, index) {
-    var entry = cockpitVehicleById(id);
-    var event = entry && entry.raw && entry.raw.events && entry.raw.events[index];
-    if (!event || !entry.normalized) { cockpitReplayFeedback('未找到异常事件关联车辆'); return; }
-    var range = cockpitEventReplayWindow(event.occurredAt);
+  function replayIncidentEvent(eventId) {
+    var row = incidentRows.filter(function (item) { return item.id === eventId; })[0];
+    var entry = row ? cockpitVehicleEntryByPlate(row.plate) : null;
+    if (!row || !entry || !entry.normalized) { cockpitReplayFeedback('未找到异常事件关联车辆'); return; }
+    var occurredAt = incidentOccurredAt(row);
+    var range = cockpitEventReplayWindow(occurredAt);
     if (!range) { cockpitReplayFeedback('异常事件时间无效，无法打开回放'); return; }
+    startCockpitEventReplay({ category: row.category, type: row.type, occurredAt: occurredAt, location: row.location }, entry, range);
+  }
+  function replayAccident(recordId) {
+    var record = state.accidentData.find(function (item) { return item.id === recordId; });
+    var entry = record && cockpitVehicleEntryByPlate(record.plate);
+    if (!record || !entry || !entry.normalized) { cockpitReplayFeedback('未找到事故关联车辆'); return; }
+    var range = cockpitEventReplayWindow(record.date + ' ' + record.time);
+    if (!range) { cockpitReplayFeedback('事故发生时间无效，无法打开回放'); return; }
+    startCockpitEventReplay({ kind: 'accident', id: record.id, type: record.type, occurredAt: record.date + ' ' + record.time, location: record.location }, entry, range);
+  }
+  function startCockpitEventReplay(event, entry, range) {
+    var id = entry.normalized.id;
     if (!eventReplayState) eventReplayState = { videoWasOpen: document.getElementById('cockpit-video-panel').classList.contains('is-open') };
     if (state.map) state.map.closePopup();
     showCockpitTrajectory(id, range);
     openCockpitVideo(id, Object.assign({ timeSource: 'external' }, range));
     renderCockpitEventReplay(event, entry.normalized, range);
+  }
+  function focusVehicleByPlate(plate) {
+    var entry = cockpitVehicleEntryByPlate(plate);
+    var position = entry ? cockpitVehicleCoords(entry, null) : null;
+    if (!entry || !position || !state.map) { cockpitReplayFeedback('未找到该异常事件关联车辆'); return; }
+    var map = state.map;
+    var id = entry.normalized ? entry.normalized.id : null;
+    state.selectedVehicleId = id;
+    map.closePopup();
+    afterCockpitMapMove(map, position, Math.max(map.getZoom(), VEHICLE_ICON_ZOOM), function () {
+      var marker = id ? state.vehicleMarkers[id] : null;
+      if (marker && state.mapLayers.vehicle && state.mapLayers.vehicle.hasLayer(marker)) { marker.openPopup(); return; }
+      clearCockpitFocusMarker('vehicleFocusMarker');
+      state.vehicleFocusMarker = L.circleMarker(position, { radius: 10, color: '#00cfe8', weight: 2, fillColor: '#00cfe8', fillOpacity: .22, className: 'vehicle-focus-marker' }).addTo(map);
+      state.vehicleFocusMarker.bindPopup(cockpitVehiclePopup(entry.area, entry.raw, null, 'events'), { closeButton: true, maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' }).openPopup();
+    });
   }
   function clearCockpitTrajectoryLayers() {
     [trajectoryState.line, trajectoryState.passedLine, trajectoryState.marker].forEach(function (layer) { if (layer && state.map) state.map.removeLayer(layer); });
@@ -1231,7 +1449,11 @@
     if (!legend) return;
     var items = [];
     if (layerIsVisible('vehicle')) items.push('<span><i class="legend-vehicle-icon manual">' + VEHICLE_ICON_SVG + '</i>人工驾驶</span><span><i class="legend-vehicle-icon auto">' + VEHICLE_ICON_SVG + '</i>自动驾驶</span><span><i class="legend-vehicle-icon offline">' + VEHICLE_ICON_SVG + '</i>离线</span>');
-    if (layerIsVisible('incident')) items.push('<span><i class="legend-incident-icon">◆</i>未完成事件车辆</span><span><i class="legend-incident-icon finished">◆</i>已完成事件车辆</span>');
+    if (layerIsVisible('incident')) items.push(
+      '<span><i class="legend-incident-icon warning pending">' + INCIDENT_CATEGORY_SVG.warning + '</i>预警·未处理</span>' +
+      '<span><i class="legend-incident-icon warning finished">' + INCIDENT_CATEGORY_SVG.warning + '</i>预警·已处理</span>' +
+      '<span><i class="legend-incident-icon alarm pending">' + INCIDENT_CATEGORY_SVG.alarm + '</i>告警·未处理</span>' +
+      '<span><i class="legend-incident-icon alarm finished">' + INCIDENT_CATEGORY_SVG.alarm + '</i>告警·已处理</span>');
     if (layerIsVisible('accident')) items.push('<span><i class="legend-accident-icon">' + ACCIDENT_ICON_SVG + '</i>事故点位</span>');
     if (layerIsVisible('road')) items.push('<span><i class="legend-road-open"></i>开放路段</span><span><i class="legend-road-paused"></i>暂停路段</span>');
     if (layerIsVisible('fence')) items.push('<span><i class="legend-fence-open"></i>开放围栏</span><span><i class="legend-fence-paused"></i>暂停围栏</span><span><i class="legend-fence-closed"></i>关闭/禁行围栏</span>');
@@ -1316,8 +1538,9 @@
       if ((event.key === 'Enter' || event.key === ' ') && event.target === module) { event.preventDefault(); setAccidentModuleSelected(!state.accidentMode); }
     });
   }
-  function incidentCountForArea(area) { return areaIncidentEvents(area).length; }
-  function incidentVehicleMatches(vehicle) { return vehicleIncidentEvents(vehicle).length > 0; }
+  function incidentCountForArea(area) {
+    return incidentFilteredRows().filter(function (row) { return row.area === area.name; }).length;
+  }
   function updateIncidentView(force) {
     var map = state.map;
     var layer = state.mapLayers.incident;
@@ -1330,22 +1553,41 @@
     if (mode === 'points') renderIncidentPoints();
     renderAggregateClusters();
   }
+  function incidentPointIconHtml(row) {
+    return '<div class="incident-point ' + row.category + (row.status === '已完成' ? ' finished' : ' pending') + '">' +
+      '<span class="incident-point-ring"></span>' + INCIDENT_CATEGORY_SVG[row.category] + '</div>';
+  }
+  function incidentPopupHtml(row) {
+    if (!row) return '';
+    var entry = cockpitVehicleEntryByPlate(row.plate);
+    var available = !!(entry && entry.normalized);
+    var unavailable = ' disabled title="事件关联车辆暂不可用"';
+    return '<div class="cockpit-vehicle-popup incident-popup">' +
+      '<div class="cockpit-popup-head"><strong>' + vehicleListEscape(row.plate) + '-' + vehicleListEscape(row.company || '--') + '</strong></div>' +
+      '<div class="cockpit-popup-grid">' +
+      '<div><span>事件编号</span><b>' + vehicleListEscape(row.id) + '</b></div>' +
+      '<div><span>事件分类</span><b>' + incidentCategoryLabel(row.category) + '</b></div>' +
+      '<div><span>事件类型</span><b>' + vehicleListEscape(row.type) + '</b></div>' +
+      '<div><span>处理状态</span><b class="incident-popup-status ' + incidentStatusClass(row.status) + '">' + vehicleListEscape(row.status) + '</b></div>' +
+      '<div><span>发生时间</span><b>' + vehicleListEscape(incidentOccurredAt(row)) + '</b></div>' +
+      '<div><span>所属区域</span><b>' + vehicleListEscape(row.area) + '</b></div>' +
+      '<div class="cockpit-popup-span"><span>发生地点</span><b>' + vehicleListEscape(row.location) + '</b></div>' +
+      '<div class="cockpit-popup-span"><span>触发规则</span><b>' + vehicleListEscape(row.rule) + '</b></div>' +
+      '</div>' +
+      '<div class="cockpit-popup-events"><span>事件描述</span><b>' + vehicleListEscape(row.description) + '</b></div>' +
+      '<div class="cockpit-popup-actions"><button type="button" class="cockpit-popup-action primary" data-incident-vehicle="' + vehicleListEscape(row.plate) + '"' + (available ? '' : unavailable) + '>查看该车</button><button type="button" class="cockpit-popup-action" data-event-replay="' + vehicleListEscape(row.id) + '"' + (available ? '' : unavailable) + '>回放</button></div>' +
+      '</div>';
+  }
   function renderIncidentPoints() {
     var layer = state.mapLayers.incident;
     if (!layer) return;
-    state.vehicleData.forEach(function (area) {
-      (area.vehicles || []).filter(incidentVehicleMatches).forEach(function (vehicle) {
-        var events = vehicleIncidentEvents(vehicle);
-        var completion = vehicleIncidentStatus(vehicle);
-        var label = area.name + ' · ' + vehicle.plate + ' · ' + events.length + ' 起异常事件';
-        var html = '<div class="incident-vehicle-marker ' + completion + '"><span class="incident-vehicle-glyph">◆</span><b>' + events.length + '</b></div>';
-        var marker = L.marker(vehicle.position, { icon: L.divIcon({ className: '', html: html, iconSize: [34, 30], iconAnchor: [17, 15] }), title: label, keyboard: true });
-        marker.bindTooltip(label, { direction: 'top', offset: [0, -10] });
-        marker.bindPopup(cockpitVehiclePopup(area, vehicle, events, 'events'), { closeButton: true, offset: [0, -8], maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' });
-        marker.on('click', function () { state.selectedVehicleId = vehicle.vehicleId; });
-        marker.addTo(layer);
-        state.incidentMarkers[vehicle.vehicleId] = marker;
-      });
+    incidentFilteredRows().forEach(function (row) {
+      var label = row.area + ' · ' + row.location + ' · ' + row.type;
+      var marker = L.marker([row.lat, row.lon], { icon: L.divIcon({ className: '', html: incidentPointIconHtml(row), iconSize: [24, 24], iconAnchor: [12, 12] }), title: label, keyboard: true });
+      marker.bindTooltip(label, { direction: 'top', offset: [0, -13] });
+      marker.bindPopup(incidentPopupHtml(row), { closeButton: true, offset: [0, -12], maxWidth: 380, autoPanPaddingTopLeft: [20, 24], className: 'cockpit-vehicle-leaflet-popup' });
+      marker.addTo(layer);
+      state.incidentMarkers[row.id] = marker;
     });
   }
   function setIncidentModuleSelected(selected) {
@@ -1563,25 +1805,28 @@
     var aggregateLayer = L.layerGroup();
     var districtData = [
       { name: '樊城区', center: [32.064, 112.122], polygon: [[32.105,112.055],[32.108,112.16],[32.065,112.19],[32.02,112.15],[32.03,112.07]], count: 34, online: 34, mileageCount: 8, vehicles: [
-        { plate: '鄂F·A001', status: 'manual', mileage: 486, position: [32.082,112.095], events: [{ type: '车速超限', category: 'alarm', status: '待处理', period: '本月' }, { type: '通信中断', category: 'warning', status: '已完成', period: '本年' }] }, { plate: '鄂F·A002', status: 'auto', mileage: 728, position: [32.078,112.16], events: [{ type: '路径规划异常', category: 'warning', status: '待审核', period: '本月' }] }, { plate: '鄂F·A007', status: 'offline', mileage: 120, position: [32.06,112.13], events: [{ type: '车载终端异常', category: 'warning', status: '已完成', period: '全部' }] }
+        { plate: '鄂F·A001', status: 'manual', mileage: 486, position: [32.082,112.095] },
+        { plate: '鄂F·A002', status: 'auto', mileage: 728, position: [32.078,112.16] },
+        { plate: '鄂F·A007', status: 'offline', mileage: 120, position: [32.06,112.13] }
       ] },
       { name: '高新区', center: [32.10, 112.24], polygon: [[32.14,112.18],[32.15,112.29],[32.095,112.31],[32.065,112.25],[32.09,112.18]], count: 22, online: 21, mileageCount: 6, vehicles: [
-        { plate: '鄂F·A003', status: 'auto', mileage: 912, position: [32.116,112.24], events: [{ type: '电子围栏越界', category: 'warning', status: '已完成', period: '本月' }, { type: '时段合规异常', category: 'alarm', status: '已完成', period: '本年' }] }, { plate: '鄂F·A008', status: 'manual', mileage: 268, position: [32.1,112.27], events: [{ type: '临牌有效期', category: 'alarm', status: '已退回', period: '本月' }] }
+        { plate: '鄂F·A003', status: 'auto', mileage: 912, position: [32.116,112.24] },
+        { plate: '鄂F·A008', status: 'manual', mileage: 268, position: [32.1,112.27] }
       ] },
       { name: '襄州区', center: [32.04, 112.29], polygon: [[32.065,112.24],[32.09,112.36],[32.02,112.42],[31.96,112.31],[31.99,112.24]], count: 31, online: 29, mileageCount: 7, vehicles: [
-        { plate: '鄂F·A004', status: 'auto', mileage: 642, position: [32.039,112.30], events: [{ type: '车速超限', category: 'alarm', status: '待处理', period: '本月' }, { type: '电子围栏越界', category: 'warning', status: '待审核', period: '本月' }] }, { plate: '鄂F·A009', status: 'manual', mileage: 354, position: [32.045,112.34], events: [{ type: '非规定时段测试', category: 'warning', status: '已完成', period: '本月' }] }, { plate: '鄂F·A010', status: 'offline', mileage: 188, position: [32.02,112.28], events: [{ type: '车载终端异常', category: 'warning', status: '已完成', period: '全部' }] }
+        { plate: '鄂F·A004', status: 'auto', mileage: 642, position: [32.039,112.30] },
+        { plate: '鄂F·A009', status: 'manual', mileage: 354, position: [32.045,112.34] },
+        { plate: '鄂F·A010', status: 'offline', mileage: 188, position: [32.02,112.28] }
       ] },
       { name: '襄城区', center: [31.99, 112.13], polygon: [[32.02,112.08],[32.03,112.17],[31.98,112.22],[31.93,112.16],[31.94,112.08]], count: 18, online: 18, mileageCount: 5, vehicles: [
-        { plate: '鄂F·A005', status: 'manual', mileage: 516, position: [31.987,112.12], events: [{ type: '通信中断', category: 'warning', status: '已完成', period: '本月' }] }, { plate: '鄂F·A011', status: 'auto', mileage: 404, position: [31.98,112.17], events: [{ type: '临牌有效期', category: 'alarm', status: '待审核', period: '本年' }] }
+        { plate: '鄂F·A005', status: 'manual', mileage: 516, position: [31.987,112.12] },
+        { plate: '鄂F·A011', status: 'auto', mileage: 404, position: [31.98,112.17] }
       ] },
       { name: '东津新区', center: [31.98, 112.27], polygon: [[32.01,112.2],[32.03,112.32],[31.96,112.36],[31.91,112.27],[31.94,112.2]], count: 23, online: 23, mileageCount: 4, vehicles: [
-        { plate: '鄂F·A006', status: 'auto', mileage: 846, position: [31.969,112.27], events: [{ type: '电子围栏越界', category: 'warning', status: '已完成', period: '本月' }, { type: '车速超限', category: 'alarm', status: '已完成', period: '全部' }] }, { plate: '鄂F·A012', status: 'offline', mileage: 95, position: [31.98,112.31], events: [{ type: '时段合规异常', category: 'alarm', status: '待处理', period: '本月' }] }
+        { plate: '鄂F·A006', status: 'auto', mileage: 846, position: [31.969,112.27] },
+        { plate: '鄂F·A012', status: 'offline', mileage: 95, position: [31.98,112.31] }
       ] }
     ];
-    state.vehicleData = districtData;
-    ensureCockpitVehicleData(districtData);
-    state.accidentData = buildAccidentData(districtData);
-    renderAccidentChart();
     state.roadData = [
       { name: '樊城区', center: [32.064, 112.122], roadCount: 34, openCount: 33, pausedCount: 1, segments: [
         { name: '长虹路（人民路—春园路）', status: 'open', length: '4.8', lanes: 6, path: [[32.055,112.085],[32.062,112.12],[32.068,112.16]], scenes: ['无人物流','无人出行'] },
@@ -1611,6 +1856,11 @@
         { name: '科技大道（东津大道—鹿门大道）', status: 'open', length: '3.8', lanes: 4, path: [[31.96,112.21],[31.98,112.27],[32.0,112.32]], scenes: ['无人环卫','无人物流'] }
       ] }
     ];
+    state.vehicleData = districtData;
+    buildIncidentData(districtData, state.roadData);
+    ensureCockpitVehicleData(districtData);
+    state.accidentData = buildAccidentData(districtData);
+    renderAccidentChart();
     state.fenceData = cockpitFenceData;
     districtData.forEach(function (item) {
       L.polygon(item.polygon, { color: '#13c8f5', weight: 1, opacity: .5, fillColor: '#123a43', fillOpacity: .23, className: 'district-boundary' }).addTo(districtLayer);
@@ -1791,7 +2041,9 @@
   window.seekCockpitTrajectory = seekCockpitTrajectory;
   window.reloadCockpitTrajectory = reloadCockpitTrajectory;
 
-  setDonut('application', 'road-test'); setDonut('vehicle', 'all'); setDonut('incident', 'total'); updateIncidentTiles();
-  bindMetricTiles(); bindRangeTabs(); bindRoadResource(); bindVehicleResource(); bindIncidentModule(); bindAccidentModule(); renderEvents(); bindMap(); bindVehiclePopup(); bindAccidentPhoto(); bindOverlay(); updateClock();
+  setDonut('application', 'road-test'); setDonut('vehicle', 'all');
+  bindMetricTiles(); bindRangeTabs(); bindRoadResource(); bindVehicleResource(); bindIncidentModule(); bindAccidentModule(); bindMap(); bindVehiclePopup(); bindAccidentPhoto(); bindOverlay(); updateClock();
+  // 事件统计与实时事件依赖地图初始化时生成的事件数据，须在其后执行
+  updateIncidentTiles(); renderEvents();
   window.setInterval(updateClock, 1000);
 }());
