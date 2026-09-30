@@ -74,9 +74,6 @@
     .param-input{display:flex;align-items:center;gap:8px}
     .param-input .ant-input{background:#fff!important}
     .param-unit{font-size:13px;color:#00000073;min-width:34px}
-    .checkbox-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
-    .checkbox-pill{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #f0f0f0;border-radius:6px;background:#fafafa;font-size:13px;color:#000000d9}
-    .checkbox-pill input{width:14px;height:14px}
     .rule-switch{width:42px;height:22px;border:none;border-radius:11px;background:#d9d9d9;position:relative;cursor:pointer;transition:background .2s;padding:0}
     .rule-switch span{position:absolute;width:18px;height:18px;top:2px;left:2px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s}
     .rule-switch.checked{background:#1677ff}
@@ -111,7 +108,7 @@
     .version-table .version-actions{white-space:nowrap}
     .toast-msg{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;border:1px solid #f0f0f0;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.12);padding:10px 22px;font-size:14px;color:#000000d9;white-space:nowrap}
     @media(max-width:1200px){
-      .form-grid,.readonly-grid,.checkbox-grid,.multi-enum-grid{grid-template-columns:1fr}
+      .form-grid,.readonly-grid,.multi-enum-grid{grid-template-columns:1fr}
       .param-row{grid-template-columns:1fr}
       .version-layout{grid-template-columns:1fr}
     }
@@ -205,11 +202,11 @@ function initPager(){
 }
 
 var rules=[
-  {code:'ARC-EW01-001',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速剧烈突变',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.2',updateTime:'2026-07-01 09:30:20',critical:false,today:6,seven:42,optimize:false,core:'车辆自动驾驶运行过程中，在统计窗口内速度变化超过阈值，且达到持续或重复次数后触发预警。'},
+  {code:'ARC-EW01-001',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速剧烈突变',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.2',updateTime:'2026-07-01 09:30:20',critical:false,today:6,seven:42,optimize:false,core:'车辆自动驾驶运行过程中，在统计窗口内速度变化超过阈值，并通过系统连续确认后触发预警。'},
   {code:'ARC-EW01-002',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'加速度剧烈突变',object:'乘用车、商用车、专用作业车',vehicleTypes:['乘用车','商用车','专用作业车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'启用',version:'V1.1',updateTime:'2026-06-28 15:12:06',critical:false,today:4,seven:31,optimize:false,core:'纵向或横向加速度在持续时间内超过配置阈值时触发预警，用于识别急加速、急减速和急转向风险。'},
-  {code:'ARC-EW01-003',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'超时停靠',object:'功能型低速无人车、商用车',vehicleTypes:['功能型低速无人车','商用车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.4',updateTime:'2026-07-06 10:26:48',critical:false,today:18,seven:126,optimize:true,core:'车辆处于低速或静止状态，位移低于阈值并超过不同场景停靠时长后触发预警；计划停靠、充电站、装卸点等可豁免。'},
+  {code:'ARC-EW01-003',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'超时停靠',object:'功能型低速无人车、商用车',vehicleTypes:['功能型低速无人车','商用车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.4',updateTime:'2026-07-06 10:26:48',critical:false,today:18,seven:126,optimize:true,core:'车辆处于低速或静止状态，位移低于阈值并超过不同场景停靠时长后触发预警。'},
   {code:'ARC-EW01-004',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'车速超限',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.3',updateTime:'2026-07-03 16:05:32',critical:true,today:12,seven:98,optimize:true,core:'车辆实时速度超过道路或围栏限速，并超出配置容差且持续达到阈值时触发预警。'},
-  {code:'ARC-EW01-005',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'倒车预警',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'停用',version:'V1.0',updateTime:'2026-06-20 11:42:15',critical:false,today:0,seven:0,optimize:false,core:'车辆处于倒挡或倒车运动状态且持续达到阈值时触发预警，作业区内可按配置豁免。'},
+  {code:'ARC-EW01-005',name:'车辆运行异常预警规则',category:'预警',type:'车辆运行异常预警',subtype:'倒车预警',object:'功能型低速无人车',vehicleTypes:['功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用',status:'停用',version:'V1.0',updateTime:'2026-06-20 11:42:15',critical:false,today:0,seven:0,optimize:false,core:'车辆处于倒挡或倒车运动状态且持续达到阈值时触发预警。'},
   {code:'ARC-EW02-001',name:'车辆碰撞事件预警规则',category:'预警',type:'车辆碰撞事件预警',subtype:'碰撞预警',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.2',updateTime:'2026-07-04 12:18:08',critical:true,today:1,seven:8,optimize:false,core:'碰撞检测模型输出置信度高于阈值时触发预警，并按严重程度映射方案标记事件风险。'},
   {code:'ARC-EW03-001',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'数据中断',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.5',updateTime:'2026-07-05 09:18:42',critical:true,today:9,seven:78,optimize:true,core:'车辆终端连续未上报或连续丢包次数达到阈值时触发预警，恢复上报后进入恢复判定。'},
   {code:'ARC-EW03-002',name:'车载终端异常预警规则',category:'预警',type:'车载终端异常预警',subtype:'传感器故障',object:'乘用车、商用车、专用作业车、功能型低速无人车',vehicleTypes:['乘用车','商用车','专用作业车','功能型低速无人车'],scope:'业务类型',scopeText:'道路测试、示范应用、商业化试点',status:'启用',version:'V1.3',updateTime:'2026-07-02 17:11:29',critical:true,today:7,seven:54,optimize:false,core:'关键传感器状态异常持续达到阈值或连续异常采样次数达到阈值时触发预警。'},
@@ -286,27 +283,6 @@ var vehiclesByCompany={
   ]
 };
 
-var recoverOptionsMap={
-  'default':['回到围栏内','离开禁行区','车速恢复','终端恢复上报','安全员重新在线'],
-  '车速剧烈突变':['车速恢复','终端恢复上报'],
-  '加速度剧烈突变':['加速度恢复','终端恢复上报'],
-  '超时停靠':['车辆移动','终端恢复上报'],
-  '车速超限':['车速恢复','进入合规道路'],
-  '倒车预警':['车辆停止倒车','档位恢复'],
-  '碰撞预警':['人工确认','车辆静止'],
-  '数据中断':['终端恢复上报','网络恢复'],
-  '传感器故障':['传感器恢复','人工确认'],
-  '其他':['终端恢复上报','人工确认'],
-  '临牌过期上路':['临牌续期','车辆停运'],
-  '允许通行区域越界':['回到围栏内','终端恢复上报'],
-  '禁行区域闯入':['离开禁行区','人工确认'],
-  '区域外激活自动驾驶':['进入授权区域','自动驾驶退出'],
-  '非规定时段测试':['进入允许时段','人工确认'],
-  '高峰时段运行':['离开高峰时段','人工确认'],
-  '安全员未到岗':['安全员到岗','终端恢复上报'],
-  '安全员异常离岗':['安全员重新在线','人工确认']
-};
-
 var isRoadRelatedType=function(type){
   return type==='车辆运行异常预警'||type==='车辆碰撞事件预警'||type==='测试时段合规性告警';
 };
@@ -319,8 +295,7 @@ var parameterTemplates={
   '车速剧烈突变':[
     {label:'速度变化阈值',value:'15',unit:'km/h',range:'1~80km/h'},
     {label:'统计窗口',value:'3',unit:'s',range:'1~10s'},
-    {label:'减速度阈值',value:'-3',unit:'m/s²',range:'-10~0m/s²'},
-    {label:'持续/重复次数',value:'2',unit:'次',range:'1~10次'}
+    {label:'减速度阈值',value:'-3',unit:'m/s²',range:'-10~0m/s²'}
   ],
   '加速度剧烈突变':[
     {label:'纵向加速度阈值',value:'3',unit:'m/s²',range:'0.5~10m/s²'},
@@ -406,24 +381,20 @@ var versionData=[
     version:'V1.4',action:'参数调整',operator:'监管管理员',time:'2026-07-06 10:26:48',reason:'降低短时等待误报',
     changes:[
       {field:'普通道路阈值',before:'5 min',after:'3 min'},
-      {field:'重点位置阈值',before:'90 s',after:'60 s'},
-      {field:'去重周期',before:'60 min',after:'30 min'}
+      {field:'重点位置阈值',before:'90 s',after:'60 s'}
     ]
   },
   {
     version:'V1.3',action:'恢复默认',operator:'平台运维',time:'2026-07-02 16:12:11',reason:'规则参数复核',
     changes:[
       {field:'普通道路阈值',before:'3 min',after:'5 min',note:'恢复系统默认'},
-      {field:'重点位置阈值',before:'60 s',after:'90 s',note:'恢复系统默认'},
-      {field:'去重周期',before:'30 min',after:'60 min',note:'恢复系统默认'},
-      {field:'企业端推送',before:'关闭',after:'开启',note:'保留'}
+      {field:'重点位置阈值',before:'60 s',after:'90 s',note:'恢复系统默认'}
     ]
   },
   {
     version:'V1.2',action:'启用',operator:'监管管理员',time:'2026-06-28 09:43:05',reason:'纳入本期监管范围',
     changes:[
-      {field:'状态',before:'停用',after:'启用'},
-      {field:'地图高亮',before:'关闭',after:'开启'}
+      {field:'状态',before:'停用',after:'启用'}
     ]
   },
   {
@@ -635,23 +606,6 @@ function buildConfigBody(rule,readonly){
         '</div>'+
         '<div id="effectiveTimeWrap" style="display:none"><div class="field-label">生效时间段 <span style="color:#ff4d4f">*</span></div><input id="effectiveTimeStart" class="ant-input" value="00:00" placeholder="开始时间"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><span style="display:inline-block;width:4%;text-align:center;color:#00000073">-</span><input id="effectiveTimeEnd" class="ant-input" value="23:59" placeholder="结束时间"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><div class="field-help">开始时间需早于结束时间</div></div>'+
         '<div id="effectiveDateWrap" style="display:none"><div class="field-label">生效日期范围 <span style="color:#ff4d4f">*</span></div><input id="effectiveDateStart" type="date" class="ant-input" value="2026-07-01"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><span style="display:inline-block;width:4%;text-align:center;color:#00000073">-</span><input id="effectiveDateEnd" type="date" class="ant-input" value="2026-12-31"'+(readonly?' disabled':'')+' style="width:48%;display:inline-block"><div class="field-help">开始日期不晚于结束日期</div></div>'+
-      '</div></div>'+
-    '</div>'+
-    '<div class="config-section">'+
-      '<div class="config-section-header"><div class="config-section-title">豁免与去重恢复</div></div>'+
-      '<div class="config-section-body">'+
-        '<div class="field-label">豁免条件</div>'+checkboxGrid(['人工接管','任务结束','计划停靠','停车场','充电站','装卸点','维修区','调度等待区','测试任务白名单','临时管控豁免'],readonly)+
-        '<div class="form-grid mt-4">'+
-          fieldInput('去重周期','dedupe','30 分钟',readonly,'同车同规则同未恢复事件在周期内不重复生成')+
-          fieldRecoverConditions('恢复条件','recover',rule.subtype,readonly)+
-          '<div><div class="field-label">自动关闭事件</div>'+switchHTML('autoCloseSwitch',false,readonly,'')+'<div class="field-help">满足恢复条件后标记为已恢复，是否自动处理待业务确认。</div></div>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="config-section">'+
-      '<div class="config-section-header"><div class="config-section-title">通知策略</div></div>'+
-      '<div class="config-section-body"><div class="checkbox-grid">'+
-        notifySwitch('生成异常事件',true,true)+notifySwitch('地图高亮',true,readonly)+notifySwitch('卡片弹窗',false,readonly)+notifySwitch('站内通知',true,readonly)+notifySwitch('企业端推送',false,readonly)+
       '</div></div>'+
     '</div>';
 }
@@ -1097,22 +1051,6 @@ document.addEventListener('click',function(e){
   }
 });
 
-function fieldRecoverConditions(label,id,subtype,readonly){
-  var options=recoverOptionsMap[subtype]||recoverOptionsMap['default'];
-  if(readonly){
-    var defaultSelected=options.slice(0,2);
-    var tags=defaultSelected.map(function(opt){return '<span class="multi-view-tag">'+opt+'</span>';}).join('');
-    return '<div><div class="field-label">'+label+'</div><div class="multi-view-list">'+tags+'</div><div class="field-help">至少选择 1 项，当前为只读状态</div></div>';
-  }
-  var html='<div class="checkbox-grid">';
-  options.forEach(function(opt,idx){
-    var checked=idx<2?' checked':'';
-    html+='<label class="checkbox-pill"><input type="checkbox"'+checked+'>'+opt+'</label>';
-  });
-  html+='</div>';
-  return '<div><div class="field-label"><span style="color:#ff4d4f;margin-right:4px">*</span>'+label+'</div>'+html+'<div class="field-help">至少选择 1 项，根据规则子类型动态显示</div></div>';
-}
-
 function syncMultiEnumOption(input){
   var option=input.closest('.multi-enum-option');
   if(option) option.classList.toggle('selected',input.checked);
@@ -1152,6 +1090,9 @@ function renderParamRows(rule,readonly){
   var params=parameterTemplates[rule.subtype]||[];
   var disabled=readonly?' disabled':'';
   var extra='';
+  if(rule.subtype==='车速剧烈突变'){
+    extra='<div class="inline-alert info mb-3">连续确认由系统固定：连续满足条件 2 次后生成预警，不作为页面可配置参数。</div>';
+  }
   if(rule.subtype==='车速超限'){
     extra='<div class="inline-alert info mb-3">限速来源默认采用道路限速 + 围栏限速，命中时取更严格值。</div>';
   }
@@ -1179,17 +1120,6 @@ function renderParamRows(rule,readonly){
     var valueStr=Array.isArray(param.value)?param.value.join('、'):param.value;
     return '<div class="param-row"><div><div class="param-name">'+param.label+'</div><div class="param-range">校验范围：'+param.range+'</div></div><div class="param-input"><input class="ant-input" value="'+valueStr+'"'+disabled+'><span class="param-unit">'+param.unit+'</span></div></div>';
   }).join('')+'</div>';
-}
-
-function checkboxGrid(items,readonly){
-  return '<div class="checkbox-grid">'+items.map(function(item,idx){
-    var checked=idx<4?' checked':'';
-    return '<label class="checkbox-pill"><input type="checkbox"'+checked+(readonly?' disabled':'')+'>'+item+'</label>';
-  }).join('')+'</div>';
-}
-
-function notifySwitch(label,checked,disabled){
-  return '<div class="checkbox-pill" style="justify-content:space-between"><span>'+label+'</span>'+switchHTML('',checked,disabled,'')+'</div>';
 }
 
 function switchHTML(id,checked,disabled,handler){
