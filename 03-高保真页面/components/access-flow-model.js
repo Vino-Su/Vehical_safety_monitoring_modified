@@ -143,22 +143,26 @@
     ensureRecord(record);
     var openReturn = latestReturn(record), destination;
     record.flowLogs.push({ eventId: makeId('passed'), eventType: 'stage_passed', stageInstanceId: record.currentStage + '_round_' + ((record.flowLogs || []).filter(function (l) { return l.stage === record.currentStage; }).length + 1), stage: record.currentStage, result: 'passed', handler: handlers[record.currentStage], handledAt: '2026-09-10 15:30:00', opinion: opinion || '审核结论：通过' });
-    if (openReturn && openReturn.stage !== record.currentStage) destination = openReturn.stage;
-    else {
-      var path = approvalPath(record), index = path.indexOf(record.currentStage);
-      destination = index > -1 && index < path.length - 1 ? path[index + 1] : '';
-    }
+    // Re-enter the normal path after a return, including previously passed stages.
+    var path = approvalPath(record), index = path.indexOf(record.currentStage);
+    destination = index > -1 && index < path.length - 1 ? path[index + 1] : '';
     if (destination) { closeReturn(record, destination); record.processStatus = 'processing'; record.currentStage = destination; }
     else if (record.currentStage === 'plate_confirmation') { record.processStatus = 'active'; record.currentStage = 'completed'; }
     else if (needsPlate(record)) { record.processStatus = 'approved'; record.currentStage = 'plate_upload'; }
     else { record.processStatus = 'active'; record.currentStage = 'completed'; }
     syncLegacy(record); return record;
   }
+  function returnTarget(record) {
+    ensureRecord(record);
+    if (record.currentStage === 'plate_confirmation') return 'plate_correction';
+    if (record.currentStage === 'third_party_review') return 'applicant_correction';
+    if (['committee_review', 'expert_review', 'meeting_review', 'committee_confirm'].indexOf(record.currentStage) > -1) return 'third_party_review';
+    return null;
+  }
   function reject(record, opinion) {
     ensureRecord(record);
-    var path = approvalPath(record), index = path.indexOf(record.currentStage), target;
-    if (record.currentStage === 'plate_confirmation') target = 'plate_correction';
-    else target = index <= 0 ? 'applicant_correction' : path[index - 1];
+    var target = returnTarget(record);
+    if (!target) return record;
     record.flowLogs.push({ eventId: makeId('returned'), eventType: 'stage_returned', returnCycleId: makeId('return_cycle'), stageInstanceId: record.currentStage + '_round_' + ((record.flowLogs || []).filter(function (l) { return l.stage === record.currentStage; }).length + 1), stage: record.currentStage, round: 1, result: 'returned', handler: handlers[record.currentStage], handledAt: '2026-09-10 15:30:00', opinion: opinion || '请补充完善后重新提交。', returnToStage: target, closed: false });
     record.processStatus = 'returning'; record.returnedFromStage = record.currentStage; record.currentStage = target; syncLegacy(record); return record;
   }
@@ -202,7 +206,7 @@
   window.AccessFlowModel = {
     processStatusMap: processStatusMap, stageMap: stageMap, ensureRecord: ensureRecord, ensureAll: ensureAll,
     processInfo: processInfo, stageInfo: stageInfo, latestReturn: latestReturn,
-    isFullApproval: isFullApproval, approvalPath: approvalPath, needsPlate: needsPlate, pass: pass, reject: reject,
+    isFullApproval: isFullApproval, approvalPath: approvalPath, needsPlate: needsPlate, returnTarget: returnTarget, pass: pass, reject: reject,
     resubmit: resubmit, progress: progress, displayLogs: displayLogs, syncLegacy: syncLegacy, currentRole: currentRole,
     canHandle: canHandle
   };

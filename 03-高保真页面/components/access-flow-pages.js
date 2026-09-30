@@ -196,7 +196,9 @@
       var count = window.MaterialReviewComments ? window.MaterialReviewComments.getCurrent(record).length : 0;
       if (action === 'reject' && record.currentStage === 'third_party_review' && !count) { alert('请至少为一个有问题的材料添加批注'); return; }
       if (action === 'reject') {
-        var path = F.approvalPath(record), index = path.indexOf(record.currentStage), target = record.currentStage === 'plate_confirmation' ? '牌照修改' : index <= 0 ? '申请主体补正' : F.stageMap[path[index - 1]].label;
+        var targetStage = F.returnTarget(record);
+        if (!targetStage) { alert('当前环节不支持退回'); return; }
+        var target = F.stageMap[targetStage].label;
         if (!window.confirm('确认退回至“' + target + '”？退回后流程继续办理。')) return;
         if (window.MaterialReviewComments) window.MaterialReviewComments.archiveCurrent(record); F.reject(record, opinion); notify('已退回至' + target, 'warning');
       } else { if (window.MaterialReviewComments && record.currentStage === 'third_party_review') window.MaterialReviewComments.clearCurrent(record); F.pass(record, opinion); notify('审批通过，已流转至' + F.stageInfo(record).label, 'success'); }

@@ -319,12 +319,13 @@
     var vehicles = source.vehicles || [];
     var persons = source.persons || [];
     var labels = ({
-      road_test: { roads: '道路测试路段或区域', vehicles: '道路测试车辆', persons: '道路测试驾驶员（安全员）' },
+      road_test: { roads: '道路测试路段', vehicles: '道路测试车辆', persons: '道路测试驾驶员（安全员）' },
       demo_apply: { roads: '示范应用路段', vehicles: '示范应用车辆', persons: '示范应用测试人员' },
       demo_operate: { roads: '商业化试点路段', vehicles: '商业化试点车辆', persons: '商业化试点驾驶人（安全员）' }
-    })[(state.config || {}).originalContentDomain] || { roads: '道路/区域', vehicles: '车辆', persons: '人员' };
+    })[(state.config || {}).originalContentDomain] || { roads: '路段', vehicles: '车辆', persons: '人员' };
     var roadRows = roads.map(function (item, index) {
-      return '<tr><td>' + (index + 1) + '</td><td>' + esc(item.name || '-') + '</td><td>' + esc(item.type || '-') + '</td><td><span class="ant-tag ' + (item.status === '开放' ? 'ant-tag-success' : 'ant-tag-default') + '">' + esc(item.status || '-') + '</span></td></tr>';
+      var level = item.level || ((window.roadFullData || {})[item.name] || {}).level || '-';
+      return '<tr><td>' + (index + 1) + '</td><td>' + esc(item.name || '-') + '</td><td>' + esc(level) + '</td><td><span class="ant-tag ' + (item.status === '开放' ? 'ant-tag-success' : 'ant-tag-default') + '">' + esc(item.status || '-') + '</span></td></tr>';
     });
     var hasOperationMetrics = vehicles.some(function (item) { return item.mileage !== undefined || item.violations !== undefined || item.accidents !== undefined; });
     var vehicleHeaders = hasOperationMetrics ? ['VIN码', '里程及小时', '违法次数', '事故次数', '临牌号', '牌照有效期'] : ['VIN码', '生产企业/品牌', '型号', '自动驾驶级别', '临牌号', '临牌有效期'];
@@ -335,7 +336,7 @@
     var personRows = persons.map(function (item) {
       return '<tr><td>' + esc(item.name || '-') + '</td><td>' + esc(item.gender || '-') + '</td><td>' + esc(item.age === undefined ? '-' : item.age) + '</td><td>' + esc(item.unit || '-') + '</td><td>' + esc(item.idType || '-') + '</td><td>' + esc(item.idNo || '-') + '</td></tr>';
     });
-    return originalTable(labels.roads + '（' + roads.length + '条）', ['序号', '道路/区域名称', '类型', '状态'], roadRows) +
+    return originalTable(labels.roads + '（' + roads.length + '条）', ['序号', '路段名称', '道路等级', '状态'], roadRows) +
       originalTable(labels.vehicles + '（' + vehicles.length + '辆）', vehicleHeaders, vehicleRows) +
       originalTable(labels.persons + '（' + persons.length + '人）', ['姓名', '性别', '年龄', '工作单位', '证件类型', '证件号码'], personRows);
   }
